@@ -1,0 +1,8 @@
+*.db
+*.xrc
+*.pyc
+*.pyo
+*.pdf
+OrderManager.cfg
+OrderManager/
+_eric4project/
