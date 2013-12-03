@@ -12,6 +12,7 @@ import wx				#wxWidgets used as the GUI
 from wx import xrc		#allows the loading and access of xrc file (xml) that describes GUI
 ctrl = xrc.XRCCTRL		#define a shortined function name (just for convienience)
 import wx.lib.agw.advancedsplash as AS
+#import wx.lib.inspection
 
 import ConfigParser #for reading local config data (*.cfg)
 
@@ -127,6 +128,7 @@ class LoginFrame(wx.Frame):
 
 			gn.user = selected_user
 			## don't need to store it??? gn.main_frame = MainFrame(None)
+			MainFrame(None)
 			
 			self.Close()
 			
@@ -144,11 +146,66 @@ class LoginFrame(wx.Frame):
 
 
 
+class MainFrame(wx.Frame):
+	def __init__(self, parent):
+		#load frame XRC description
+		pre = wx.PreFrame()
+		res = xrc.XmlResource.Get() 
+		res.LoadOnFrame(pre, parent, "frame:main") 
+		self.PostCreate(pre)
+		self.SetIcon(wx.Icon(gn.resource_path('OrderManager.ico'), wx.BITMAP_TYPE_ICO))
+		
+		#bindings
+		self.Bind(wx.EVT_CLOSE, self.on_close_frame)
+		#self.Bind(wx.EVT_BUTTON, self.on_click_login, id=xrc.XRCID('button:log_in'))
+		#self.Bind(wx.EVT_BUTTON, self.on_click_create_user, id=xrc.XRCID('button:create_user'))
+
+		#misc
+		self.SetTitle('OrderManager v{} - Logged in as {}'.format(version, gn.user))
+		#OrderScheduler v{} - Logged in as{} {}'.format(version, self.user.split(',')[-1], self.user.split(',')[0]))
+
+		self.Show()
+		
+		ItemFrame(self, id=12585385)
+		
+
+	def on_close_frame(self, event):
+		print 'called on_close_frame'
+		self.Destroy()
+
+
+
+class ItemFrame(wx.Frame):
+	def __init__(self, parent, id):
+		#load frame XRC description
+		pre = wx.PreFrame()
+		res = xrc.XmlResource.Get() 
+		res.LoadOnFrame(pre, parent, "frame:item") 
+		self.PostCreate(pre)
+		self.SetIcon(wx.Icon(gn.resource_path('OrderManager.ico'), wx.BITMAP_TYPE_ICO))
+		
+		self.id = id
+		
+		#bindings
+		self.Bind(wx.EVT_CLOSE, self.on_close_frame)
+
+		#misc
+		self.SetTitle('Item ID {}'.format(self.id))
+		self.SetSize((800, 600))
+		self.Center()
+
+
+		self.Show()
+		
+		
+	def on_close_frame(self, event):
+		print 'called on_close_frame'
+		self.Destroy()
+
 
 class OrdManApp(wx.App):
 	def OnInit(self):
 		#show splash screen
-		
 		gn.splash_frame = AS.AdvancedSplash(None,
 			bitmap=wx.Bitmap(gn.resource_path("Splash.png"), wx.BITMAP_TYPE_PNG), 
 			timeout=2500, agwStyle=AS.AS_TIMEOUT | AS.AS_CENTER_ON_SCREEN)

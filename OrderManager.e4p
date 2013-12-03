@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE Project SYSTEM "Project-4.6.dtd">
 <!-- eric4 project file for project OrderManager -->
-<!-- Saved: 2013-11-25, 10:29:54 -->
+<!-- Saved: 2013-12-03, 16:25:41 -->
 <!-- Copyright (C) 2013 Travis Stuart, TMStuart22@gmail.com -->
 <Project version="4.6">
   <Language></Language>
@@ -14,6 +14,8 @@
   <Sources>
     <Source>OrderManager.py</Source>
     <Source>__init__.py</Source>
+    <Source>Database.py</Source>
+    <Source>General.py</Source>
   </Sources>
   <Forms>
   </Forms>
