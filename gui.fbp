@@ -2844,7 +2844,7 @@
                         </object>
                         <object class="notebookpage" expanded="0">
                             <property name="bitmap"></property>
-                            <property name="label"> Administration </property>
+                            <property name="label"> Scheduling </property>
                             <property name="select">0</property>
                             <object class="wxPanel" expanded="0">
                                 <property name="BottomDockable">1</property>
