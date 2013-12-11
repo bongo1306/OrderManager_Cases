@@ -4,10 +4,13 @@
 import pyodbc
 import sys
 import wx
+from wx import xrc
+ctrl = xrc.XRCCTRL
 
 import datetime as dt
 import TweakedGrid
 import General as gn
+import Database as db
 
 
 class SearchTab(object):
@@ -17,16 +20,18 @@ class SearchTab(object):
 		
 		#Bindings
 		self.Bind(wx.EVT_CHOICE, self.on_choice_table, id=xrc.XRCID('choice:which_table'))
+		self.Bind(wx.EVT_CHECKBOX, self.on_choice_table, id=xrc.XRCID('checkbox:display_alphabetically'))
 		
 		#tables or views the user can search in
 		tables = ('orders.root', 'orders.view_systems', 'dbo.orders', 'dbo.view_orders_old')
 		
 		ctrl(self, 'choice:which_table').AppendItems(tables)
 		ctrl(self, 'choice:which_table').SetStringSelection('orders.view_systems')
+		self.on_choice_table()
 		
 
 
-	def on_choice_table(self):
+	def on_choice_table(self, event=None):
 		table_panel = ctrl(self, 'panel:search_criteria')
 		
 		#remove the table if there is already one there
@@ -46,34 +51,16 @@ class SearchTab(object):
 			pass
 		
 		for column_index, column in enumerate(columns):
-			columns[column_index] = '{}.{}'.format(table_to_search, column)
-
-		for joining_table in self.joining_tables:
-			if table_to_search == joining_table[0]:
-				extend_list = ['']
-				#extend_list.append('-{}'.format(joining_table[1]))
-				
-				#manually specify columns for some tables...
-				try:
-					extended_columns = list(custom_search_table_columns[joining_table[1]])
-				except:
-					extended_columns = list(db.get_table_column_names(joining_table[1], presentable=False))
-				
-				extend_list.extend(extended_columns)
-				extend_list.remove(joining_table[3])
-				
-				for column_index, column in enumerate(extend_list):
-					if column_index > 0:
-						extend_list[column_index] = '{}.{}'.format(joining_table[1], column)
-						
-				columns.extend(extend_list)
+			if '_spacer_' in column:
+				column = ''
+			columns[column_index] = '{}'.format(column)
 
 
-
-
-		#sort columns alphabeticaly <--(lol spelling)
-		#columns.sort()
-
+		#sort columns alphabetically if user wants
+		if ctrl(self, 'checkbox:display_alphabetically').Value == True:
+			#columns = list(set(columns))#.remove('')
+			columns = filter(None, columns)
+			columns.sort()
 
 		self.table_search_criteria.CreateGrid(len(columns), 2)
 		self.table_search_criteria.SetRowLabelSize(0)
@@ -101,6 +88,7 @@ class SearchTab(object):
 		
 		for row in range(len(columns)):
 			self.table_search_criteria.SetReadOnly(row, 0)
+			#self.table_search_criteria.SetCellAlignment(row, 0, wx.ALIGN_RIGHT, wx.ALIGN_CENTRE)
 		
 		sizer = wx.BoxSizer(wx.VERTICAL)
 		sizer.Add(self.table_search_criteria, 1, wx.EXPAND)
@@ -117,6 +105,7 @@ class SearchTab(object):
 
 
 	def on_change_grid_cell(self, event):
-		ctrl(self, 'text:sql_query').SetValue(self.generate_sql_query())
+		#ctrl(self, 'text:sql_query').SetValue(self.generate_sql_query())
+		print 'HELLO!!!!!!!!!!'
 		event.Skip()
 

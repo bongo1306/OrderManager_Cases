@@ -220,7 +220,7 @@ def insert(table, field_value_pairs, connection=None):
 def get_table_column_names(table, presentable=False):
 	cursor = eng04_connection.cursor()
 
-	column_names = zip(*cursor.execute("SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_Name='{}' ORDER by ORDINAL_POSITION".format(table)).fetchall())[3]
+	column_names = zip(*cursor.execute("SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA='{}' AND TABLE_NAME='{}' ORDER by ORDINAL_POSITION".format(table.split('.')[0], table.split('.')[1])).fetchall())[3]
 		
 	if presentable:
 		presentable_column_names = []
