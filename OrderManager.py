@@ -21,6 +21,7 @@ import datetime as dt
 import BetterListCtrl
 import General as gn
 import Database as db
+import Search
 
 
 def check_for_updates():
@@ -146,8 +147,10 @@ class LoginFrame(wx.Frame):
 
 
 
-class MainFrame(wx.Frame):
+class MainFrame(wx.Frame, Search.SearchTab):
 	def __init__(self, parent):
+		#super(MainFrame, self).__init__(self)
+		
 		#load frame XRC description
 		pre = wx.PreFrame()
 		res = xrc.XmlResource.Get() 
@@ -163,6 +166,8 @@ class MainFrame(wx.Frame):
 		#misc
 		self.SetTitle('OrderManager v{} - Logged in as {}'.format(version, gn.user))
 		#OrderScheduler v{} - Logged in as{} {}'.format(version, self.user.split(',')[-1], self.user.split(',')[0]))
+
+		self.init_search_tab()
 
 		self.Show()
 		
