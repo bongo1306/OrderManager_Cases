@@ -166,7 +166,7 @@ class MainFrame(wx.Frame):
 
 		self.Show()
 		
-		ItemFrame(self, id=12585385)
+		#ItemFrame(self, id=12585385)
 		
 
 	def on_close_frame(self, event):
