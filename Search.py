@@ -107,7 +107,7 @@ class SearchTab(object):
 
 	def generate_sql_query(self):
 		print 'generating sql query'
-		find_records_in_table = ctrl(self, 'choice:which_table').GetStringSelection()
+		table_to_search = ctrl(self, 'choice:which_table').GetStringSelection()
 
 		sql = "SELECT "
 		
@@ -125,11 +125,10 @@ class SearchTab(object):
 							column = self.table_search_criteria.GetCellValue(row, 0), 
 							criteria = self.table_search_criteria.GetCellValue(row, 1))
 
-
 		columns = list(db.get_table_column_names(table_to_search, presentable=False))
 		fields_to_select = ', '.join(columns)
 		
-		sql += "{} FROM {} ".format(fields_to_select, find_records_in_table)
+		sql += "{} FROM {} ".format(fields_to_select, table_to_search)
 		sql += 'WHERE {}'.format(sql_criteria[:-4])
 
 		##limit the records pulled if desired
@@ -141,75 +140,117 @@ class SearchTab(object):
 
 
 	def search_criteria_to_sql(self, column, criteria):
-		operators = ['==', '<=', '>=', '!=', '<>', '=', '<', '>', 'LIKE ']
-		tokens = ['AND ', 'OR ']
-
-		#distinguish betweeen criteria that is a legit number a pesudo number... aka and item number
-		# which starts with zero which must be preserved
-		try:
-			float(criteria)
-			if criteria[0] == '0':
-				is_number = False
-			else:
-				is_number = True
-		except:
-			is_number = False
-			
-		#overriding!!!! the bull above.... because SQL 2005 can be strange
-		is_number = False
-			
-		#is the criteria dates?
-		if '/' in criteria:
-			is_date = True
-			
-			#if criteria.count('/') == 4:
-			if '...' in criteria:
-				is_date_range = True
-			else:
-				is_date_range = False
-			
-		else:
-			is_date = False
-			is_date_range = False
+		operators = ['<=', '>=', '!=', '<>', '=', '<', '>']
+		tokens = [' AND ', ' OR ', '...']
 		
-		#prepend an = sign if no operator specified
-		operator_found = False
-		for operator in operators:
-			if operator in criteria:
-				operator_found = True
+		#split string by tokens
+		criteria_parts = []
+		previous_split_index = 0
+		for index in range(len(criteria)):
+			for token in tokens:
+				if criteria[index:index + len(token)] == token or index == len(criteria)-1:
+					if token == '...':
+						lower_limit = '>= {}'.format(criteria[previous_split_index:index].rstrip())
 
-		if operator_found == False:
-			#print 'is_number: {}'.format(is_number)
-			
-			if is_number:
-				criteria = '= '+criteria
-			else:
-				if is_date:
-					if is_date_range:
-						first_date = criteria.split('...')[0].strip()
+						#find next space character to signify end of ... statement
+						for char_index in range(index+len(token), len(criteria)-1):
+							space_index = char_index+1
+							if criteria[char_index] == ' ':
+								space_index -= 1
+								break
 
-						second_date = criteria.split('...')[1].strip()
-	
-						criteria = ">= '{}' AND {} <= '{} 23:59:59'".format(first_date, column, second_date)
+						upper_limit = ' AND <= {} '.format(criteria[index+len(token):space_index+1].rstrip())
+						
+						criteria_parts.append(lower_limit)
+						criteria_parts.append(upper_limit)
+						previous_split_index = space_index+1
+						break
+						
 					else:
-						#criteria = "= '{}'".format(criteria)
-						criteria = ">= '{}' AND {} <= '{} 23:59:59'".format(criteria, column, criteria)
-
-				else:
-					criteria = "LIKE '%{}%'".format(criteria)
-		
-		else:
-			for operator in operators:
-				if operator in criteria:
-					found_operator = operator
-					break
+						criteria_parts.append(criteria[previous_split_index:index+1].rstrip())
+						previous_split_index = index
+						break
 					
-			if is_date:
-				criteria = "{} '{}'".format(found_operator, criteria.replace(found_operator, '').strip())
-			
-			if criteria == '=':
-				criteria = 'IS NULL'
+		#remove any '' criteria_parts
+		criteria_parts = [value for value in criteria_parts if value != '']
+
+		sql_criterias = []
+		sql_text = '('
+
+		for criteria_part in criteria_parts:
+			#determine and strip out token from criteria
+			token_found = None
+			for token in tokens:
+				if token in criteria_part:
+					token_found = token
+					criteria_part = criteria_part.replace(token, '')
+					break
+
+			#determine and strip out operator from criteria
+			operator_found = None
+			for operator in operators:
+				if operator in criteria_part:
+					operator_found = operator
+					criteria_part = criteria_part.replace(operator, '').strip()
+					break
+
+			#force not equal sign to be ANSI compliant
+			try:
+				operator_found = operator_found.replace('!=', '<>')
+			except:
+				pass
+
+			#if not criteria, just '=' sign then make it check if null
+			#print 'criteria_part',criteria_part
+			if operator_found == '=' and criteria_part == '':
+				criteria_part = 'IS NULL'
+				operator_found = None
+
+			elif operator_found == '<>' and criteria_part == '':
+				criteria_part = 'IS NOT NULL'
+				operator_found = None
+
+			else:
+				#is it a date?
+				criteria_part_is_date = False
+				if criteria_part.count('/') > 1:
+					criteria_part_is_date = True
+
+				#is it a number?
+				criteria_part_is_number = True
+				try:
+					criteria_part = str(float(criteria_part)).rstrip('.0')
+				except:
+					if criteria_part_is_date:
+						criteria_part = "'{}'".format(criteria_part)
+					else:
+						criteria_part = "'%{}%'".format(criteria_part)
+					criteria_part_is_number = False
+
+				#include all the time in the day if checking <= a date
+				if criteria_part_is_date and operator_found == '<=':
+					criteria_part = "{} 23:59:59'".format(criteria_part[:-1])
+
+				#if no operators found, it should be a LIKE or = depending if string or number
+				if operator_found == None:
+					if criteria_part_is_number:
+						operator_found = '='
+					else:
+						if criteria_part_is_date:
+							operator_found = '='
+						else:
+							operator_found = 'LIKE'
+
+			#build up the SQL
+			if token_found:
+				sql_text += token_found
+
+			if not operator_found:
+				operator_found = ''
+
+			sql_text += '{} {} {}'.format(column, operator_found, criteria_part)
+
+		sql_text += ') AND '
 		
-		sql = '{} {} AND '.format(column, criteria)
-		return sql
+		return sql_text
 
