@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE Project SYSTEM "Project-4.6.dtd">
 <!-- eric4 project file for project OrderManager -->
-<!-- Saved: 2013-12-11, 17:24:26 -->
+<!-- Saved: 2013-12-13, 12:35:47 -->
 <!-- Copyright (C) 2013 Travis Stuart, TMStuart22@gmail.com -->
 <Project version="4.6">
   <Language></Language>
@@ -18,6 +18,7 @@
     <Source>General.py</Source>
     <Source>Search.py</Source>
     <Source>TweakedGrid.py</Source>
+    <Source>Item.py</Source>
   </Sources>
   <Forms>
   </Forms>

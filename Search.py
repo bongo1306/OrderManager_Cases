@@ -22,9 +22,10 @@ class SearchTab(object):
 		self.Bind(wx.EVT_CHOICE, self.on_choice_table, id=xrc.XRCID('choice:which_table'))
 		self.Bind(wx.EVT_CHECKBOX, self.on_choice_table, id=xrc.XRCID('checkbox:display_alphabetically'))
 		self.Bind(wx.EVT_BUTTON, self.on_click_begin_search, id=xrc.XRCID('button:search'))
+		self.Bind(wx.EVT_BUTTON, ctrl(self, 'list:search_results').export_list, id=xrc.XRCID('button:export_results'))
 		
 		#tables or views the user can search in
-		tables = ('orders.root', 'orders.view_systems', 'dbo.orders', 'dbo.view_orders_old')
+		tables = ('orders.root', 'orders.changes', 'orders.view_systems', 'dbo.orders', 'dbo.view_orders_old')
 		
 		ctrl(self, 'choice:which_table').AppendItems(tables)
 		ctrl(self, 'choice:which_table').SetStringSelection('orders.view_systems')
@@ -163,7 +164,6 @@ class SearchTab(object):
 						#print index+len(token), len(criteria)-1
 						#find next space character to signify end of ... statement
 						for char_index in range(index+len(token)-1, len(criteria)-1):
-							print 'char_index', char_index
 							space_index = char_index+1
 							if criteria[char_index] == ' ':
 								space_index -= 1
