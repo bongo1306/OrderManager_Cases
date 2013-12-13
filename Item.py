@@ -1,8 +1,7 @@
-
-
-
 #!/usr/bin/env python
 # -*- coding: utf8 -*-
+
+import sys
 
 import wx
 from wx import xrc
@@ -27,6 +26,9 @@ class ItemFrame(wx.Frame):
 		#bindings
 		self.Bind(wx.EVT_CLOSE, self.on_close_frame)
 
+		self.init_changes_tab()
+		self.populate_changes_tab()
+
 		#misc
 		self.SetTitle('Item ID {}'.format(self.id))
 		self.SetSize((800, 600))
@@ -37,13 +39,56 @@ class ItemFrame(wx.Frame):
 
 
 	def init_changes_tab(self):
-		pass
-		
+		column_names = ['Id', 'Table', 'Field', 'Previous Value', 'New Value', 'Who Changed', 'When Changed']
+
+		for index, column_name in enumerate(column_names):
+			ctrl(self, 'list:changes').InsertColumn(index, column_name)
+
 	def reset_changes_tab(self):
-		pass
+		ctrl(self, 'list:changes').DeleteAllItems()
 
 	def populate_changes_tab(self):
-		pass
+		list_ctrl = ctrl(self, 'list:changes')
+		
+		records = db.query('''
+			SELECT
+				id,
+				table_name,
+				field,
+				previous_value,
+				new_value,
+				who_changed,
+				when_changed
+			FROM
+				orders.changes
+			WHERE
+				table_id={}
+			ORDER BY
+				when_changed DESC
+			'''.format(self.id))
+		
+		for index, record in enumerate(records):
+			id, table_name, field, previous_value, new_value, who_changed, when_changed = record
+			
+			list_ctrl.InsertStringItem(sys.maxint, '#')
+			list_ctrl.SetStringItem(index, 0, '{}'.format(id))
+			list_ctrl.SetStringItem(index, 1, '{}'.format(table_name))
+			list_ctrl.SetStringItem(index, 2, '{}'.format(field))
+			list_ctrl.SetStringItem(index, 3, '{}'.format(previous_value))
+			list_ctrl.SetStringItem(index, 4, '{}'.format(new_value))
+			list_ctrl.SetStringItem(index, 5, '{}'.format(who_changed))
+			list_ctrl.SetStringItem(index, 6, '{}'.format(when_changed.strftime('%m/%d/%y %I:%M %p')))
+
+		#auto fit the column widths
+		for index in range(list_ctrl.GetColumnCount()):
+			list_ctrl.SetColumnWidth(index, wx.LIST_AUTOSIZE_USEHEADER)
+			
+			#cap column width at max 400
+			if list_ctrl.GetColumnWidth(index) > 400:
+				list_ctrl.SetColumnWidth(index, 400)
+		
+		#hide id column
+		list_ctrl.SetColumnWidth(0, 0)
 
 
 	def on_close_frame(self, event):

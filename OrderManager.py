@@ -172,8 +172,8 @@ class MainFrame(wx.Frame, Search.SearchTab):
 
 		self.Show()
 		
-		Item.ItemFrame(self, id=12585385)
-		
+		Item.ItemFrame(self, id=12587666)
+		#12585385
 
 	def on_close_frame(self, event):
 		print 'called on_close_frame'
