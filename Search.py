@@ -146,6 +146,10 @@ class SearchTab(object):
 		operators = ['<=', '>=', '!=', '<>', '=', '<', '>']
 		tokens = [' AND ', ' OR ', '...']
 		
+		table_to_search = ctrl(self, 'choice:which_table').GetStringSelection()
+		
+		criteria = criteria.upper()
+		
 		#split string by tokens
 		criteria_parts = []
 		previous_split_index = 0
@@ -155,8 +159,11 @@ class SearchTab(object):
 					if token == '...':
 						lower_limit = '>= {}'.format(criteria[previous_split_index:index].rstrip())
 
+						space_index = 0
+						#print index+len(token), len(criteria)-1
 						#find next space character to signify end of ... statement
-						for char_index in range(index+len(token), len(criteria)-1):
+						for char_index in range(index+len(token)-1, len(criteria)-1):
+							print 'char_index', char_index
 							space_index = char_index+1
 							if criteria[char_index] == ' ':
 								space_index -= 1
@@ -214,11 +221,38 @@ class SearchTab(object):
 				operator_found = None
 
 			else:
+				column_data_type = db.query("SELECT DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA='{}' AND TABLE_NAME='{}' AND COLUMN_NAME='{}'".format(table_to_search.split('.')[0], table_to_search.split('.')[1], column))[0]
+				#print column_data_type
+				
+				if 'date' in column_data_type:
+					criteria_part = "'{}'".format(criteria_part)
+					if operator_found == None:
+						operator_found = '='
+						
+					elif operator_found == '<=':
+						#include all the hours in the day since less than and EQUAL
+						criteria_part = "{} 23:59:59'".format(criteria_part[:-1])
+					
+				elif 'int' in column_data_type or 'decimal' in column_data_type:
+					if operator_found == None:
+						operator_found = '='
+
+				elif 'varchar' in column_data_type:
+					if operator_found == None:
+						operator_found = 'LIKE'
+						criteria_part = "'%{}%'".format(criteria_part)
+					else:
+						criteria_part = "'{}'".format(criteria_part)
+
+
+				'''
 				#is it a date?
 				criteria_part_is_date = False
 				if criteria_part.count('/') > 1:
 					criteria_part_is_date = True
-
+				'''
+				
+				'''
 				#is it a number?
 				criteria_part_is_number = True
 				try:
@@ -243,6 +277,7 @@ class SearchTab(object):
 							operator_found = '='
 						else:
 							operator_found = 'LIKE'
+				'''
 
 			#build up the SQL
 			if token_found:
