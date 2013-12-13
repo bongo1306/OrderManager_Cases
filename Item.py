@@ -26,6 +26,9 @@ class ItemFrame(wx.Frame):
 		#bindings
 		self.Bind(wx.EVT_CLOSE, self.on_close_frame)
 
+		self.init_details_panel()
+		self.populate_details_panel()
+
 		self.init_changes_tab()
 		self.populate_changes_tab()
 
@@ -36,6 +39,58 @@ class ItemFrame(wx.Frame):
 
 
 		self.Show()
+
+
+
+	def init_details_panel(self):
+		pass
+
+	def reset_details_panel(self):
+		ctrl(self, 'label:quote').SetLabel('...')
+		ctrl(self, 'label:sales_order').SetLabel('...')
+
+	def populate_details_panel(self):
+		record = db.query('''
+			SELECT
+				filemaker_quote,
+				sales_order,
+				item,
+				production_order,
+				material,
+				hierarchy,
+				model,
+				description
+			FROM
+				orders.root
+			WHERE
+				id={}
+			'''.format(self.id))
+			
+		#format all fields as strings
+		formatted_record = []
+		for field in record[0]:
+			if field == None:
+				field = '...'
+				
+			elif isinstance(field, dt.datetime):
+				field = field.strftime('%m/%d/%y')
+				
+			else:
+				field = str(field)
+				
+			formatted_record.append(field)
+
+		filemaker_quote, sales_order, item, production_order, material, hierarchy, model, description = formatted_record
+		
+		ctrl(self, 'label:quote').SetLabel(filemaker_quote)
+		ctrl(self, 'label:sales_order').SetLabel(sales_order)
+		ctrl(self, 'label:item').SetLabel(item)
+		ctrl(self, 'label:production_order').SetLabel(production_order)
+		ctrl(self, 'label:material').SetLabel(material)
+		ctrl(self, 'label:hierarchy').SetLabel(hierarchy)
+		ctrl(self, 'label:model').SetLabel(model)
+		ctrl(self, 'label:description').SetLabel(description)
+
 
 
 	def init_changes_tab(self):
@@ -67,6 +122,7 @@ class ItemFrame(wx.Frame):
 				when_changed DESC
 			'''.format(self.id))
 		
+		#insert records into list
 		for index, record in enumerate(records):
 			id, table_name, field, previous_value, new_value, who_changed, when_changed = record
 			
