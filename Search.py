@@ -21,6 +21,7 @@ class SearchTab(object):
 		#Bindings
 		self.Bind(wx.EVT_CHOICE, self.on_choice_table, id=xrc.XRCID('choice:which_table'))
 		self.Bind(wx.EVT_CHECKBOX, self.on_choice_table, id=xrc.XRCID('checkbox:display_alphabetically'))
+		self.Bind(wx.EVT_BUTTON, self.on_click_begin_search, id=xrc.XRCID('button:search'))
 		
 		#tables or views the user can search in
 		tables = ('orders.root', 'orders.view_systems', 'dbo.orders', 'dbo.view_orders_old')
@@ -125,10 +126,12 @@ class SearchTab(object):
 							column = self.table_search_criteria.GetCellValue(row, 0), 
 							criteria = self.table_search_criteria.GetCellValue(row, 1))
 
-		columns = list(db.get_table_column_names(table_to_search, presentable=False))
-		fields_to_select = ', '.join(columns)
+		#columns = list(db.get_table_column_names(table_to_search, presentable=False))
+		#fields_to_select = ', '.join(columns)
 		
-		sql += "{} FROM {} ".format(fields_to_select, table_to_search)
+		#sql += "{} FROM {} ".format(fields_to_select, table_to_search)
+		sql += "* FROM {} ".format(table_to_search)
+
 		sql += 'WHERE {}'.format(sql_criteria[:-4])
 
 		##limit the records pulled if desired
@@ -254,3 +257,66 @@ class SearchTab(object):
 		
 		return sql_text
 
+
+	def on_click_begin_search(self, event):
+		ctrl(self, 'text:sql_query').SetValue(self.generate_sql_query())
+		sql = ctrl(self, 'text:sql_query').GetValue()
+
+		event.GetEventObject().SetLabel('Searching...')
+		table_to_search = ctrl(self, 'choice:which_table').GetStringSelection()
+			
+		if table_to_search == '':
+			return
+		
+		results_list = ctrl(self, 'list:search_results')
+		results_list.Freeze()
+		
+		#clear out the list
+		results_list.DeleteAllItems()
+		
+		column_names = db.get_table_column_names(table_to_search, presentable=False)
+
+		if results_list.GetColumn(0) != None:
+			results_list.DeleteAllColumns()
+		
+		#populate column names
+		for index, column_name in enumerate(column_names):
+			if '_spacer_' in column_name:
+				column_name = ' '
+			results_list.InsertColumn(index, column_name)
+
+		#query the database
+		try:
+			records = db.query(sql)
+		except:
+			records = None
+		
+		if records != None:
+			for index, record in enumerate(records):
+				results_list.InsertStringItem(sys.maxint, '#')
+				
+				for column_index, column_value in enumerate(record):
+					if isinstance(column_value, dt.datetime):
+						#only include time data if it's not zero'd out
+						if column_value.time():
+							column_value = column_value.strftime('%m/%d/%y %I:%M %p')
+						else:
+							column_value = column_value.strftime('%m/%d/%Y')
+
+					if column_value != None:
+						results_list.SetStringItem(index, column_index, str(column_value).replace('\n', ' \\ '))
+			
+		for column_index in range(len(column_names)):
+			results_list.SetColumnWidth(column_index, wx.LIST_AUTOSIZE_USEHEADER)
+			
+			#cap column width at 400
+			if results_list.GetColumnWidth(column_index) > 400:
+				results_list.SetColumnWidth(column_index, 400)
+
+		try: ctrl(self, 'label:result_count').SetLabel('{}'.format(len(records)))
+		except: ctrl(self, 'label:result_count').SetLabel('...')
+
+		results_list.Thaw()
+
+		event.GetEventObject().SetLabel('Begin Search')
+		
