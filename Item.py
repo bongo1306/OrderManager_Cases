@@ -25,20 +25,122 @@ class ItemFrame(wx.Frame):
 		
 		#bindings
 		self.Bind(wx.EVT_CLOSE, self.on_close_frame)
+		self.Bind(wx.EVT_BUTTON, self.on_click_goto_next_item, id=xrc.XRCID('button:next_item'))
+		self.Bind(wx.EVT_BUTTON, self.on_click_goto_previous_item, id=xrc.XRCID('button:previous_item'))
+		
+		
 
-		self.init_details_panel()
-		self.populate_details_panel()
-
-		self.init_changes_tab()
-		self.populate_changes_tab()
 
 		#misc
 		self.SetTitle('Item ID {}'.format(self.id))
-		self.SetSize((800, 600))
+		self.SetSize((976, 690))
 		self.Center()
+		
+		#self.init_details_panel()
+		self.init_changes_tab()
+		
+		self.populate_all()
 
 
 		self.Show()
+
+
+	def on_click_goto_previous_item(self, event):
+		self.Freeze()
+		self.reset_all()
+		
+		previous_id = db.query('''
+			SELECT TOP 1
+				id
+			FROM
+				orders.root
+			WHERE
+				sales_order=(SELECT TOP 1 sales_order FROM orders.root WHERE id={}) AND
+				CAST(item AS INT) < (SELECT TOP 1 CAST(item AS INT) FROM orders.root WHERE id={})
+			ORDER BY
+				CAST(item AS INT) DESC
+			'''.format(self.id, self.id))[0]
+
+		self.id = previous_id
+		self.populate_all()
+		self.Thaw()
+		
+	def on_click_goto_next_item(self, event):
+		self.Freeze()
+		self.reset_all()
+		
+		next_id = db.query('''
+			SELECT
+				id
+			FROM
+				orders.root
+			WHERE
+				sales_order=(SELECT TOP 1 sales_order FROM orders.root WHERE id={}) AND
+				CAST(item AS INT) > (SELECT TOP 1 CAST(item AS INT) FROM orders.root WHERE id={})
+			ORDER BY
+				CAST(item AS INT) ASC
+			'''.format(self.id, self.id))[0]
+		
+		self.id = next_id
+		self.populate_all()
+		self.Thaw()
+		
+
+	def reset_all(self):
+		self.reset_other_items_panel()
+		self.reset_details_panel()
+		self.reset_changes_tab()
+		
+	def populate_all(self):
+		self.populate_other_items_panel()
+		self.populate_details_panel()
+		self.populate_changes_tab()
+		
+		ctrl(self, 'panel:main').Layout()
+
+
+	def reset_other_items_panel(self):
+		ctrl(self, 'label:other_items').SetLabel('Item X of X')
+		ctrl(self, 'button:previous_item').Enable()
+		ctrl(self, 'button:next_item').Enable()
+
+	def populate_other_items_panel(self):
+		all_items = db.query('''
+			SELECT
+				id, CAST(item AS INT)
+			FROM
+				orders.root
+			WHERE
+				sales_order=(SELECT TOP 1 sales_order FROM orders.root WHERE id={})
+			ORDER BY
+				CAST(item AS INT) DESC
+			'''.format(self.id))
+		
+		#determine the current item given id without querying the database again :)
+		current_item = None
+		for item_data in all_items:
+			if item_data[0] == self.id:
+				current_item = item_data[1]
+				
+		try:
+			max_item = all_items[0][1]
+		except:
+			max_item = None
+
+		try:
+			min_item = all_items[-1][1]
+		except:
+			min_item = None
+
+		ctrl(self, 'label:other_items').SetLabel('Item {} of {}'.format(current_item, max_item))
+		
+		#disable previous or next buttons if there are no more items
+		if current_item <= min_item:
+			ctrl(self, 'button:previous_item').Disable()
+		
+		if current_item >= max_item:
+			ctrl(self, 'button:next_item').Disable()
+
 
 
 
@@ -59,7 +161,18 @@ class ItemFrame(wx.Frame):
 				material,
 				hierarchy,
 				model,
-				description
+				description,
+				
+				sold_to_name,
+				sold_to_number,
+				ship_to_name,
+				ship_to_number,
+				country,
+				state,
+				city,
+				zip_code,
+				address
+
 			FROM
 				orders.root
 			WHERE
@@ -80,7 +193,8 @@ class ItemFrame(wx.Frame):
 				
 			formatted_record.append(field)
 
-		filemaker_quote, sales_order, item, production_order, material, hierarchy, model, description = formatted_record
+		filemaker_quote, sales_order, item, production_order, material, hierarchy, model, description, \
+		sold_to_name, sold_to_number, ship_to_name, ship_to_number, country, state, city, zip_code, address = formatted_record
 		
 		ctrl(self, 'label:quote').SetLabel(filemaker_quote)
 		ctrl(self, 'label:sales_order').SetLabel(sales_order)
@@ -91,6 +205,11 @@ class ItemFrame(wx.Frame):
 		ctrl(self, 'label:model').SetLabel(model)
 		ctrl(self, 'label:description').SetLabel(description)
 
+		ctrl(self, 'label:sold_to').SetLabel('{} ({})'.format(sold_to_name, sold_to_number))
+		ctrl(self, 'label:ship_to').SetLabel('{} ({})'.format(sold_to_name, sold_to_number))
+		ctrl(self, 'label:address').SetLabel(address)
+		ctrl(self, 'label:city_state').SetLabel('{}, {} ({}) {}'.format(city, state, country, zip_code))
+		
 
 
 	def init_changes_tab(self):

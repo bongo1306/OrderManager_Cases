@@ -91,9 +91,12 @@ class LoginFrame(wx.Frame):
 		threading.Thread(target=check_for_updates).start()
 		
 		#gn.splash_frame.Close()
+		
+		##############
+		self.on_click_login()
 
 
-	def on_click_login(self, event):
+	def on_click_login(self, event=None):
 		#get entered user and password values from form fields
 		selected_user = ctrl(self, 'choice:name').GetStringSelection()
 		entered_password = ctrl(self, 'text:password').GetValue()
@@ -172,8 +175,10 @@ class MainFrame(wx.Frame, Search.SearchTab):
 
 		self.Show()
 		
-		Item.ItemFrame(self, id=12587666)
-		#12585385
+		Item.ItemFrame(self, id=12588283)
+		#Item.ItemFrame(self, id=12587666)
+		#Item.ItemFrame(self, id=12585385)
+
 
 	def on_close_frame(self, event):
 		print 'called on_close_frame'
