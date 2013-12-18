@@ -47,9 +47,6 @@ class ItemFrame(wx.Frame):
 
 
 	def on_click_goto_previous_item(self, event):
-		self.Freeze()
-		self.reset_all()
-		
 		previous_id = db.query('''
 			SELECT TOP 1
 				id
@@ -62,14 +59,14 @@ class ItemFrame(wx.Frame):
 				CAST(item AS INT) DESC
 			'''.format(self.id, self.id))[0]
 
+		self.Freeze()
+		self.reset_all()
+
 		self.id = previous_id
 		self.populate_all()
 		self.Thaw()
 		
 	def on_click_goto_next_item(self, event):
-		self.Freeze()
-		self.reset_all()
-		
 		next_id = db.query('''
 			SELECT
 				id
@@ -81,6 +78,9 @@ class ItemFrame(wx.Frame):
 			ORDER BY
 				CAST(item AS INT) ASC
 			'''.format(self.id, self.id))[0]
+
+		self.Freeze()
+		self.reset_all()
 		
 		self.id = next_id
 		self.populate_all()
@@ -135,6 +135,9 @@ class ItemFrame(wx.Frame):
 			WHERE
 				id={}
 			'''.format(self.id))
+			
+		if not record:
+			return
 			
 		#format all fields as strings
 		formatted_record = []
@@ -252,6 +255,9 @@ class ItemFrame(wx.Frame):
 			WHERE
 				id={}
 			'''.format(self.id))
+		
+		if not record:
+			return
 			
 		#format all fields as strings
 		formatted_record = []

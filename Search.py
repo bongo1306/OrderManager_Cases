@@ -42,7 +42,7 @@ class SearchTab(object):
 		
 		if 'orders.' in table_name:
 			if table_id != '':
-				Item.ItemFrame(self, table_id)
+				Item.ItemFrame(self, int(table_id))
 
 
 	def on_choice_table(self, event=None):
