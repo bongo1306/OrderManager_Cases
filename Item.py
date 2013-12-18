@@ -45,6 +45,7 @@ class ItemFrame(wx.Frame):
 		self.Show()
 
 
+
 	def on_click_goto_previous_item(self, event):
 		self.Freeze()
 		self.reset_all()

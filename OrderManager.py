@@ -200,6 +200,15 @@ class OrdManApp(wx.App):
 		return True
 
 
+def handle_gui_exception(exc_type, exc_value, exc_traceback):
+	err_msg = '\n'.join(traceback.format_exception(exc_type, exc_value, exc_traceback))
+	dlg = wx.MessageDialog(None, err_msg, 'An error occurred!', wx.OK | wx.ICON_ERROR)
+	dlg.ShowModal()
+	dlg.Destroy()
+
+sys.excepthook = handle_gui_exception
+
+
 if __name__ == '__main__':
 	print 'starting app'
 

@@ -11,6 +11,7 @@ import datetime as dt
 import TweakedGrid
 import General as gn
 import Database as db
+import Item
 
 
 class SearchTab(object):
@@ -23,6 +24,7 @@ class SearchTab(object):
 		self.Bind(wx.EVT_CHECKBOX, self.on_choice_table, id=xrc.XRCID('checkbox:display_alphabetically'))
 		self.Bind(wx.EVT_BUTTON, self.on_click_begin_search, id=xrc.XRCID('button:search'))
 		self.Bind(wx.EVT_BUTTON, ctrl(self, 'list:search_results').export_list, id=xrc.XRCID('button:export_results'))
+		self.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self.on_activated_result, id=xrc.XRCID('list:search_results'))
 		
 		#tables or views the user can search in
 		tables = ('orders.root', 'orders.changes', 'orders.view_systems', 'dbo.orders', 'dbo.view_orders_old')
@@ -31,6 +33,16 @@ class SearchTab(object):
 		ctrl(self, 'choice:which_table').SetStringSelection('orders.view_systems')
 		self.on_choice_table()
 		
+
+	def on_activated_result(self, event):
+		#open applicable records from search results based on table selected
+		selected_item = event.GetEventObject()
+		table_id = selected_item.GetItem(selected_item.GetFirstSelected(), 0).GetText()
+		table_name = ctrl(self, 'choice:which_table').GetStringSelection()
+		
+		if 'orders.' in table_name:
+			if table_id != '':
+				Item.ItemFrame(self, table_id)
 
 
 	def on_choice_table(self, event=None):
