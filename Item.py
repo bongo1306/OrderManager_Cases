@@ -28,8 +28,9 @@ class ItemFrame(wx.Frame):
 		self.Bind(wx.EVT_BUTTON, self.on_click_goto_next_item, id=xrc.XRCID('button:next_item'))
 		self.Bind(wx.EVT_BUTTON, self.on_click_goto_previous_item, id=xrc.XRCID('button:previous_item'))
 		
-		
-		#ctrl(self, 'text:requested_mmg_release').Bind(wx.EVT_KILL_FOCUS, self.on_focus_lost) 
+		#specify what tables the various controls should try to update
+		#ctrl(self, 'text:requested_mmg_release').table = 'orders.target_dates'
+		#ctrl(self, 'text:requested_mmg_release').table = 'orders.target_dates'
 
 		#misc
 		self.SetTitle('Item ID {}'.format(self.id))
@@ -106,11 +107,23 @@ class ItemFrame(wx.Frame):
 
 
 	def reset_target_dates_tab(self):
-		ctrl(self, 'text:requested_de_release').SetValue('')
-		ctrl(self, 'text:planned_de_release').SetValue('')
-		ctrl(self, 'text:suggested_de_start').SetValue('')
-		ctrl(self, 'text:actual_de_release').SetValue('')
-		ctrl(self, 'checkbox:planned_de_release_locked').SetValue(False)
+		ctrl(self, 'text:orders.target_dates.requested_ae_release').SetValue('')
+		ctrl(self, 'text:orders.target_dates.planned_ae_release').SetValue('')
+		ctrl(self, 'text:orders.target_dates.suggested_ae_start').SetValue('')
+		ctrl(self, 'text:orders.target_dates.actual_ae_release').SetValue('')
+		ctrl(self, 'checkbox:orders.target_dates.planned_ae_release_locked').SetValue(False)
+
+		ctrl(self, 'text:orders.target_dates.requested_de_release').SetValue('')
+		ctrl(self, 'text:orders.target_dates.planned_de_release').SetValue('')
+		ctrl(self, 'text:orders.target_dates.suggested_de_start').SetValue('')
+		ctrl(self, 'text:orders.target_dates.actual_de_release').SetValue('')
+		ctrl(self, 'checkbox:orders.target_dates.planned_de_release_locked').SetValue(False)
+
+		ctrl(self, 'text:orders.target_dates.requested_mmg_release').SetValue('')
+		ctrl(self, 'text:orders.target_dates.planned_mmg_release').SetValue('')
+		ctrl(self, 'text:orders.target_dates.suggested_mmg_start').SetValue('')
+		ctrl(self, 'text:orders.target_dates.actual_mmg_release').SetValue('')
+		ctrl(self, 'checkbox:orders.target_dates.planned_mmg_release_locked').SetValue(False)
 
 
 	def populate_target_dates_tab(self):
@@ -160,23 +173,23 @@ class ItemFrame(wx.Frame):
 		requested_de_release, planned_de_release, planned_de_release_locked, suggested_de_start, actual_de_release, \
 		requested_mmg_release, planned_mmg_release, planned_mmg_release_locked, suggested_mmg_start, actual_mmg_release = formatted_record
 
-		ctrl(self, 'text:requested_ae_release').SetValue(requested_ae_release)
-		ctrl(self, 'text:planned_ae_release').SetValue(planned_ae_release)
-		ctrl(self, 'text:suggested_ae_start').SetValue(suggested_ae_start)
-		ctrl(self, 'text:actual_ae_release').SetValue(actual_ae_release)
-		ctrl(self, 'checkbox:planned_ae_release_locked').SetValue(planned_ae_release_locked)
+		ctrl(self, 'text:orders.target_dates.requested_ae_release').SetValue(requested_ae_release)
+		ctrl(self, 'text:orders.target_dates.planned_ae_release').SetValue(planned_ae_release)
+		ctrl(self, 'text:orders.target_dates.suggested_ae_start').SetValue(suggested_ae_start)
+		ctrl(self, 'text:orders.target_dates.actual_ae_release').SetValue(actual_ae_release)
+		ctrl(self, 'checkbox:orders.target_dates.planned_ae_release_locked').SetValue(planned_ae_release_locked)
 
-		ctrl(self, 'text:requested_de_release').SetValue(requested_de_release)
-		ctrl(self, 'text:planned_de_release').SetValue(planned_de_release)
-		ctrl(self, 'text:suggested_de_start').SetValue(suggested_de_start)
-		ctrl(self, 'text:actual_de_release').SetValue(actual_de_release)
-		ctrl(self, 'checkbox:planned_de_release_locked').SetValue(planned_de_release_locked)
+		ctrl(self, 'text:orders.target_dates.requested_de_release').SetValue(requested_de_release)
+		ctrl(self, 'text:orders.target_dates.planned_de_release').SetValue(planned_de_release)
+		ctrl(self, 'text:orders.target_dates.suggested_de_start').SetValue(suggested_de_start)
+		ctrl(self, 'text:orders.target_dates.actual_de_release').SetValue(actual_de_release)
+		ctrl(self, 'checkbox:orders.target_dates.planned_de_release_locked').SetValue(planned_de_release_locked)
 
-		ctrl(self, 'text:requested_mmg_release').SetValue(requested_mmg_release)
-		ctrl(self, 'text:planned_mmg_release').SetValue(planned_mmg_release)
-		ctrl(self, 'text:suggested_mmg_start').SetValue(suggested_mmg_start)
-		ctrl(self, 'text:actual_mmg_release').SetValue(actual_mmg_release)
-		ctrl(self, 'checkbox:planned_mmg_release_locked').SetValue(planned_mmg_release_locked)
+		ctrl(self, 'text:orders.target_dates.requested_mmg_release').SetValue(requested_mmg_release)
+		ctrl(self, 'text:orders.target_dates.planned_mmg_release').SetValue(planned_mmg_release)
+		ctrl(self, 'text:orders.target_dates.suggested_mmg_start').SetValue(suggested_mmg_start)
+		ctrl(self, 'text:orders.target_dates.actual_mmg_release').SetValue(actual_mmg_release)
+		ctrl(self, 'checkbox:orders.target_dates.planned_mmg_release_locked').SetValue(planned_mmg_release_locked)
 
 
 	def reset_other_items_panel(self):
@@ -213,6 +226,7 @@ class ItemFrame(wx.Frame):
 			min_item = None
 
 		ctrl(self, 'label:other_items').SetLabel('Item {} of {}'.format(current_item, max_item))
+		self.SetTitle('Item ID {}'.format(self.id))
 		
 		#disable previous or next buttons if there are no more items
 		if current_item <= min_item:

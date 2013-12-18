@@ -48,130 +48,61 @@ def edit(sql, connection=None):
 	connection.commit()
 
 
-###def update(update_table, field_value_pairs, update_where, record_changes_table):
-## this was going to be a generic function like the others but that went out the window...
-def update_fsr(field_value_pairs, fsr_id, who_changed, when_changed):
+
+def update_order(table, table_id, field, new_value):
 	connection = eng04_connection
-	
+
 	#first, get the previous values so we can see which ones changed...
-	sql = "SELECT "
-	sql += ", ".join(zip(*field_value_pairs)[0])
-	sql += " FROM tss.fsrs WHERE id={}".format(fsr_id)
-	prev_values = query(sql)[0]
+	sql = "SELECT {} FROM {} WHERE id={}".format(field, table, table_id)
+	prev_value = query(sql)[0]
 
-	for index, field_value_pair in enumerate(field_value_pairs):
-		field = field_value_pair[0]
-		new_value = field_value_pair[1]
-		prev_value = prev_values[index]
-		
-		#so we don't record changes from NULL to empty string
-		#if prev_value == None:
-		#	prev_value = ''
-		if (new_value == '' and prev_value == None) or (new_value == None and prev_value == ''):
-			continue
-		
-		#record any changes in fields
-		if new_value != prev_value:
-			insert('tss.field_changes', (
-				("table_name", 'tss.fsrs'), 
-				("table_id", fsr_id),
-				("field", field),
-				("previous_value", prev_value),
-				("new_value", new_value),
-				("who_changed", who_changed),
-				("when_changed", when_changed),)
-			)
-
-	#now update the record
-	sql = "UPDATE tss.fsrs SET "
+	#convert new date in string format to datetime format for comparison
+	if isinstance(prev_value, dt.datetime):
+		try:
+			new_value = dt.datetime.strptime(new_value, '%m/%d/%Y')
+		except:
+			pass
 	
-	for field_value_pair in field_value_pairs:
-		field = field_value_pair[0]
-		value = field_value_pair[1]
+	#so we don't record changes from NULL to empty string
+	if prev_value == '':
+		previous_value = None
+	
+	if new_value == '':
+		new_value = None
 
-		if isinstance(value, bool):
-			if value:
+	if new_value != prev_value:
+		#update the record
+		sql = "UPDATE {} SET ".format(table)
+		
+		if isinstance(new_value, bool):
+			if new_value:
 				sql += "{}=1, ".format(field)
 			else:
 				sql += "{}=0, ".format(field)
-		elif isinstance(value, (int, long, float, complex)) or value == None:
-			if value == None:
-				value = 'NULL'
-			sql += "{}={}, ".format(field, value)
+		elif isinstance(new_value, (int, long, float, complex)) or new_value == None:
+			if new_value == None:
+				new_value = 'NULL'
+			sql += "{}={}, ".format(field, new_value)
 		else:
-			sql += "{}='{}', ".format(field, gn.clean(str(value)))
+			sql += "{}='{}', ".format(field, gn.clean(str(new_value)))
 
-	sql = sql[:-2]
-	sql += " WHERE id={}".format(fsr_id)
-	
-	edit(sql)
+		sql = sql[:-2]
+		sql += " WHERE id={}".format(table_id)
+		edit(sql)
 
 
-def update_rsr(field_value_pairs, rsr_id, who_changed, when_changed):
-	connection = eng04_connection
-	
-	#first, get the previous values so we can see which ones changed...
-	sql = "SELECT "
-	sql += ", ".join(zip(*field_value_pairs)[0])
-	sql += " FROM tss.rsrs WHERE id={}".format(rsr_id)
-	prev_values = query(sql)[0]
-
-	for index, field_value_pair in enumerate(field_value_pairs):
-		field = field_value_pair[0]
-		new_value = field_value_pair[1]
-		prev_value = prev_values[index]
-		
-		#convert new date in string format to datetime format for comparison
-		if isinstance(prev_value, dt.datetime):
-			try:
-				new_value = dt.datetime.strptime(new_value, '%m/%d/%Y')
-			except:
-				pass
-		
-		#so we don't record changes from NULL to empty string
-		#if prev_value == None:
-		#	prev_value = ''
-		if (new_value == '' and prev_value == None) or (new_value == None and prev_value == ''):
-			continue
-		
 		#record any changes in fields
-		if new_value != prev_value:
-			insert('tss.field_changes', (
-				("table_name", 'tss.rsrs'), 
-				("table_id", rsr_id),
-				("field", field),
-				("previous_value", prev_value),
-				("new_value", new_value),
-				("who_changed", who_changed),
-				("when_changed", when_changed),)
-			)
+		insert('orders.changes', (
+			("table_name", table), 
+			("table_id", table_id),
+			("field", field),
+			("previous_value", prev_value),
+			("new_value", new_value),
+			("who_changed", gn.user),
+			("when_changed", 'CURRENT_TIMESTAMP'),)
+		)
 
-	#now update the record
-	sql = "UPDATE tss.rsrs SET "
-	
-	
-	for field_value_pair in field_value_pairs:
-		field = field_value_pair[0]
-		value = field_value_pair[1]
 
-		if isinstance(value, bool):
-			if value:
-				sql += "{}=1, ".format(field)
-			else:
-				sql += "{}=0, ".format(field)
-		elif isinstance(value, (int, long, float, complex)) or value == None:
-			if value == None:
-				value = 'NULL'
-			sql += "{}={}, ".format(field, value)
-		else:
-			sql += "{}='{}', ".format(field, gn.clean(str(value)))
-
-	sql = sql[:-2]
-	sql += " WHERE id={}".format(rsr_id)
-	
-	edit(sql)
-	
-	
 
 def insert(table, field_value_pairs, connection=None):
 	#make the eng04 db default if none specified
@@ -200,7 +131,7 @@ def insert(table, field_value_pairs, connection=None):
 					sql += "1, "
 				else:
 					sql += "0, "
-			elif isinstance(value, (int, long, float, complex)) or value == None:
+			elif isinstance(value, (int, long, float, complex)) or value == None or value == 'CURRENT_TIMESTAMP':
 				if value == None:
 					value = 'NULL'
 				sql += "{}, ".format(value)
