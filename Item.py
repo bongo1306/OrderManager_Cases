@@ -29,7 +29,7 @@ class ItemFrame(wx.Frame):
 		self.Bind(wx.EVT_BUTTON, self.on_click_goto_previous_item, id=xrc.XRCID('button:previous_item'))
 		
 		
-
+		#ctrl(self, 'text:requested_mmg_release').Bind(wx.EVT_KILL_FOCUS, self.on_focus_lost) 
 
 		#misc
 		self.SetTitle('Item ID {}'.format(self.id))
@@ -44,7 +44,10 @@ class ItemFrame(wx.Frame):
 
 		self.Show()
 
-
+	
+	def on_focus_lost(self, event):
+		print 'lost focus!', event
+	
 
 	def on_click_goto_previous_item(self, event):
 		previous_id = db.query('''

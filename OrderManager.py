@@ -19,6 +19,7 @@ import ConfigParser #for reading local config data (*.cfg)
 import datetime as dt
 
 import BetterListCtrl
+import TextCtrlDbLinker
 import General as gn
 import Database as db
 import Search
