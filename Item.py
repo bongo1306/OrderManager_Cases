@@ -112,11 +112,23 @@ class ItemFrame(wx.Frame):
 	def populate_target_dates_tab(self):
 		record = db.query('''
 			SELECT
+				requested_ae_release,
+				planned_ae_release,
+				planned_ae_release_locked,
+				suggested_ae_start,
+				actual_ae_release,
+				
 				requested_de_release,
 				planned_de_release,
 				planned_de_release_locked,
 				suggested_de_start,
-				actual_de_release
+				actual_de_release,
+				
+				requested_mmg_release,
+				planned_mmg_release,
+				planned_mmg_release_locked,
+				suggested_mmg_start,
+				actual_mmg_release
 			FROM
 				orders.target_dates
 			WHERE
@@ -137,14 +149,28 @@ class ItemFrame(wx.Frame):
 				
 			formatted_record.append(field)
 
-		requested_de_release, planned_de_release, planned_de_release_locked, suggested_de_start, actual_de_release = formatted_record
-		
+		requested_ae_release, planned_ae_release, planned_ae_release_locked, suggested_ae_start, actual_ae_release, \
+		requested_de_release, planned_de_release, planned_de_release_locked, suggested_de_start, actual_de_release, \
+		requested_mmg_release, planned_mmg_release, planned_mmg_release_locked, suggested_mmg_start, actual_mmg_release = formatted_record
+
+		ctrl(self, 'text:requested_ae_release').SetValue(requested_ae_release)
+		ctrl(self, 'text:planned_ae_release').SetValue(planned_ae_release)
+		ctrl(self, 'text:suggested_ae_start').SetValue(suggested_ae_start)
+		ctrl(self, 'text:actual_ae_release').SetValue(actual_ae_release)
+		ctrl(self, 'checkbox:planned_ae_release_locked').SetValue(planned_ae_release_locked)
+
 		ctrl(self, 'text:requested_de_release').SetValue(requested_de_release)
 		ctrl(self, 'text:planned_de_release').SetValue(planned_de_release)
 		ctrl(self, 'text:suggested_de_start').SetValue(suggested_de_start)
 		ctrl(self, 'text:actual_de_release').SetValue(actual_de_release)
 		ctrl(self, 'checkbox:planned_de_release_locked').SetValue(planned_de_release_locked)
-		
+
+		ctrl(self, 'text:requested_mmg_release').SetValue(requested_mmg_release)
+		ctrl(self, 'text:planned_mmg_release').SetValue(planned_mmg_release)
+		ctrl(self, 'text:suggested_mmg_start').SetValue(suggested_mmg_start)
+		ctrl(self, 'text:actual_mmg_release').SetValue(actual_mmg_release)
+		ctrl(self, 'checkbox:planned_mmg_release_locked').SetValue(planned_mmg_release_locked)
+
 
 	def reset_other_items_panel(self):
 		ctrl(self, 'label:other_items').SetLabel('Item X of X')
