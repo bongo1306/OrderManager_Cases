@@ -27,7 +27,7 @@ class SearchTab(object):
 		self.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self.on_activated_result, id=xrc.XRCID('list:search_results'))
 		
 		#tables or views the user can search in
-		tables = ('orders.root', 'orders.changes', 'orders.view_systems', 'dbo.orders', 'dbo.view_orders_old')
+		tables = ('orders.root', 'orders.changes', 'orders.labor_hours', 'orders.view_systems', 'dbo.orders', 'dbo.view_orders_old')
 		
 		ctrl(self, 'choice:which_table').AppendItems(tables)
 		ctrl(self, 'choice:which_table').SetStringSelection('orders.view_systems')

@@ -27,3 +27,10 @@ class TextCtrlDbLinker(wx.TextCtrl):
 		new_value = self.GetValue()
 
 		db.update_order(table, table_id, field, new_value)
+		
+		parent_frame = wx.GetTopLevelParent(self)
+		parent_frame.Freeze()
+		parent_frame.reset_all()
+		parent_frame.populate_all()
+		parent_frame.Thaw()
+

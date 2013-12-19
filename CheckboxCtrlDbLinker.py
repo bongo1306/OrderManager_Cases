@@ -32,3 +32,9 @@ class CheckboxCtrlDbLinker(wx.CheckBox):
 			new_value = 0
 		
 		db.update_order(table, table_id, field, new_value)
+
+		parent_frame = wx.GetTopLevelParent(self)
+		parent_frame.Freeze()
+		parent_frame.reset_all()
+		parent_frame.populate_all()
+		parent_frame.Thaw()

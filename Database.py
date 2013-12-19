@@ -69,6 +69,16 @@ def update_order(table, table_id, field, new_value):
 	
 	if new_value == '':
 		new_value = None
+		
+	#don't record if the values are the same number in slightly different format..
+	try:
+		prev_value_number = float(prev_value)
+		new_value_number = float(new_value)
+		
+		if prev_value_number == new_value_number:
+			return
+	except:
+		pass
 
 	if new_value != prev_value:
 		#update the record

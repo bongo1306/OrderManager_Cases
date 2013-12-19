@@ -100,12 +100,14 @@ class ItemFrame(wx.Frame):
 		self.reset_other_items_panel()
 		self.reset_details_panel()
 		self.reset_target_dates_tab()
+		self.reset_labor_hours_tab()
 		self.reset_changes_tab()
 		
 	def populate_all(self):
 		self.populate_other_items_panel()
 		self.populate_details_panel()
 		self.populate_target_dates_tab()
+		self.populate_labor_hours_tab()
 		self.populate_changes_tab()
 
 		ctrl(self, 'panel:main').Layout()
@@ -195,6 +197,103 @@ class ItemFrame(wx.Frame):
 		ctrl(self, 'text:orders.target_dates.suggested_mmg_start').SetValue(suggested_mmg_start)
 		ctrl(self, 'text:orders.target_dates.actual_mmg_release').SetValue(actual_mmg_release)
 		ctrl(self, 'checkbox:orders.target_dates.planned_mmg_release_locked').SetValue(planned_mmg_release_locked)
+
+
+
+	def reset_labor_hours_tab(self):
+		ctrl(self, 'text:orders.labor_hours.applications_engineering').SetValue('')
+		ctrl(self, 'text:orders.labor_hours.mechanical_engineering').SetValue('')
+		ctrl(self, 'text:orders.labor_hours.electrical_engineering').SetValue('')
+		ctrl(self, 'text:orders.labor_hours.structural_engineering').SetValue('')
+
+		ctrl(self, 'text:orders.labor_hours.welding').SetValue('')
+		ctrl(self, 'text:orders.labor_hours.painting').SetValue('')
+		ctrl(self, 'text:orders.labor_hours.base_assembly').SetValue('')
+		ctrl(self, 'text:orders.labor_hours.tube_fab_header').SetValue('')
+		ctrl(self, 'text:orders.labor_hours.tube_fab').SetValue('')
+		ctrl(self, 'text:orders.labor_hours.brazing').SetValue('')
+		ctrl(self, 'text:orders.labor_hours.box_wire').SetValue('')
+		ctrl(self, 'text:orders.labor_hours.hookup').SetValue('')
+		ctrl(self, 'text:orders.labor_hours.testing').SetValue('')
+		ctrl(self, 'text:orders.labor_hours.finishing').SetValue('')
+		ctrl(self, 'text:orders.labor_hours.ship_loose').SetValue('')
+		ctrl(self, 'text:orders.labor_hours.assembly').SetValue('')
+		ctrl(self, 'text:orders.labor_hours.sheet_metal').SetValue('')
+
+
+
+	def populate_labor_hours_tab(self):
+		record = db.query('''
+			SELECT
+				applications_engineering,
+				mechanical_engineering,
+				electrical_engineering,
+				structural_engineering,
+
+				welding,
+				painting,
+				base_assembly,
+				tube_fab_header,
+				tube_fab,
+				brazing,
+				box_wire,
+				hookup,
+				testing,
+				finishing,
+				ship_loose,
+				assembly,
+				sheet_metal,
+				
+				(COALESCE(welding, 0) + COALESCE(painting, 0) + COALESCE(base_assembly, 0) +
+					COALESCE(tube_fab_header, 0) + COALESCE(tube_fab, 0) + COALESCE(brazing, 0) +
+					COALESCE(box_wire, 0) + COALESCE(hookup, 0) + COALESCE(testing, 0) +
+					COALESCE(finishing, 0) + COALESCE(ship_loose, 0) + COALESCE(assembly, 0) +
+					COALESCE(sheet_metal, 0)) AS hours_standard
+			FROM
+				orders.labor_hours
+			WHERE
+				id={}
+			'''.format(self.id))
+			
+		if not record:
+			return
+			
+		#format all fields as strings
+		formatted_record = []
+		for field in record[0]:
+			if field == None:
+				field = ''
+				
+			else:
+				field = '{}'.format(field)
+				
+			formatted_record.append(field)
+
+		applications_engineering, mechanical_engineering, electrical_engineering, structural_engineering, \
+		welding, painting, base_assembly, tube_fab_header, tube_fab, brazing, box_wire, hookup, testing, \
+		finishing, ship_loose, assembly, sheet_metal, hours_standard = formatted_record
+
+		ctrl(self, 'text:orders.labor_hours.applications_engineering').SetValue(applications_engineering)
+		ctrl(self, 'text:orders.labor_hours.mechanical_engineering').SetValue(mechanical_engineering)
+		ctrl(self, 'text:orders.labor_hours.electrical_engineering').SetValue(electrical_engineering)
+		ctrl(self, 'text:orders.labor_hours.structural_engineering').SetValue(structural_engineering)
+
+		ctrl(self, 'text:orders.labor_hours.welding').SetValue(welding)
+		ctrl(self, 'text:orders.labor_hours.painting').SetValue(painting)
+		ctrl(self, 'text:orders.labor_hours.base_assembly').SetValue(base_assembly)
+		ctrl(self, 'text:orders.labor_hours.tube_fab_header').SetValue(tube_fab_header)
+		ctrl(self, 'text:orders.labor_hours.tube_fab').SetValue(tube_fab)
+		ctrl(self, 'text:orders.labor_hours.brazing').SetValue(brazing)
+		ctrl(self, 'text:orders.labor_hours.box_wire').SetValue(box_wire)
+		ctrl(self, 'text:orders.labor_hours.hookup').SetValue(hookup)
+		ctrl(self, 'text:orders.labor_hours.testing').SetValue(testing)
+		ctrl(self, 'text:orders.labor_hours.finishing').SetValue(finishing)
+		ctrl(self, 'text:orders.labor_hours.ship_loose').SetValue(ship_loose)
+		ctrl(self, 'text:orders.labor_hours.assembly').SetValue(assembly)
+		ctrl(self, 'text:orders.labor_hours.sheet_metal').SetValue(sheet_metal)
+		
+		ctrl(self, 'label:standard_hours').SetLabel('{}'.format(hours_standard))
+
 
 
 	def reset_other_items_panel(self):
@@ -325,6 +424,7 @@ class ItemFrame(wx.Frame):
 
 	def populate_changes_tab(self):
 		list_ctrl = ctrl(self, 'list:changes')
+		list_ctrl.Freeze()
 		
 		records = db.query('''
 			SELECT
@@ -389,6 +489,8 @@ class ItemFrame(wx.Frame):
 		
 		#hide id column
 		list_ctrl.SetColumnWidth(0, 0)
+		
+		list_ctrl.Thaw()
 
 
 	def on_close_frame(self, event):
