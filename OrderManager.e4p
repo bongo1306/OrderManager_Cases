@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE Project SYSTEM "Project-4.6.dtd">
 <!-- eric4 project file for project OrderManager -->
-<!-- Saved: 2013-12-18, 16:51:24 -->
+<!-- Saved: 2013-12-19, 11:18:57 -->
 <!-- Copyright (C) 2013 Travis Stuart, TMStuart22@gmail.com -->
 <Project version="4.6">
   <Language></Language>
@@ -21,6 +21,7 @@
     <Source>Item.py</Source>
     <Source>BetterListCtrl.py</Source>
     <Source>TextCtrlDbLinker.py</Source>
+    <Source>CheckboxCtrlDbLinker.py</Source>
   </Sources>
   <Forms>
   </Forms>

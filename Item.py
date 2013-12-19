@@ -28,9 +28,10 @@ class ItemFrame(wx.Frame):
 		self.Bind(wx.EVT_BUTTON, self.on_click_goto_next_item, id=xrc.XRCID('button:next_item'))
 		self.Bind(wx.EVT_BUTTON, self.on_click_goto_previous_item, id=xrc.XRCID('button:previous_item'))
 		
-		#specify what tables the various controls should try to update
-		#ctrl(self, 'text:requested_mmg_release').table = 'orders.target_dates'
-		#ctrl(self, 'text:requested_mmg_release').table = 'orders.target_dates'
+		#for convenience, populate today's date when user focuses on a release field
+		ctrl(self, 'text:orders.target_dates.actual_ae_release').Bind(wx.EVT_SET_FOCUS, self.on_focus_insert_date)
+		ctrl(self, 'text:orders.target_dates.actual_de_release').Bind(wx.EVT_SET_FOCUS, self.on_focus_insert_date)
+		ctrl(self, 'text:orders.target_dates.actual_mmg_release').Bind(wx.EVT_SET_FOCUS, self.on_focus_insert_date)
 
 		#misc
 		self.SetTitle('Item ID {}'.format(self.id))
@@ -46,8 +47,12 @@ class ItemFrame(wx.Frame):
 		self.Show()
 
 	
-	def on_focus_lost(self, event):
-		print 'lost focus!', event
+	def on_focus_insert_date(self, event):
+		#for convenience, populate today's date when user focuses on a release field
+		text_ctrl = event.GetEventObject()
+		
+		if text_ctrl.GetValue() == '':
+			text_ctrl.SetValue(dt.date.today().strftime('%m/%d/%Y'))
 	
 
 	def on_click_goto_previous_item(self, event):
