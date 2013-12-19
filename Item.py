@@ -342,6 +342,29 @@ class ItemFrame(wx.Frame):
 		for index, record in enumerate(records):
 			id, table_name, field, previous_value, new_value, who_changed, when_changed = record
 			
+			#convert values to formatted datetimes if possible
+			try:
+				if len(previous_value) == 19 and previous_value.count(':') == 2 and previous_value.count('-') == 2:
+					if '00:00:00' in previous_value:
+						previous_value = dt.datetime.strptime(previous_value, "%Y-%m-%d %H:%M:%S").strftime('%m/%d/%Y')
+					else:
+						previous_value = dt.datetime.strptime(previous_value, "%Y-%m-%d %H:%M:%S").strftime('%m/%d/%y %I:%M %p')
+
+				if len(new_value) == 19 and new_value.count(':') == 2 and new_value.count('-') == 2:
+					if '00:00:00' in new_value:
+						new_value = dt.datetime.strptime(new_value, "%Y-%m-%d %H:%M:%S").strftime('%m/%d/%Y')
+					else:
+						new_value = dt.datetime.strptime(new_value, "%Y-%m-%d %H:%M:%S").strftime('%m/%d/%y %I:%M %p')
+			except:
+				pass
+				
+			#blank out null or none values
+			if previous_value == None or previous_value == 'NULL':
+				previous_value = ''
+
+			if new_value == None or new_value == 'NULL':
+				new_value = ''
+
 			list_ctrl.InsertStringItem(sys.maxint, '#')
 			list_ctrl.SetStringItem(index, 0, '{}'.format(id))
 			list_ctrl.SetStringItem(index, 1, '{}'.format(table_name))
