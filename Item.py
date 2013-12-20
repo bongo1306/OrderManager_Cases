@@ -369,7 +369,12 @@ class ItemFrame(wx.Frame):
 				state,
 				city,
 				zip_code,
-				address
+				address,
+				
+				bpcs_sales_order,
+				bpcs_line_up,
+				bpcs_item,
+				bpcs_family
 
 			FROM
 				orders.root
@@ -395,7 +400,8 @@ class ItemFrame(wx.Frame):
 			formatted_record.append(field)
 
 		filemaker_quote, sales_order, item, production_order, material, hierarchy, model, description, \
-		sold_to_name, sold_to_number, ship_to_name, ship_to_number, country, state, city, zip_code, address = formatted_record
+		sold_to_name, sold_to_number, ship_to_name, ship_to_number, country, state, city, zip_code, address, \
+		bpcs_sales_order, bpcs_line_up, bpcs_item, bpcs_family = formatted_record
 		
 		ctrl(self, 'label:quote').SetLabel(filemaker_quote)
 		ctrl(self, 'label:sales_order').SetLabel(sales_order)
@@ -411,6 +417,14 @@ class ItemFrame(wx.Frame):
 		ctrl(self, 'label:address').SetLabel(address)
 		ctrl(self, 'label:city_state').SetLabel('{}, {} ({}) {}'.format(city, state, country, zip_code))
 		
+		#format the BPCS Sales Order and Line Up together
+		bpcs_sales_order_and_line_up = '{}-{}'.format(bpcs_sales_order, bpcs_line_up)
+		if bpcs_sales_order_and_line_up == '...-...':
+			bpcs_sales_order_and_line_up = '...'
+
+		ctrl(self, 'label:bpcs_item').SetLabel(bpcs_item)
+		ctrl(self, 'label:bpcs_sales_order').SetLabel(bpcs_sales_order_and_line_up)
+		ctrl(self, 'label:bpcs_family').SetLabel(bpcs_family)
 
 
 	def init_changes_tab(self):
