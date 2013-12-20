@@ -440,7 +440,7 @@ class ItemFrame(wx.Frame):
 			WHERE
 				table_id={}
 			ORDER BY
-				when_changed DESC
+				id DESC
 			'''.format(self.id))
 		
 		#insert records into list
