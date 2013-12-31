@@ -413,7 +413,7 @@ class ItemFrame(wx.Frame):
 		ctrl(self, 'label:description').SetLabel(description)
 
 		ctrl(self, 'label:sold_to').SetLabel('{} ({})'.format(sold_to_name, sold_to_number))
-		ctrl(self, 'label:ship_to').SetLabel('{} ({})'.format(sold_to_name, sold_to_number))
+		ctrl(self, 'label:ship_to').SetLabel('{} ({})'.format(ship_to_name, ship_to_number))
 		ctrl(self, 'label:address').SetLabel(address)
 		ctrl(self, 'label:city_state').SetLabel('{}, {} ({}) {}'.format(city, state, country, zip_code))
 		
