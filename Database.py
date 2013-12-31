@@ -54,7 +54,17 @@ def update_order(table, table_id, field, new_value):
 
 	#first, get the previous values so we can see which ones changed...
 	sql = "SELECT {} FROM {} WHERE id={}".format(field, table, table_id)
-	prev_value = query(sql)[0]
+	prev_value = query(sql)
+	
+	#create a new blank record in the particular table if none exists yet
+	if not prev_value:
+		sql = "INSERT INTO {} (id) VALUES ({})".format(table, table_id)
+		edit(sql)
+		prev_value = None
+
+	#otherwise pick out the previous value from the list
+	else:
+		prev_value = prev_value[0]
 
 	#convert new date in string format to datetime format for comparison
 	if isinstance(prev_value, dt.datetime):
