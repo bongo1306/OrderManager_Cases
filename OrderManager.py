@@ -177,7 +177,8 @@ class MainFrame(wx.Frame, Search.SearchTab):
 
 		self.Show()
 		
-		Item.ItemFrame(self, id=12585270)
+		Item.ItemFrame(self, id=12588966)
+		#Item.ItemFrame(self, id=12585270)
 		#Item.ItemFrame(self, id=12585556)
 		#Item.ItemFrame(self, id=12588283)
 		#Item.ItemFrame(self, id=12587666)

@@ -2,6 +2,8 @@
 # -*- coding: utf8 -*-
 
 import sys
+import os
+import subprocess
 
 import wx
 from wx import xrc
@@ -20,11 +22,14 @@ class ItemFrame(wx.Frame):
 		res.LoadOnFrame(pre, parent, "frame:item") 
 		self.PostCreate(pre)
 		self.SetIcon(wx.Icon(gn.resource_path('OrderManager.ico'), wx.BITMAP_TYPE_ICO))
-		
+
 		self.id = id
-		
+
 		#bindings
 		self.Bind(wx.EVT_CLOSE, self.on_close_frame)
+
+		self.Bind(wx.EVT_BUTTON, self.on_click_open_order_folder, id=xrc.XRCID('button:order_folder'))
+
 		self.Bind(wx.EVT_BUTTON, self.on_click_goto_next_item, id=xrc.XRCID('button:next_item'))
 		self.Bind(wx.EVT_BUTTON, self.on_click_goto_previous_item, id=xrc.XRCID('button:previous_item'))
 		
@@ -54,6 +59,79 @@ class ItemFrame(wx.Frame):
 		if text_ctrl.GetValue() == '':
 			text_ctrl.SetValue(dt.date.today().strftime('%m/%d/%Y'))
 	
+	
+	def on_click_open_order_folder(self, event):
+		event.GetEventObject().Disable()
+		
+		sales_orders = db.query('''
+			SELECT TOP 1
+				sales_order,
+				bpcs_sales_order
+			FROM
+				orders.root
+			WHERE
+				id={}
+			'''.format(self.id))
+		
+		if sales_orders:
+			sap_so, bpcs_so = sales_orders[0]
+		else:
+			sap_so, bpcs_so = (None, None)
+		
+		if sap_so:
+			sap_order_folder_path = self.find_sap_order_folder_path(sap_so)
+			
+			if sap_order_folder_path:
+				subprocess.Popen('explorer "{}"'.format(sap_order_folder_path))
+
+		if bpcs_so:
+			bpcs_order_folder_path = self.find_bpcs_order_folder_path(bpcs_so)
+			
+			if bpcs_order_folder_path:
+				subprocess.Popen('explorer "{}"'.format(bpcs_order_folder_path))
+
+		event.GetEventObject().Enable()
+
+
+	def find_bpcs_order_folder_path(self, bpcs_so):
+		starting_path = r"\\kw_engineering\eng_res\Design_Eng\Orders\Orders_20{}".format(bpcs_so[1:3])
+
+		#plow through three directories deep looking for a folder named that bpcs sales order
+		for x in os.listdir(starting_path):
+			starting_path_x = os.path.join(starting_path, x)
+			
+			if os.path.isdir(starting_path_x):
+				for y in os.listdir(starting_path_x):
+					starting_path_x_y = os.path.join(starting_path_x, y)
+
+					if os.path.isdir(starting_path_x_y):
+						for z in os.listdir(starting_path_x_y):
+							starting_path_x_y_z = os.path.join(starting_path_x_y, z)
+							
+							if os.path.isdir(starting_path_x_y_z):
+								if z == bpcs_so:
+									return starting_path_x_y_z
+		
+		return None
+
+
+	def find_sap_order_folder_path(self, sap_so):
+		starting_path = r"\\kw_engineering\eng_res\Design_Eng\Orders\SAP_ORDERS_COLS"
+
+		#plow through two directories deep looking for a folder named that sap sales order
+		for x in os.listdir(starting_path):
+			starting_path_x = os.path.join(starting_path, x)
+			
+			if os.path.isdir(starting_path_x):
+				for y in os.listdir(starting_path_x):
+					starting_path_x_y = os.path.join(starting_path_x, y)
+					
+					if os.path.isdir(starting_path_x_y):
+						if y == sap_so:
+							return starting_path_x_y
+		
+		return None
+
 
 	def on_click_goto_previous_item(self, event):
 		previous_id = db.query('''
