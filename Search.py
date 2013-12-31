@@ -37,10 +37,18 @@ class SearchTab(object):
 	def on_activated_result(self, event):
 		#open applicable records from search results based on table selected
 		selected_item = event.GetEventObject()
-		table_id = selected_item.GetItem(selected_item.GetFirstSelected(), 0).GetText()
 		table_name = ctrl(self, 'choice:which_table').GetStringSelection()
 		
-		if 'orders.' in table_name:
+		if table_name in ('orders.root', 'orders.labor_hours', 'orders.target_dates', 'orders.responsibilities', 
+						'orders.financials', 'orders.misc', 'orders.view_systems', 'orders.view_case'):
+			table_id = selected_item.GetItem(selected_item.GetFirstSelected(), 0).GetText()
+			
+			if table_id != '':
+				Item.ItemFrame(self, int(table_id))
+
+		if table_name == 'orders.changes':
+			table_id = selected_item.GetItem(selected_item.GetFirstSelected(), 2).GetText()
+			
 			if table_id != '':
 				Item.ItemFrame(self, int(table_id))
 
