@@ -168,21 +168,166 @@ class MainFrame(wx.Frame, Search.SearchTab):
 		self.Bind(wx.EVT_CLOSE, self.on_close_frame)
 		#self.Bind(wx.EVT_BUTTON, self.on_click_login, id=xrc.XRCID('button:log_in'))
 		#self.Bind(wx.EVT_BUTTON, self.on_click_create_user, id=xrc.XRCID('button:create_user'))
+		
+		self.Bind(wx.EVT_LIST_ITEM_ACTIVATED , self.on_activated_order, id=xrc.XRCID('list:unreleased_de'))
+
 
 		#misc
 		self.SetTitle('OrderManager v{} - Logged in as {}'.format(version, gn.user))
 		#OrderScheduler v{} - Logged in as{} {}'.format(version, self.user.split(',')[-1], self.user.split(',')[0]))
 
 		self.init_search_tab()
+		self.init_lists()
+		
+		self.refresh_list_unreleased_de()
 
 		self.Show()
 		
-		Item.ItemFrame(self, id=12588966)
+		#Item.ItemFrame(self, id=12588966)
 		#Item.ItemFrame(self, id=12585270)
 		#Item.ItemFrame(self, id=12585556)
 		#Item.ItemFrame(self, id=12588283)
 		#Item.ItemFrame(self, id=12587666)
 		#Item.ItemFrame(self, id=12585385)
+
+	def on_activated_order(self, event):
+		selected_item = event.GetEventObject()
+		table_id = selected_item.GetItem(selected_item.GetFirstSelected(), 0).GetText()
+
+		if table_id != '':
+			Item.ItemFrame(self, int(table_id))
+
+
+	def init_lists(self):
+		#design unreleased
+		list_ctrl = ctrl(self, 'list:unreleased_de')
+		
+		list_ctrl.printer_paper_type = wx.PAPER_11X17
+		list_ctrl.printer_header = 'DE Unreleased Schedule'
+		list_ctrl.printer_font_size = 8
+		
+		column_names = ['Id', 'Sales Order', 'Item', 'Production Order', 'Material', 'Customer', 'Std Hours', 
+						'Requested Release', 'Planned Release', 'Suggested Start', 
+						'Design Lead',
+						'Design Status',
+						'Mechanical Status',
+						'Electrical Status',
+						'Structural Status',
+						'Mechanical Engineer',
+						'Electrical Engineer',
+						'Structural Engineer',
+						'Mechanical CAD Designer', 
+						'Electrical CAD Designer', 
+						'Structural CAD Designer']
+
+		for index, column_name in enumerate(column_names):
+			list_ctrl.InsertColumn(index, column_name)
+			
+	
+	def refresh_list_unreleased_de(self, event=None):
+		list_ctrl = ctrl(self, 'list:unreleased_de')
+		list_ctrl.Freeze()
+		list_ctrl.DeleteAllItems()
+
+		records = db.query('''
+			SELECT
+				id,
+				sales_order,
+				item,
+				production_order,
+				material,
+				sold_to_name,
+				hours_standard,
+
+				date_requested_de_release,
+				date_planned_de_release,
+				date_suggested_de_start,
+
+				design_engineer,
+				design_status,
+				mechanical_status,
+				electrical_status,
+				structural_status,
+				mechanical_engineer,
+				electrical_engineer,
+				structural_engineer,
+				mechanical_cad_designer,
+				electrical_cad_designer,
+				structural_cad_designer
+			FROM
+				orders.view_systems
+			WHERE
+				date_actual_de_release IS NULL AND
+				status NOT LIKE '%CAN%'
+			ORDER BY
+				date_planned_de_release ASC
+			''')
+		
+		#insert records into list
+		for index, record in enumerate(records):
+			#format all fields as strings
+			formatted_record = []
+			for field in record:
+				if field == None:
+					field = ''
+					
+				elif isinstance(field, dt.datetime):
+					field = field.strftime('%m/%d/%Y')
+					
+				else:
+					pass
+					
+				formatted_record.append(field)
+
+			id, sales_order, item, production_order, material, sold_to_name, hours_standard, \
+			date_requested_de_release, date_planned_de_release, date_suggested_de_start, \
+			design_engineer, design_status, mechanical_status, electrical_status, structural_status, \
+			mechanical_engineer, electrical_engineer, structural_engineer, \
+			mechanical_cad_designer, electrical_cad_designer, structural_cad_designer = formatted_record
+			
+			#remove the decimals from the std hours
+			try:
+				hours_standard = int(round(float(hours_standard)))
+			except:
+				pass
+
+			list_ctrl.InsertStringItem(sys.maxint, '#')
+			list_ctrl.SetStringItem(index, 0, '{}'.format(id))
+			list_ctrl.SetStringItem(index, 1, '{}'.format(sales_order))
+			list_ctrl.SetStringItem(index, 2, '{}'.format(item))
+			list_ctrl.SetStringItem(index, 3, '{}'.format(production_order))
+			list_ctrl.SetStringItem(index, 4, '{}'.format(material))
+			list_ctrl.SetStringItem(index, 5, '{}'.format(sold_to_name))
+			list_ctrl.SetStringItem(index, 6, '{}'.format(hours_standard))
+
+			list_ctrl.SetStringItem(index, 7, '{}'.format(date_requested_de_release))
+			list_ctrl.SetStringItem(index, 8, '{}'.format(date_planned_de_release))
+			list_ctrl.SetStringItem(index, 9, '{}'.format(date_suggested_de_start))
+
+			list_ctrl.SetStringItem(index, 10, '{}'.format(design_engineer))
+			list_ctrl.SetStringItem(index, 11, '{}'.format(design_status))
+			list_ctrl.SetStringItem(index, 12, '{}'.format(mechanical_status))
+			list_ctrl.SetStringItem(index, 13, '{}'.format(electrical_status))
+			list_ctrl.SetStringItem(index, 14, '{}'.format(structural_status))
+			list_ctrl.SetStringItem(index, 15, '{}'.format(mechanical_engineer))
+			list_ctrl.SetStringItem(index, 16, '{}'.format(electrical_engineer))
+			list_ctrl.SetStringItem(index, 17, '{}'.format(structural_engineer))
+			list_ctrl.SetStringItem(index, 18, '{}'.format(mechanical_cad_designer))
+			list_ctrl.SetStringItem(index, 19, '{}'.format(electrical_cad_designer))
+			list_ctrl.SetStringItem(index, 20, '{}'.format(structural_cad_designer))
+
+		#auto fit the column widths
+		for index in range(list_ctrl.GetColumnCount()):
+			list_ctrl.SetColumnWidth(index, wx.LIST_AUTOSIZE_USEHEADER)
+			
+			#cap column width at max 400
+			if list_ctrl.GetColumnWidth(index) > 400:
+				list_ctrl.SetColumnWidth(index, 400)
+		
+		#hide id column
+		list_ctrl.SetColumnWidth(0, 0)
+		
+		list_ctrl.Thaw()
 
 
 	def on_close_frame(self, event):
