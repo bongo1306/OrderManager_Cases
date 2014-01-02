@@ -78,17 +78,24 @@ class ItemFrame(wx.Frame):
 		else:
 			sap_so, bpcs_so = (None, None)
 		
+		a_folder_was_found = False
+		
 		if sap_so:
 			sap_order_folder_path = self.find_sap_order_folder_path(sap_so)
 			
 			if sap_order_folder_path:
 				subprocess.Popen('explorer "{}"'.format(sap_order_folder_path))
+				a_folder_was_found = True
 
 		if bpcs_so:
 			bpcs_order_folder_path = self.find_bpcs_order_folder_path(bpcs_so)
 			
 			if bpcs_order_folder_path:
 				subprocess.Popen('explorer "{}"'.format(bpcs_order_folder_path))
+				a_folder_was_found = True
+
+		if a_folder_was_found == False:
+			wx.MessageBox("A folder for this order was not automatically found.\nMaybe it doesn't exist yet or is named incorrectly.", 'Notice', wx.OK | wx.ICON_INFORMATION)
 
 		event.GetEventObject().Enable()
 
