@@ -199,16 +199,18 @@ class MainFrame(wx.Frame, Search.SearchTab):
 
 	def init_lists(self):
 		#design unreleased
-		self.Bind(wx.EVT_LIST_ITEM_ACTIVATED , self.on_activated_order, id=xrc.XRCID('list:unreleased_de'))
-		self.Bind(wx.EVT_BUTTON, self.refresh_list_unreleased_de, id=xrc.XRCID('button:refresh_unreleased_de'))
-
-		
 		list_ctrl = ctrl(self, 'list:unreleased_de')
-		
+
 		list_ctrl.printer_paper_type = wx.PAPER_11X17
 		list_ctrl.printer_header = 'DE Unreleased Schedule'
 		list_ctrl.printer_font_size = 8
-
+		
+		self.Bind(wx.EVT_LIST_ITEM_ACTIVATED , self.on_activated_order, id=xrc.XRCID('list:unreleased_de'))
+		self.Bind(wx.EVT_BUTTON, self.refresh_list_unreleased_de, id=xrc.XRCID('button:refresh_unreleased_de'))
+		self.Bind(wx.EVT_BUTTON, list_ctrl.filter_list, id=xrc.XRCID('button:filter_unreleased_de')) 
+		self.Bind(wx.EVT_BUTTON, list_ctrl.export_list, id=xrc.XRCID('button:export_unreleased_de')) 
+		self.Bind(wx.EVT_BUTTON, list_ctrl.print_list, id=xrc.XRCID('button:print_unreleased_de')) 
+		
 		column_names = ['Id', 'Sales Order', 'Item', 'Production Order', 'Material', 'Customer', 'Std Hours', 
 						'Requested Release', 'Planned Release', 'Suggested Start', 
 						'Design Lead',

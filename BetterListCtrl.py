@@ -128,6 +128,27 @@ class BetterListCtrl(wx.ListCtrl):
 		else:
 			event.Skip()
 
+
+	def filter_list(self, event):
+		if self.quick_filter_frame == None:
+			#build a backup of the original list
+			self.original_list_data = OriginalListData(self)
+			
+			self.quick_filter_frame = QuickFilterFrame(self)
+
+			list_size =  self.GetClientSize()
+			frame_size = self.quick_filter_frame.GetSize()
+
+			self.quick_filter_frame.Move(self.ClientToScreen((list_size[0]-frame_size[0], list_size[1]-frame_size[1])))
+			self.quick_filter_frame.Show(True)
+			
+			self.quick_filter_frame.text.SetFocus()
+			self.quick_filter_frame.text.SetValue(" ")
+			self.quick_filter_frame.text.AppendText("")
+			
+		else:
+			self.quick_filter_frame.Close()
+
 	
 	def build_filtered_list(self, filter_string):
 		#print 'building filtered list using filter:', filter_string
