@@ -236,10 +236,31 @@ class MainFrame(wx.Frame, Search.SearchTab):
 		records = db.query('''
 			SELECT
 				id,
-				sales_order,
-				item,
-				production_order,
-				material,
+
+				CASE
+					WHEN bpcs_sales_order IS NULL THEN sales_order
+					WHEN sales_order IS NULL THEN bpcs_sales_order
+					ELSE sales_order + '/' + bpcs_sales_order
+				END AS sales_order,
+
+				CASE
+					WHEN bpcs_line_up IS NULL THEN item
+					WHEN item IS NULL THEN bpcs_line_up
+					ELSE item + '/' + bpcs_line_up
+				END AS item,
+
+				CASE
+					WHEN bpcs_item IS NULL THEN production_order
+					WHEN production_order IS NULL THEN bpcs_item
+					ELSE production_order + '/' + bpcs_item
+				END AS production_order,
+
+				CASE
+					WHEN bpcs_family IS NULL THEN material
+					WHEN material IS NULL THEN bpcs_family
+					ELSE material + '/' + bpcs_family
+				END AS material,
+
 				sold_to_name,
 				hours_standard,
 
@@ -264,7 +285,7 @@ class MainFrame(wx.Frame, Search.SearchTab):
 				date_actual_de_release IS NULL AND
 				status NOT LIKE '%CAN%'
 			ORDER BY
-				date_planned_de_release ASC
+				date_planned_de_release, date_requested_de_release ASC
 			''')
 		
 		#insert records into list
