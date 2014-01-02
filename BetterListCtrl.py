@@ -68,11 +68,12 @@ class BetterListCtrl(wx.ListCtrl):
 		#removes sorting symbols from headers
 		headers = []
 		for col in range(self.GetColumnCount()):
-			headers.append(self.GetColumn(col).GetText().replace(u'↓', '').replace(u'↑', '').strip())
+			headers.append(self.GetColumn(col).GetText())
 
-		self.DeleteAllColumns()
-		for header_index, header in enumerate(headers):
-			self.InsertColumn(header_index, header)
+		if u'↓' in ''.join(headers) or u'↑' in ''.join(headers):
+			self.DeleteAllColumns()
+			for header_index, header in enumerate(headers):
+				self.InsertColumn(header_index, header.replace(u'↓', '').replace(u'↑', '').strip())
 
 
 	def on_key(self, event):
