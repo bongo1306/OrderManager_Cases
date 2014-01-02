@@ -2,6 +2,8 @@
 # -*- coding: utf8 -*-
 
 #Change log:
+#v0.6 - 1/2/14
+#	*Added function to clean up sorting symbols from headers
 #v0.5 - 8/21/13
 #	*Fixed date sorting
 #v0.4 - 8/8/13
@@ -60,6 +62,17 @@ class BetterListCtrl(wx.ListCtrl):
 	def on_create(self, event):
 		self.Unbind(wx.EVT_WINDOW_CREATE)
 		#extra initialization here
+
+
+	def clean_headers(self):
+		#removes sorting symbols from headers
+		headers = []
+		for col in range(self.GetColumnCount()):
+			headers.append(self.GetColumn(col).GetText().replace(u'↓', '').replace(u'↑', '').strip())
+
+		self.DeleteAllColumns()
+		for header_index, header in enumerate(headers):
+			self.InsertColumn(header_index, header)
 
 
 	def on_key(self, event):

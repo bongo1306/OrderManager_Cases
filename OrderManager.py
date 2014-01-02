@@ -169,7 +169,6 @@ class MainFrame(wx.Frame, Search.SearchTab):
 		#self.Bind(wx.EVT_BUTTON, self.on_click_login, id=xrc.XRCID('button:log_in'))
 		#self.Bind(wx.EVT_BUTTON, self.on_click_create_user, id=xrc.XRCID('button:create_user'))
 		
-		self.Bind(wx.EVT_LIST_ITEM_ACTIVATED , self.on_activated_order, id=xrc.XRCID('list:unreleased_de'))
 
 
 		#misc
@@ -200,12 +199,16 @@ class MainFrame(wx.Frame, Search.SearchTab):
 
 	def init_lists(self):
 		#design unreleased
+		self.Bind(wx.EVT_LIST_ITEM_ACTIVATED , self.on_activated_order, id=xrc.XRCID('list:unreleased_de'))
+		self.Bind(wx.EVT_BUTTON, self.refresh_list_unreleased_de, id=xrc.XRCID('button:refresh_unreleased_de'))
+
+		
 		list_ctrl = ctrl(self, 'list:unreleased_de')
 		
 		list_ctrl.printer_paper_type = wx.PAPER_11X17
 		list_ctrl.printer_header = 'DE Unreleased Schedule'
 		list_ctrl.printer_font_size = 8
-		
+
 		column_names = ['Id', 'Sales Order', 'Item', 'Production Order', 'Material', 'Customer', 'Std Hours', 
 						'Requested Release', 'Planned Release', 'Suggested Start', 
 						'Design Lead',
@@ -228,6 +231,7 @@ class MainFrame(wx.Frame, Search.SearchTab):
 		list_ctrl = ctrl(self, 'list:unreleased_de')
 		list_ctrl.Freeze()
 		list_ctrl.DeleteAllItems()
+		list_ctrl.clean_headers()
 
 		records = db.query('''
 			SELECT
