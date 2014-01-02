@@ -4,6 +4,7 @@
 #Change log:
 #v0.6 - 1/2/14
 #	*Added function to clean up sorting symbols from headers
+#	*Added function to trigger blank filter control
 #v0.5 - 8/21/13
 #	*Fixed date sorting
 #v0.4 - 8/8/13
