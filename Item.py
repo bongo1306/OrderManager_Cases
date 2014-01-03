@@ -474,8 +474,9 @@ class ItemFrame(wx.Frame):
 		pass
 
 	def reset_details_panel(self):
-		ctrl(self, 'label:quote').SetLabel('...')
-		ctrl(self, 'label:sales_order').SetLabel('...')
+		pass
+		#ctrl(self, 'label:quote').SetLabel('...')
+		#ctrl(self, 'label:sales_order').SetLabel('...')
 
 	def populate_details_panel(self):
 		record = db.query('''
@@ -488,6 +489,7 @@ class ItemFrame(wx.Frame):
 				hierarchy,
 				model,
 				description,
+				serial,
 				
 				sold_to_name,
 				sold_to_number,
@@ -527,7 +529,7 @@ class ItemFrame(wx.Frame):
 				
 			formatted_record.append(field)
 
-		filemaker_quote, sales_order, item, production_order, material, hierarchy, model, description, \
+		filemaker_quote, sales_order, item, production_order, material, hierarchy, model, description, serial, \
 		sold_to_name, sold_to_number, ship_to_name, ship_to_number, country, state, city, zip_code, address, \
 		bpcs_sales_order, bpcs_line_up, bpcs_item, bpcs_family = formatted_record
 		
@@ -539,6 +541,7 @@ class ItemFrame(wx.Frame):
 		ctrl(self, 'label:hierarchy').SetLabel(hierarchy)
 		ctrl(self, 'label:model').SetLabel(model)
 		ctrl(self, 'label:description').SetLabel(description)
+		ctrl(self, 'label:serial').SetLabel(serial)
 
 		ctrl(self, 'label:sold_to').SetLabel('{} ({})'.format(sold_to_name, sold_to_number))
 		ctrl(self, 'label:ship_to').SetLabel('{} ({})'.format(ship_to_name, ship_to_number))
