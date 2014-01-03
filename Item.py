@@ -217,6 +217,13 @@ class ItemFrame(wx.Frame):
 		ctrl(self, 'text:orders.target_dates.actual_mmg_release').SetValue('')
 		ctrl(self, 'checkbox:orders.target_dates.planned_mmg_release_locked').SetValue(False)
 
+		ctrl(self, 'label:date_created_on').SetLabel('...')
+		ctrl(self, 'label:date_basic_start').SetLabel('...')
+		ctrl(self, 'label:date_basic_finish').SetLabel('...')
+		ctrl(self, 'label:date_actual_finish').SetLabel('...')
+		ctrl(self, 'label:date_request_delivered').SetLabel('...')
+		ctrl(self, 'label:date_shipped').SetLabel('...')
+
 
 	def populate_target_dates_tab(self):
 		record = db.query('''
@@ -244,45 +251,81 @@ class ItemFrame(wx.Frame):
 				id={}
 			'''.format(self.id))
 			
-		if not record:
-			return
+		if record:
+			#format all fields as strings
+			formatted_record = []
+			for field in record[0]:
+				if field == None:
+					field = ''
+					
+				elif isinstance(field, dt.datetime):
+					field = field.strftime('%m/%d/%Y')
+					
+				else:
+					pass
+					
+				formatted_record.append(field)
+
+			requested_ae_release, planned_ae_release, planned_ae_release_locked, suggested_ae_start, actual_ae_release, \
+			requested_de_release, planned_de_release, planned_de_release_locked, suggested_de_start, actual_de_release, \
+			requested_mmg_release, planned_mmg_release, planned_mmg_release_locked, suggested_mmg_start, actual_mmg_release = formatted_record
+
+			ctrl(self, 'text:orders.target_dates.requested_ae_release').SetValue(requested_ae_release)
+			ctrl(self, 'text:orders.target_dates.planned_ae_release').SetValue(planned_ae_release)
+			ctrl(self, 'text:orders.target_dates.suggested_ae_start').SetValue(suggested_ae_start)
+			ctrl(self, 'text:orders.target_dates.actual_ae_release').SetValue(actual_ae_release)
+			ctrl(self, 'checkbox:orders.target_dates.planned_ae_release_locked').SetValue(planned_ae_release_locked)
+
+			ctrl(self, 'text:orders.target_dates.requested_de_release').SetValue(requested_de_release)
+			ctrl(self, 'text:orders.target_dates.planned_de_release').SetValue(planned_de_release)
+			ctrl(self, 'text:orders.target_dates.suggested_de_start').SetValue(suggested_de_start)
+			ctrl(self, 'text:orders.target_dates.actual_de_release').SetValue(actual_de_release)
+			ctrl(self, 'checkbox:orders.target_dates.planned_de_release_locked').SetValue(planned_de_release_locked)
+
+			ctrl(self, 'text:orders.target_dates.requested_mmg_release').SetValue(requested_mmg_release)
+			ctrl(self, 'text:orders.target_dates.planned_mmg_release').SetValue(planned_mmg_release)
+			ctrl(self, 'text:orders.target_dates.suggested_mmg_start').SetValue(suggested_mmg_start)
+			ctrl(self, 'text:orders.target_dates.actual_mmg_release').SetValue(actual_mmg_release)
+			ctrl(self, 'checkbox:orders.target_dates.planned_mmg_release_locked').SetValue(planned_mmg_release_locked)
+
+
+		record = db.query('''
+			SELECT
+				date_created_on,
+				date_basic_start,
+				date_basic_finish,
+				date_actual_finish,
+				date_request_delivered,
+				date_shipped
+			FROM
+				orders.root
+			WHERE
+				id={}
+			'''.format(self.id))
 			
-		#format all fields as strings
-		formatted_record = []
-		for field in record[0]:
-			if field == None:
-				field = ''
-				
-			elif isinstance(field, dt.datetime):
-				field = field.strftime('%m/%d/%Y')
-				
-			else:
-				pass
-				
-			formatted_record.append(field)
+		if record:
+			#format all fields as strings
+			formatted_record = []
+			for field in record[0]:
+				if field == None:
+					field = '...'
+					
+				elif isinstance(field, dt.datetime):
+					field = field.strftime('%m/%d/%Y')
+					
+				else:
+					pass
+					
+				formatted_record.append(field)
 
-		requested_ae_release, planned_ae_release, planned_ae_release_locked, suggested_ae_start, actual_ae_release, \
-		requested_de_release, planned_de_release, planned_de_release_locked, suggested_de_start, actual_de_release, \
-		requested_mmg_release, planned_mmg_release, planned_mmg_release_locked, suggested_mmg_start, actual_mmg_release = formatted_record
+			date_created_on, date_basic_start, date_basic_finish, date_actual_finish, date_request_delivered, date_shipped = formatted_record
 
-		ctrl(self, 'text:orders.target_dates.requested_ae_release').SetValue(requested_ae_release)
-		ctrl(self, 'text:orders.target_dates.planned_ae_release').SetValue(planned_ae_release)
-		ctrl(self, 'text:orders.target_dates.suggested_ae_start').SetValue(suggested_ae_start)
-		ctrl(self, 'text:orders.target_dates.actual_ae_release').SetValue(actual_ae_release)
-		ctrl(self, 'checkbox:orders.target_dates.planned_ae_release_locked').SetValue(planned_ae_release_locked)
-
-		ctrl(self, 'text:orders.target_dates.requested_de_release').SetValue(requested_de_release)
-		ctrl(self, 'text:orders.target_dates.planned_de_release').SetValue(planned_de_release)
-		ctrl(self, 'text:orders.target_dates.suggested_de_start').SetValue(suggested_de_start)
-		ctrl(self, 'text:orders.target_dates.actual_de_release').SetValue(actual_de_release)
-		ctrl(self, 'checkbox:orders.target_dates.planned_de_release_locked').SetValue(planned_de_release_locked)
-
-		ctrl(self, 'text:orders.target_dates.requested_mmg_release').SetValue(requested_mmg_release)
-		ctrl(self, 'text:orders.target_dates.planned_mmg_release').SetValue(planned_mmg_release)
-		ctrl(self, 'text:orders.target_dates.suggested_mmg_start').SetValue(suggested_mmg_start)
-		ctrl(self, 'text:orders.target_dates.actual_mmg_release').SetValue(actual_mmg_release)
-		ctrl(self, 'checkbox:orders.target_dates.planned_mmg_release_locked').SetValue(planned_mmg_release_locked)
-
+			ctrl(self, 'label:date_created_on').SetLabel(date_created_on)
+			ctrl(self, 'label:date_basic_start').SetLabel(date_basic_start)
+			ctrl(self, 'label:date_basic_finish').SetLabel(date_basic_finish)
+			ctrl(self, 'label:date_actual_finish').SetLabel(date_actual_finish)
+			ctrl(self, 'label:date_request_delivered').SetLabel(date_request_delivered)
+			ctrl(self, 'label:date_shipped').SetLabel(date_shipped)
 
 
 	def reset_labor_hours_tab(self):
