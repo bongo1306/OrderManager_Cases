@@ -44,6 +44,7 @@ class ItemFrame(wx.Frame):
 		self.Center()
 		
 		self.init_details_panel()
+		self.init_responsibilities_tab()
 		self.init_changes_tab()
 		
 		self.populate_all()
@@ -184,6 +185,7 @@ class ItemFrame(wx.Frame):
 	def reset_all(self):
 		self.reset_other_items_panel()
 		self.reset_details_panel()
+		self.reset_responsibilities_tab()
 		self.reset_target_dates_tab()
 		self.reset_labor_hours_tab()
 		self.reset_changes_tab()
@@ -191,6 +193,7 @@ class ItemFrame(wx.Frame):
 	def populate_all(self):
 		self.populate_other_items_panel()
 		self.populate_details_panel()
+		self.populate_responsibilities_tab()
 		self.populate_target_dates_tab()
 		self.populate_labor_hours_tab()
 		self.populate_changes_tab()
@@ -347,6 +350,8 @@ class ItemFrame(wx.Frame):
 		ctrl(self, 'text:orders.labor_hours.ship_loose').SetValue('')
 		ctrl(self, 'text:orders.labor_hours.assembly').SetValue('')
 		ctrl(self, 'text:orders.labor_hours.sheet_metal').SetValue('')
+
+		ctrl(self, 'label:standard_hours').SetLabel('...')
 
 
 
@@ -566,6 +571,231 @@ class ItemFrame(wx.Frame):
 		ctrl(self, 'label:bpcs_item').SetLabel(bpcs_item)
 		ctrl(self, 'label:bpcs_sales_order').SetLabel(bpcs_sales_order_and_line_up)
 		ctrl(self, 'label:bpcs_family').SetLabel(bpcs_family)
+
+
+	def on_click_auto_sign_up(self, event):
+		#this will populate the user's name if none selected yet without opening the drop down
+		choice_ctrl = event.GetEventObject()
+		
+		if choice_ctrl.GetStringSelection() == '':
+			choice_ctrl.SetStringSelection(gn.user)
+		
+		else:
+			event.Skip()
+
+
+	def init_responsibilities_tab(self):
+		possible_signees = db.query('''
+			SELECT
+				name
+			FROM
+				dbo.employees
+			WHERE
+				department LIKE '%engineer%'
+			ORDER BY
+				name ASC
+			''')
+		
+		possible_signees.insert(0, gn.user)
+		possible_signees.insert(0, '')
+
+		ctrl(self, 'choice:orders.responsibilities.applications_engineer').AppendItems(possible_signees)
+		ctrl(self, 'choice:orders.responsibilities.applications_engineer').Bind(wx.EVT_LEFT_DOWN, self.on_click_auto_sign_up)
+
+		ctrl(self, 'choice:orders.responsibilities.design_engineer').AppendItems(possible_signees)
+		ctrl(self, 'choice:orders.responsibilities.design_engineer').Bind(wx.EVT_LEFT_DOWN, self.on_click_auto_sign_up)
+
+		ctrl(self, 'choice:orders.responsibilities.mechanical_engineer').AppendItems(possible_signees)
+		ctrl(self, 'choice:orders.responsibilities.mechanical_engineer').Bind(wx.EVT_LEFT_DOWN, self.on_click_auto_sign_up)
+
+		ctrl(self, 'choice:orders.responsibilities.mechanical_cad_designer').AppendItems(possible_signees)
+		ctrl(self, 'choice:orders.responsibilities.mechanical_cad_designer').Bind(wx.EVT_LEFT_DOWN, self.on_click_auto_sign_up)
+
+		ctrl(self, 'choice:orders.responsibilities.electrical_engineer').AppendItems(possible_signees)
+		ctrl(self, 'choice:orders.responsibilities.electrical_engineer').Bind(wx.EVT_LEFT_DOWN, self.on_click_auto_sign_up)
+
+		ctrl(self, 'choice:orders.responsibilities.electrical_cad_designer').AppendItems(possible_signees)
+		ctrl(self, 'choice:orders.responsibilities.electrical_cad_designer').Bind(wx.EVT_LEFT_DOWN, self.on_click_auto_sign_up)
+
+		ctrl(self, 'choice:orders.responsibilities.structural_engineer').AppendItems(possible_signees)
+		ctrl(self, 'choice:orders.responsibilities.structural_engineer').Bind(wx.EVT_LEFT_DOWN, self.on_click_auto_sign_up)
+
+		ctrl(self, 'choice:orders.responsibilities.structural_cad_designer').AppendItems(possible_signees)
+		ctrl(self, 'choice:orders.responsibilities.structural_cad_designer').Bind(wx.EVT_LEFT_DOWN, self.on_click_auto_sign_up)
+
+
+		statuses = ['', 'Previewed', 'In Process', 'Reviewing', 'Complete', 'Hold', 'Cancel']
+		ctrl(self, 'choice:orders.responsibilities.applications_status').AppendItems(statuses)
+		ctrl(self, 'choice:orders.responsibilities.design_status').AppendItems(statuses)
+		ctrl(self, 'choice:orders.responsibilities.mechanical_status').AppendItems(statuses)
+		ctrl(self, 'choice:orders.responsibilities.electrical_status').AppendItems(statuses)
+		ctrl(self, 'choice:orders.responsibilities.structural_status').AppendItems(statuses)
+
+
+	def reset_responsibilities_tab(self):
+		ctrl(self, 'choice:orders.responsibilities.applications_engineer').SetStringSelection('')
+		ctrl(self, 'choice:orders.responsibilities.design_engineer').SetStringSelection('')
+		ctrl(self, 'choice:orders.responsibilities.mechanical_engineer').SetStringSelection('')
+		ctrl(self, 'choice:orders.responsibilities.mechanical_cad_designer').SetStringSelection('')
+		ctrl(self, 'choice:orders.responsibilities.electrical_engineer').SetStringSelection('')
+		ctrl(self, 'choice:orders.responsibilities.electrical_cad_designer').SetStringSelection('')
+		ctrl(self, 'choice:orders.responsibilities.structural_engineer').SetStringSelection('')
+		ctrl(self, 'choice:orders.responsibilities.structural_cad_designer').SetStringSelection('')
+
+		ctrl(self, 'choice:orders.responsibilities.applications_status').SetStringSelection('')
+		ctrl(self, 'choice:orders.responsibilities.design_status').SetStringSelection('')
+		ctrl(self, 'choice:orders.responsibilities.mechanical_status').SetStringSelection('')
+		ctrl(self, 'choice:orders.responsibilities.electrical_status').SetStringSelection('')
+		ctrl(self, 'choice:orders.responsibilities.structural_status').SetStringSelection('')
+
+
+	def populate_responsibilities_tab(self):
+		record = db.query('''
+			SELECT
+				applications_engineer,
+				applications_status,
+				design_engineer,
+				design_status,
+				mechanical_engineer,
+				mechanical_cad_designer,
+				mechanical_status,
+				electrical_engineer,
+				electrical_cad_designer,
+				electrical_status,
+				structural_engineer,
+				structural_cad_designer,
+				structural_status
+			FROM
+				orders.responsibilities
+			WHERE
+				id={}
+			'''.format(self.id))
+		
+		if record:
+			#format all fields as strings
+			formatted_record = []
+			for field in record[0]:
+				if field == None:
+					field = ''
+					
+				else:
+					field = str(field)
+					
+				formatted_record.append(field)
+
+			applications_engineer, applications_status, \
+			design_engineer, design_status, \
+			mechanical_engineer, mechanical_cad_designer, mechanical_status, \
+			electrical_engineer, electrical_cad_designer, electrical_status, \
+			structural_engineer, structural_cad_designer, structural_status = formatted_record
+
+			#if we have an odd value in the database we have to insert it into the choice control
+			# before we can set that control to that value
+			choice_ctrl = ctrl(self, 'choice:orders.responsibilities.applications_engineer')
+			
+			if applications_engineer not in choice_ctrl.GetStrings():
+				choice_ctrl.Insert(applications_engineer, 1)
+
+			choice_ctrl.SetStringSelection(applications_engineer)
+
+			#---
+			choice_ctrl = ctrl(self, 'choice:orders.responsibilities.applications_status')
+			
+			if applications_status not in choice_ctrl.GetStrings():
+				choice_ctrl.Insert(applications_status, 1)
+
+			choice_ctrl.SetStringSelection(applications_status)
+
+			#---
+			choice_ctrl = ctrl(self, 'choice:orders.responsibilities.design_engineer')
+			
+			if design_engineer not in choice_ctrl.GetStrings():
+				choice_ctrl.Insert(design_engineer, 1)
+
+			choice_ctrl.SetStringSelection(design_engineer)
+
+			#---
+			choice_ctrl = ctrl(self, 'choice:orders.responsibilities.design_status')
+			
+			if design_status not in choice_ctrl.GetStrings():
+				choice_ctrl.Insert(design_status, 1)
+
+			choice_ctrl.SetStringSelection(design_status)
+
+			#---
+			choice_ctrl = ctrl(self, 'choice:orders.responsibilities.mechanical_engineer')
+			
+			if mechanical_engineer not in choice_ctrl.GetStrings():
+				choice_ctrl.Insert(mechanical_engineer, 1)
+
+			choice_ctrl.SetStringSelection(mechanical_engineer)
+
+			#---
+			choice_ctrl = ctrl(self, 'choice:orders.responsibilities.mechanical_cad_designer')
+			
+			if mechanical_cad_designer not in choice_ctrl.GetStrings():
+				choice_ctrl.Insert(mechanical_cad_designer, 1)
+
+			choice_ctrl.SetStringSelection(mechanical_cad_designer)
+
+			#---
+			choice_ctrl = ctrl(self, 'choice:orders.responsibilities.mechanical_status')
+			
+			if mechanical_status not in choice_ctrl.GetStrings():
+				choice_ctrl.Insert(mechanical_status, 1)
+
+			choice_ctrl.SetStringSelection(mechanical_status)
+
+			#---
+			choice_ctrl = ctrl(self, 'choice:orders.responsibilities.electrical_engineer')
+			
+			if electrical_engineer not in choice_ctrl.GetStrings():
+				choice_ctrl.Insert(electrical_engineer, 1)
+
+			choice_ctrl.SetStringSelection(electrical_engineer)
+
+			#---
+			choice_ctrl = ctrl(self, 'choice:orders.responsibilities.electrical_cad_designer')
+			
+			if electrical_cad_designer not in choice_ctrl.GetStrings():
+				choice_ctrl.Insert(electrical_cad_designer, 1)
+
+			choice_ctrl.SetStringSelection(electrical_cad_designer)
+
+			#---
+			choice_ctrl = ctrl(self, 'choice:orders.responsibilities.electrical_status')
+			
+			if electrical_status not in choice_ctrl.GetStrings():
+				choice_ctrl.Insert(electrical_status, 1)
+
+			choice_ctrl.SetStringSelection(electrical_status)
+
+			#---
+			choice_ctrl = ctrl(self, 'choice:orders.responsibilities.structural_engineer')
+			
+			if structural_engineer not in choice_ctrl.GetStrings():
+				choice_ctrl.Insert(structural_engineer, 1)
+
+			choice_ctrl.SetStringSelection(structural_engineer)
+
+			#---
+			choice_ctrl = ctrl(self, 'choice:orders.responsibilities.structural_cad_designer')
+			
+			if structural_cad_designer not in choice_ctrl.GetStrings():
+				choice_ctrl.Insert(structural_cad_designer, 1)
+
+			choice_ctrl.SetStringSelection(structural_cad_designer)
+
+			#---
+			choice_ctrl = ctrl(self, 'choice:orders.responsibilities.structural_status')
+			
+			if structural_status not in choice_ctrl.GetStrings():
+				choice_ctrl.Insert(structural_status, 1)
+
+			choice_ctrl.SetStringSelection(structural_status)
+
+
+
 
 
 	def init_changes_tab(self):
