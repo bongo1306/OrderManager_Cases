@@ -43,7 +43,7 @@ class ItemFrame(wx.Frame):
 		self.SetSize((976, 690))
 		self.Center()
 		
-		#self.init_details_panel()
+		self.init_details_panel()
 		self.init_changes_tab()
 		
 		self.populate_all()
@@ -471,7 +471,8 @@ class ItemFrame(wx.Frame):
 
 
 	def init_details_panel(self):
-		pass
+		ctrl(self, 'text:orders.misc.comments').SetBackgroundColour(ctrl(self, 'panel:main').GetBackgroundColour())
+		
 
 	def reset_details_panel(self):
 		pass
@@ -505,12 +506,15 @@ class ItemFrame(wx.Frame):
 				bpcs_sales_order,
 				bpcs_line_up,
 				bpcs_item,
-				bpcs_family
+				bpcs_family,
 
+				comments
 			FROM
 				orders.root
+			LEFT JOIN
+				orders.misc ON orders.root.id = orders.misc.id
 			WHERE
-				id={}
+				orders.root.id={}
 			'''.format(self.id))
 		
 		if not record:
@@ -532,7 +536,7 @@ class ItemFrame(wx.Frame):
 
 		status, filemaker_quote, sales_order, item, production_order, material, hierarchy, model, description, serial, \
 		sold_to_name, sold_to_number, ship_to_name, ship_to_number, country, state, city, zip_code, address, \
-		bpcs_sales_order, bpcs_line_up, bpcs_item, bpcs_family = formatted_record
+		bpcs_sales_order, bpcs_line_up, bpcs_item, bpcs_family, comments = formatted_record
 		
 		ctrl(self, 'label:status').SetLabel(status)
 		ctrl(self, 'label:quote').SetLabel(filemaker_quote)
@@ -554,6 +558,10 @@ class ItemFrame(wx.Frame):
 		bpcs_sales_order_and_line_up = '{}-{}'.format(bpcs_sales_order, bpcs_line_up)
 		if bpcs_sales_order_and_line_up == '...-...':
 			bpcs_sales_order_and_line_up = '...'
+
+		if comments == '...':
+			comments = ''
+		ctrl(self, 'text:orders.misc.comments').SetValue(comments)
 
 		ctrl(self, 'label:bpcs_item').SetLabel(bpcs_item)
 		ctrl(self, 'label:bpcs_sales_order').SetLabel(bpcs_sales_order_and_line_up)
