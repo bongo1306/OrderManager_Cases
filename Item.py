@@ -481,6 +481,7 @@ class ItemFrame(wx.Frame):
 	def populate_details_panel(self):
 		record = db.query('''
 			SELECT
+				status,
 				filemaker_quote,
 				sales_order,
 				item,
@@ -529,10 +530,11 @@ class ItemFrame(wx.Frame):
 				
 			formatted_record.append(field)
 
-		filemaker_quote, sales_order, item, production_order, material, hierarchy, model, description, serial, \
+		status, filemaker_quote, sales_order, item, production_order, material, hierarchy, model, description, serial, \
 		sold_to_name, sold_to_number, ship_to_name, ship_to_number, country, state, city, zip_code, address, \
 		bpcs_sales_order, bpcs_line_up, bpcs_item, bpcs_family = formatted_record
 		
+		ctrl(self, 'label:status').SetLabel(status)
 		ctrl(self, 'label:quote').SetLabel(filemaker_quote)
 		ctrl(self, 'label:sales_order').SetLabel(sales_order)
 		ctrl(self, 'label:item').SetLabel(item)
