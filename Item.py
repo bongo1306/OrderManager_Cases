@@ -578,10 +578,13 @@ class ItemFrame(wx.Frame):
 		choice_ctrl = event.GetEventObject()
 		
 		if choice_ctrl.GetStringSelection() == '':
-			choice_ctrl.SetStringSelection(gn.user)
+			#choice_ctrl.SetStringSelection(gn.user)
+			wx.CallAfter(choice_ctrl.SetStringSelection, gn.user)
 		
 		else:
 			event.Skip()
+			
+		choice_ctrl.SetFocus()
 
 
 	def init_responsibilities_tab(self):
