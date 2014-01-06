@@ -26,9 +26,6 @@ class ChoiceCtrlDbLinker(wx.Choice):
 		field = self.GetName().split(':')[1].split('.')[2]
 		new_value = self.GetStringSelection()
 		
-		if new_value == '':
-			new_value = None
-		
 		db.update_order(table, table_id, field, new_value)
 
 		parent_frame = wx.GetTopLevelParent(self)
