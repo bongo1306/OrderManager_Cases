@@ -287,7 +287,7 @@ class MainFrame(wx.Frame, Search.SearchTab):
 				orders.view_systems
 			WHERE
 				date_actual_de_release IS NULL AND
-				status NOT LIKE '%CAN%'
+				status <> 'Canceled'
 			ORDER BY
 				date_planned_de_release, date_requested_de_release ASC
 			''')
