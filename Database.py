@@ -160,7 +160,7 @@ def insert(table, field_value_pairs, connection=None):
 
 	sql = sql[:-2]
 	sql += ")"
-	
+
 	cursor = connection.cursor()
 	id = cursor.execute(sql).fetchone()[0]
 	connection.commit()
