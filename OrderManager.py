@@ -180,12 +180,14 @@ class MainFrame(wx.Frame, Search.SearchTab):
 		self.init_search_tab()
 		self.init_lists()
 		
+		self.refresh_list_lacking_quote_ae()
+		self.refresh_list_unreleased_ae()
 		self.refresh_list_unreleased_de()
 
 		self.Show()
 		
 		#Item.ItemFrame(self, id=12588966)
-		Item.ItemFrame(self, id=12585270)
+		#Item.ItemFrame(self, id=12585270)
 		#Item.ItemFrame(self, id=12585556)
 		#Item.ItemFrame(self, id=12588283)
 		#Item.ItemFrame(self, id=12587666)
@@ -200,6 +202,48 @@ class MainFrame(wx.Frame, Search.SearchTab):
 
 
 	def init_lists(self):
+		#applications lacking quote number
+		list_ctrl = ctrl(self, 'list:lacking_quote_ae')
+
+		list_ctrl.printer_paper_type = wx.PAPER_11X17
+		list_ctrl.printer_header = 'Orders Lacking Quote Numbers'
+		list_ctrl.printer_font_size = 8
+		
+		self.Bind(wx.EVT_LIST_ITEM_ACTIVATED , self.on_activated_order, id=xrc.XRCID('list:lacking_quote_ae'))
+		self.Bind(wx.EVT_BUTTON, self.refresh_list_lacking_quote_ae, id=xrc.XRCID('button:refresh_lacking_quote_ae'))
+		self.Bind(wx.EVT_BUTTON, list_ctrl.filter_list, id=xrc.XRCID('button:filter_lacking_quote_ae')) 
+		self.Bind(wx.EVT_BUTTON, list_ctrl.export_list, id=xrc.XRCID('button:export_lacking_quote_ae')) 
+		self.Bind(wx.EVT_BUTTON, list_ctrl.print_list, id=xrc.XRCID('button:print_lacking_quote_ae')) 
+		
+		column_names = ['Id', 'Sales Order', 'Item', 'Production Order', 'Material', 'Customer', 'Std Hours', 
+						'Requested Release', 'Planned Release',
+						'Applications Lead', 'Applications Status']
+
+		for index, column_name in enumerate(column_names):
+			list_ctrl.InsertColumn(index, column_name)
+
+
+		#applications unreleased
+		list_ctrl = ctrl(self, 'list:unreleased_ae')
+
+		list_ctrl.printer_paper_type = wx.PAPER_11X17
+		list_ctrl.printer_header = 'AE Unreleased Schedule'
+		list_ctrl.printer_font_size = 8
+		
+		self.Bind(wx.EVT_LIST_ITEM_ACTIVATED , self.on_activated_order, id=xrc.XRCID('list:unreleased_ae'))
+		self.Bind(wx.EVT_BUTTON, self.refresh_list_unreleased_ae, id=xrc.XRCID('button:refresh_unreleased_ae'))
+		self.Bind(wx.EVT_BUTTON, list_ctrl.filter_list, id=xrc.XRCID('button:filter_unreleased_ae')) 
+		self.Bind(wx.EVT_BUTTON, list_ctrl.export_list, id=xrc.XRCID('button:export_unreleased_ae')) 
+		self.Bind(wx.EVT_BUTTON, list_ctrl.print_list, id=xrc.XRCID('button:print_unreleased_ae')) 
+		
+		column_names = ['Id', 'Quote', 'Sales Order', 'Item', 'Production Order', 'Material', 'Customer', 'Std Hours', 
+						'Requested Release', 'Planned Release',
+						'Applications Lead', 'Applications Status']
+
+		for index, column_name in enumerate(column_names):
+			list_ctrl.InsertColumn(index, column_name)
+
+
 		#design unreleased
 		list_ctrl = ctrl(self, 'list:unreleased_de')
 
@@ -229,7 +273,225 @@ class MainFrame(wx.Frame, Search.SearchTab):
 
 		for index, column_name in enumerate(column_names):
 			list_ctrl.InsertColumn(index, column_name)
+
+
+	def refresh_list_lacking_quote_ae(self, event=None):
+		list_ctrl = ctrl(self, 'list:lacking_quote_ae')
+		list_ctrl.Freeze()
+		list_ctrl.DeleteAllItems()
+		list_ctrl.clean_headers()
+
+		records = db.query('''
+			SELECT
+				id,
+
+				CASE
+					WHEN bpcs_sales_order IS NULL THEN sales_order
+					WHEN sales_order IS NULL THEN bpcs_sales_order
+					ELSE sales_order + '/' + bpcs_sales_order
+				END AS sales_order,
+
+				CASE
+					WHEN bpcs_line_up IS NULL THEN item
+					WHEN item IS NULL THEN bpcs_line_up
+					ELSE item + '/' + bpcs_line_up
+				END AS item,
+
+				CASE
+					WHEN bpcs_item IS NULL THEN production_order
+					WHEN production_order IS NULL THEN bpcs_item
+					ELSE production_order + '/' + bpcs_item
+				END AS production_order,
+
+				CASE
+					WHEN bpcs_family IS NULL THEN material
+					WHEN material IS NULL THEN bpcs_family
+					ELSE material + '/' + bpcs_family
+				END AS material,
+
+				sold_to_name,
+				hours_standard,
+
+				date_requested_ae_release,
+				date_planned_ae_release,
+
+				applications_engineer,
+				applications_status
+			FROM
+				orders.view_systems
+			WHERE
+				date_actual_ae_release IS NULL AND
+				status <> 'Canceled' AND
+				quote IS NULL
+			ORDER BY
+				sales_order, item ASC
+			''')
+		
+		#insert records into list
+		for index, record in enumerate(records):
+			#format all fields as strings
+			formatted_record = []
+			for field in record:
+				if field == None:
+					field = ''
+					
+				elif isinstance(field, dt.datetime):
+					field = field.strftime('%m/%d/%Y')
+					
+				else:
+					pass
+					
+				formatted_record.append(field)
+
+			id, sales_order, item, production_order, material, sold_to_name, hours_standard, \
+			date_requested_ae_release, date_planned_ae_release, \
+			applications_engineer, applications_status = formatted_record
 			
+			#remove the decimals from the std hours
+			try:
+				hours_standard = int(round(float(hours_standard)))
+			except:
+				pass
+
+			list_ctrl.InsertStringItem(sys.maxint, '#')
+			list_ctrl.SetStringItem(index, 0, '{}'.format(id))
+			list_ctrl.SetStringItem(index, 1, '{}'.format(sales_order))
+			list_ctrl.SetStringItem(index, 2, '{}'.format(item))
+			list_ctrl.SetStringItem(index, 3, '{}'.format(production_order))
+			list_ctrl.SetStringItem(index, 4, '{}'.format(material))
+			list_ctrl.SetStringItem(index, 5, '{}'.format(sold_to_name))
+			list_ctrl.SetStringItem(index, 6, '{}'.format(hours_standard))
+
+			list_ctrl.SetStringItem(index, 7, '{}'.format(date_requested_ae_release))
+			list_ctrl.SetStringItem(index, 8, '{}'.format(date_planned_ae_release))
+
+			list_ctrl.SetStringItem(index, 9, '{}'.format(applications_engineer))
+			list_ctrl.SetStringItem(index, 10, '{}'.format(applications_status))
+
+		#auto fit the column widths
+		for index in range(list_ctrl.GetColumnCount()):
+			list_ctrl.SetColumnWidth(index, wx.LIST_AUTOSIZE_USEHEADER)
+			
+			#cap column width at max 400
+			if list_ctrl.GetColumnWidth(index) > 400:
+				list_ctrl.SetColumnWidth(index, 400)
+		
+		#hide id column
+		list_ctrl.SetColumnWidth(0, 0)
+		
+		list_ctrl.Thaw()
+
+
+
+	def refresh_list_unreleased_ae(self, event=None):
+		list_ctrl = ctrl(self, 'list:unreleased_ae')
+		list_ctrl.Freeze()
+		list_ctrl.DeleteAllItems()
+		list_ctrl.clean_headers()
+
+		records = db.query('''
+			SELECT
+				id,
+				quote,
+
+				CASE
+					WHEN bpcs_sales_order IS NULL THEN sales_order
+					WHEN sales_order IS NULL THEN bpcs_sales_order
+					ELSE sales_order + '/' + bpcs_sales_order
+				END AS sales_order,
+
+				CASE
+					WHEN bpcs_line_up IS NULL THEN item
+					WHEN item IS NULL THEN bpcs_line_up
+					ELSE item + '/' + bpcs_line_up
+				END AS item,
+
+				CASE
+					WHEN bpcs_item IS NULL THEN production_order
+					WHEN production_order IS NULL THEN bpcs_item
+					ELSE production_order + '/' + bpcs_item
+				END AS production_order,
+
+				CASE
+					WHEN bpcs_family IS NULL THEN material
+					WHEN material IS NULL THEN bpcs_family
+					ELSE material + '/' + bpcs_family
+				END AS material,
+
+				sold_to_name,
+				hours_standard,
+
+				date_requested_ae_release,
+				date_planned_ae_release,
+
+				applications_engineer,
+				applications_status
+			FROM
+				orders.view_systems
+			WHERE
+				date_actual_ae_release IS NULL AND
+				status <> 'Canceled' AND
+				quote IS NOT NULL
+			ORDER BY
+				date_planned_ae_release, date_requested_ae_release, sales_order, item ASC
+			''')
+		
+		#insert records into list
+		for index, record in enumerate(records):
+			#format all fields as strings
+			formatted_record = []
+			for field in record:
+				if field == None:
+					field = ''
+					
+				elif isinstance(field, dt.datetime):
+					field = field.strftime('%m/%d/%Y')
+					
+				else:
+					pass
+					
+				formatted_record.append(field)
+
+			id, quote, sales_order, item, production_order, material, sold_to_name, hours_standard, \
+			date_requested_ae_release, date_planned_ae_release, \
+			applications_engineer, applications_status = formatted_record
+			
+			#remove the decimals from the std hours
+			try:
+				hours_standard = int(round(float(hours_standard)))
+			except:
+				pass
+
+			list_ctrl.InsertStringItem(sys.maxint, '#')
+			list_ctrl.SetStringItem(index, 0, '{}'.format(id))
+			list_ctrl.SetStringItem(index, 1, '{}'.format(quote))
+			list_ctrl.SetStringItem(index, 2, '{}'.format(sales_order))
+			list_ctrl.SetStringItem(index, 3, '{}'.format(item))
+			list_ctrl.SetStringItem(index, 4, '{}'.format(production_order))
+			list_ctrl.SetStringItem(index, 5, '{}'.format(material))
+			list_ctrl.SetStringItem(index, 6, '{}'.format(sold_to_name))
+			list_ctrl.SetStringItem(index, 7, '{}'.format(hours_standard))
+
+			list_ctrl.SetStringItem(index, 8, '{}'.format(date_requested_ae_release))
+			list_ctrl.SetStringItem(index, 9, '{}'.format(date_planned_ae_release))
+
+			list_ctrl.SetStringItem(index, 10, '{}'.format(applications_engineer))
+			list_ctrl.SetStringItem(index, 11, '{}'.format(applications_status))
+
+		#auto fit the column widths
+		for index in range(list_ctrl.GetColumnCount()):
+			list_ctrl.SetColumnWidth(index, wx.LIST_AUTOSIZE_USEHEADER)
+			
+			#cap column width at max 400
+			if list_ctrl.GetColumnWidth(index) > 400:
+				list_ctrl.SetColumnWidth(index, 400)
+		
+		#hide id column
+		list_ctrl.SetColumnWidth(0, 0)
+		
+		list_ctrl.Thaw()
+
+
 	
 	def refresh_list_unreleased_de(self, event=None):
 		list_ctrl = ctrl(self, 'list:unreleased_de')
@@ -289,7 +551,7 @@ class MainFrame(wx.Frame, Search.SearchTab):
 				date_actual_de_release IS NULL AND
 				status <> 'Canceled'
 			ORDER BY
-				date_planned_de_release, date_requested_de_release ASC
+				date_planned_de_release, date_requested_de_release, sales_order, item ASC
 			''')
 		
 		#insert records into list
