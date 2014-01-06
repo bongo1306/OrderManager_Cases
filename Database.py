@@ -101,8 +101,10 @@ def update_order(table, table_id, field, new_value):
 				sql += "{}=0, ".format(field)
 		elif isinstance(new_value, (int, long, float, complex)) or new_value == None:
 			if new_value == None:
-				new_value = 'NULL'
-			sql += "{}={}, ".format(field, new_value)
+				new_value_str = 'NULL'
+			else:
+				new_value_str = new_value
+			sql += "{}={}, ".format(field, new_value_str)
 		else:
 			sql += "{}='{}', ".format(field, gn.clean(str(new_value)))
 
@@ -128,7 +130,7 @@ def insert(table, field_value_pairs, connection=None):
 	#make the eng04 db default if none specified
 	if connection == None:
 		connection = eng04_connection
-	
+		
 	sql = "INSERT INTO {} (".format(table)
 	
 	for field_value_pair in field_value_pairs:
@@ -160,7 +162,7 @@ def insert(table, field_value_pairs, connection=None):
 
 	sql = sql[:-2]
 	sql += ")"
-
+	
 	cursor = connection.cursor()
 	id = cursor.execute(sql).fetchone()[0]
 	connection.commit()
