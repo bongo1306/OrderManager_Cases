@@ -33,6 +33,17 @@ class ItemFrame(wx.Frame):
 		self.Bind(wx.EVT_BUTTON, self.on_click_goto_next_item, id=xrc.XRCID('button:next_item'))
 		self.Bind(wx.EVT_BUTTON, self.on_click_goto_previous_item, id=xrc.XRCID('button:previous_item'))
 		
+		#self.Bind(wx.EVT_BUTTON, self.on_click_log_time, id=xrc.XRCID('button:log_time_generic'))
+		self.Bind(wx.EVT_BUTTON, self.on_click_log_time, id=xrc.XRCID('button:log_time_applications_engineer'))
+		self.Bind(wx.EVT_BUTTON, self.on_click_log_time, id=xrc.XRCID('button:log_time_design_engineer'))
+		self.Bind(wx.EVT_BUTTON, self.on_click_log_time, id=xrc.XRCID('button:log_time_mechanical_engineer'))
+		self.Bind(wx.EVT_BUTTON, self.on_click_log_time, id=xrc.XRCID('button:log_time_electrical_engineer'))
+		self.Bind(wx.EVT_BUTTON, self.on_click_log_time, id=xrc.XRCID('button:log_time_structural_engineer'))
+		self.Bind(wx.EVT_BUTTON, self.on_click_log_time, id=xrc.XRCID('button:log_time_mechanical_cad_designer'))
+		self.Bind(wx.EVT_BUTTON, self.on_click_log_time, id=xrc.XRCID('button:log_time_electrical_cad_designer'))
+		self.Bind(wx.EVT_BUTTON, self.on_click_log_time, id=xrc.XRCID('button:log_time_structural_cad_designer'))
+
+
 		#for convenience, populate today's date when user focuses on a release field
 		ctrl(self, 'text:orders.target_dates.actual_ae_release').Bind(wx.EVT_SET_FOCUS, self.on_focus_insert_date)
 		ctrl(self, 'text:orders.target_dates.actual_de_release').Bind(wx.EVT_SET_FOCUS, self.on_focus_insert_date)
@@ -928,6 +939,156 @@ class ItemFrame(wx.Frame):
 		list_ctrl.Thaw()
 
 
+	def on_click_log_time(self, event):
+		button = event.GetEventObject()
+		button_name = button.Name.split(':')[1].replace('log_time_', '')
+
+		LogTimeDialog(self, button_name)
+
+
 	def on_close_frame(self, event):
 		print 'called on_close_frame'
 		self.Destroy()
+
+
+
+class LogTimeDialog(wx.Dialog):
+	def __init__(self, parent, button_name=None):
+		#load frame XRC description
+		pre = wx.PreDialog()
+		res = xrc.XmlResource.Get() 
+		res.LoadOnDialog(pre, parent, "dialog:log_time") 
+		self.PostCreate(pre)
+		self.SetIcon(wx.Icon(gn.resource_path('OrderManager.ico'), wx.BITMAP_TYPE_ICO))
+		
+		self.parent = parent
+		self.button_name = button_name
+		
+		print 'self.button_name:', self.button_name
+		
+		#bindings
+		self.Bind(wx.EVT_CLOSE, self.on_close_dialog)
+		self.Bind(wx.EVT_BUTTON, self.on_click_log_time, id=xrc.XRCID('button:log'))
+		#self.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self.on_double_click_open_modify_time_log_dialog, id=xrc.XRCID('list:previous'))
+
+
+		#set some toggle button defaults based on which "clock" was pressed
+		if button_name == 'applications_engineer':
+			ctrl(self, 'toggle:applications').SetValue(True)
+
+		elif button_name == 'design_engineer':
+			#ctrl(self, 'toggle:planning').SetValue(True)
+			ctrl(self, 'toggle:review').SetValue(True)
+			ctrl(self, 'toggle:mechanical').SetValue(True)
+			ctrl(self, 'toggle:electrical').SetValue(True)
+			ctrl(self, 'toggle:structural').SetValue(True)
+
+		elif button_name == 'mechanical_engineer':
+			ctrl(self, 'toggle:review').SetValue(True)
+			ctrl(self, 'toggle:mechanical').SetValue(True)
+
+		elif button_name == 'mechanical_cad_designer':
+			ctrl(self, 'toggle:cad_design').SetValue(True)
+			ctrl(self, 'toggle:mechanical').SetValue(True)
+
+		elif button_name == 'electrical_engineer':
+			ctrl(self, 'toggle:review').SetValue(True)
+			ctrl(self, 'toggle:electrical').SetValue(True)
+
+		elif button_name == 'electrical_cad_designer':
+			ctrl(self, 'toggle:cad_design').SetValue(True)
+			ctrl(self, 'toggle:electrical').SetValue(True)
+
+		elif button_name == 'structural_engineer':
+			ctrl(self, 'toggle:review').SetValue(True)
+			ctrl(self, 'toggle:structural').SetValue(True)
+
+		elif button_name == 'structural_cad_designer':
+			ctrl(self, 'toggle:cad_design').SetValue(True)
+			ctrl(self, 'toggle:structural').SetValue(True)
+
+		#populate previous user's time logs for this item
+		list_ctrl = ctrl(self, 'list:previous')
+		
+		#create list headings
+		column_names = ['Id', 'Hours', 'When Logged', 'Tags']
+		for index, column_name in enumerate(column_names):
+			list_ctrl.InsertColumn(index, column_name)
+		
+		records = db.query('''
+			SELECT
+				id,
+				hours,
+				when_logged,
+				tags
+			FROM
+				orders.time_logs
+			WHERE
+				order_id={} AND 
+				who_logged='{}'
+			ORDER BY
+				when_logged DESC
+			'''.format(parent.id, gn.user.replace("'", "''")))
+		
+		total_hours = 0
+		
+		for log_index, log in enumerate(records):
+			id, hours, when_logged, tags = log
+			
+			list_ctrl.InsertStringItem(sys.maxint, '#')
+			list_ctrl.SetStringItem(log_index, 0, '{}'.format(id))
+			#list_ctrl.SetStringItem(log_index, 1, '{:.1f}'.format(hours))
+			list_ctrl.SetStringItem(log_index, 1, '{}'.format(hours))
+			list_ctrl.SetStringItem(log_index, 2, '{}'.format(when_logged.strftime("%m/%d/%y   %I:%M %p")))
+			list_ctrl.SetStringItem(log_index, 3, '{}'.format(tags))
+			
+			total_hours += hours
+
+		for index, column_name in enumerate(column_names):
+			list_ctrl.SetColumnWidth(index, wx.LIST_AUTOSIZE_USEHEADER)
+
+		#hide id column
+		list_ctrl.SetColumnWidth(0, 0)
+
+		ctrl(self, 'label:total_hours').SetLabel('{}'.format(total_hours))
+
+		#misc
+		self.ShowModal()
+
+
+	def on_click_log_time(self, event):
+		hours = ctrl(self, 'text:hours').GetValue()
+		
+		if hours == '':
+			wx.MessageBox('Enter hours worked before logging time.', 'Hint', wx.OK | wx.ICON_WARNING)
+			return
+		
+		tags = []
+		if ctrl(self, 'toggle:applications').GetValue(): tags.append('Applications')
+		if ctrl(self, 'toggle:planning').GetValue(): tags.append('Planning')
+		if ctrl(self, 'toggle:cad_design').GetValue(): tags.append('CAD Design')
+		if ctrl(self, 'toggle:review').GetValue(): tags.append('Review')
+		if ctrl(self, 'toggle:mechanical').GetValue(): tags.append('Mechanical')
+		if ctrl(self, 'toggle:electrical').GetValue(): tags.append('Electrical')
+		if ctrl(self, 'toggle:structural').GetValue(): tags.append('Structural')
+		if ctrl(self, 'toggle:revision').GetValue(): tags.append('Revision')
+		if ctrl(self, 'toggle:shop_checkup').GetValue(): tags.append('Shop Checkup')
+		
+		#tags.sort()
+		tags_string = ', '.join(tags)
+		
+		db.insert('orders.time_logs', (
+			("order_id", self.parent.id),
+			("who_logged", gn.user),
+			("when_logged", 'CURRENT_TIMESTAMP'),
+			("hours", hours),
+			("tags", tags_string),)
+		)
+
+		self.Close()
+
+
+	def on_close_dialog(self, event):
+		print 'called on_close_dialog'
+		self.Destroy()
+

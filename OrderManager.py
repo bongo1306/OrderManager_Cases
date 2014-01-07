@@ -693,12 +693,6 @@ class MainFrame(wx.Frame, Search.SearchTab):
 				date_requested_de_release,
 				date_planned_de_release,
 				
-				--CASE
-				--	WHEN (date_requested_de_release IS NULL OR date_planned_de_release IS NULL) THEN 0
-				--	WHEN date_requested_de_release > date_planned_de_release THEN 0
-				--	ELSE DateDiff(Day, date_requested_de_release, date_planned_de_release)
-				--END AS days_off_by,
-				
 				DateDiff(Day, date_requested_de_release, date_planned_de_release) AS days_off_by,
 
 				design_engineer,
