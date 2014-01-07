@@ -183,6 +183,7 @@ class MainFrame(wx.Frame, Search.SearchTab):
 		self.refresh_list_lacking_quote_ae()
 		self.refresh_list_unreleased_ae()
 		self.refresh_list_unreleased_de()
+		self.refresh_list_exceptions_de()
 
 		self.Show()
 		
@@ -259,6 +260,36 @@ class MainFrame(wx.Frame, Search.SearchTab):
 		
 		column_names = ['Id', 'Sales Order', 'Item', 'Production Order', 'Material', 'Customer', 'Std Hours', 
 						'Requested Release', 'Planned Release', 'Suggested Start', 
+						'Design Lead',
+						'Design Status',
+						'Mechanical Status',
+						'Electrical Status',
+						'Structural Status',
+						'Mechanical Engineer',
+						'Electrical Engineer',
+						'Structural Engineer',
+						'Mechanical CAD Designer', 
+						'Electrical CAD Designer', 
+						'Structural CAD Designer']
+
+		for index, column_name in enumerate(column_names):
+			list_ctrl.InsertColumn(index, column_name)
+
+		#design release exceptions
+		list_ctrl = ctrl(self, 'list:exceptions_de')
+
+		list_ctrl.printer_paper_type = wx.PAPER_11X17
+		list_ctrl.printer_header = 'DE Release Exceptions'
+		list_ctrl.printer_font_size = 8
+		
+		self.Bind(wx.EVT_LIST_ITEM_ACTIVATED , self.on_activated_order, id=xrc.XRCID('list:exceptions_de'))
+		self.Bind(wx.EVT_BUTTON, self.refresh_list_exceptions_de, id=xrc.XRCID('button:refresh_exceptions_de'))
+		self.Bind(wx.EVT_BUTTON, list_ctrl.filter_list, id=xrc.XRCID('button:filter_exceptions_de')) 
+		self.Bind(wx.EVT_BUTTON, list_ctrl.export_list, id=xrc.XRCID('button:export_exceptions_de')) 
+		self.Bind(wx.EVT_BUTTON, list_ctrl.print_list, id=xrc.XRCID('button:print_exceptions_de')) 
+		
+		column_names = ['Id', 'Sales Order', 'Item', 'Production Order', 'Material', 'Customer', 'Std Hours', 
+						'Requested Release', 'Planned Release', 'Days Off By', 
 						'Design Lead',
 						'Design Status',
 						'Mechanical Status',
@@ -549,6 +580,7 @@ class MainFrame(wx.Frame, Search.SearchTab):
 				orders.view_systems
 			WHERE
 				date_actual_de_release IS NULL AND
+				production_order IS NOT NULL AND
 				status <> 'Canceled'
 			ORDER BY
 				date_planned_de_release, date_requested_de_release, sales_order, item ASC
@@ -619,6 +651,146 @@ class MainFrame(wx.Frame, Search.SearchTab):
 		list_ctrl.SetColumnWidth(0, 0)
 		
 		list_ctrl.Thaw()
+
+
+	def refresh_list_exceptions_de(self, event=None):
+		list_ctrl = ctrl(self, 'list:exceptions_de')
+		list_ctrl.Freeze()
+		list_ctrl.DeleteAllItems()
+		list_ctrl.clean_headers()
+
+		records = db.query('''
+			SELECT
+				id,
+
+				CASE
+					WHEN bpcs_sales_order IS NULL THEN sales_order
+					WHEN sales_order IS NULL THEN bpcs_sales_order
+					ELSE sales_order + '/' + bpcs_sales_order
+				END AS sales_order,
+
+				CASE
+					WHEN bpcs_line_up IS NULL THEN item
+					WHEN item IS NULL THEN bpcs_line_up
+					ELSE item + '/' + bpcs_line_up
+				END AS item,
+
+				CASE
+					WHEN bpcs_item IS NULL THEN production_order
+					WHEN production_order IS NULL THEN bpcs_item
+					ELSE production_order + '/' + bpcs_item
+				END AS production_order,
+
+				CASE
+					WHEN bpcs_family IS NULL THEN material
+					WHEN material IS NULL THEN bpcs_family
+					ELSE material + '/' + bpcs_family
+				END AS material,
+
+				sold_to_name,
+				hours_standard,
+
+				date_requested_de_release,
+				date_planned_de_release,
+				
+				--CASE
+				--	WHEN (date_requested_de_release IS NULL OR date_planned_de_release IS NULL) THEN 0
+				--	WHEN date_requested_de_release > date_planned_de_release THEN 0
+				--	ELSE DateDiff(Day, date_requested_de_release, date_planned_de_release)
+				--END AS days_off_by,
+				
+				DateDiff(Day, date_requested_de_release, date_planned_de_release) AS days_off_by,
+
+				design_engineer,
+				design_status,
+				mechanical_status,
+				electrical_status,
+				structural_status,
+				mechanical_engineer,
+				electrical_engineer,
+				structural_engineer,
+				mechanical_cad_designer,
+				electrical_cad_designer,
+				structural_cad_designer
+			FROM
+				orders.view_systems
+			WHERE
+				date_actual_de_release IS NULL AND
+				production_order IS NOT NULL AND
+				--days_off_by > 0 AND
+				date_planned_de_release > date_requested_de_release AND
+				status <> 'Canceled'
+			ORDER BY
+				days_off_by DESC
+			''')
+		
+		#insert records into list
+		for index, record in enumerate(records):
+			#format all fields as strings
+			formatted_record = []
+			for field in record:
+				if field == None:
+					field = ''
+					
+				elif isinstance(field, dt.datetime):
+					field = field.strftime('%m/%d/%Y')
+					
+				else:
+					pass
+					
+				formatted_record.append(field)
+
+			id, sales_order, item, production_order, material, sold_to_name, hours_standard, \
+			date_requested_de_release, date_planned_de_release, days_off_by, \
+			design_engineer, design_status, mechanical_status, electrical_status, structural_status, \
+			mechanical_engineer, electrical_engineer, structural_engineer, \
+			mechanical_cad_designer, electrical_cad_designer, structural_cad_designer = formatted_record
+			
+			#remove the decimals from the std hours
+			try:
+				hours_standard = int(round(float(hours_standard)))
+			except:
+				pass
+
+			list_ctrl.InsertStringItem(sys.maxint, '#')
+			list_ctrl.SetStringItem(index, 0, '{}'.format(id))
+			list_ctrl.SetStringItem(index, 1, '{}'.format(sales_order))
+			list_ctrl.SetStringItem(index, 2, '{}'.format(item))
+			list_ctrl.SetStringItem(index, 3, '{}'.format(production_order))
+			list_ctrl.SetStringItem(index, 4, '{}'.format(material))
+			list_ctrl.SetStringItem(index, 5, '{}'.format(sold_to_name))
+			list_ctrl.SetStringItem(index, 6, '{}'.format(hours_standard))
+
+			list_ctrl.SetStringItem(index, 7, '{}'.format(date_requested_de_release))
+			list_ctrl.SetStringItem(index, 8, '{}'.format(date_planned_de_release))
+			list_ctrl.SetStringItem(index, 9, '{}'.format(days_off_by))
+
+			list_ctrl.SetStringItem(index, 10, '{}'.format(design_engineer))
+			list_ctrl.SetStringItem(index, 11, '{}'.format(design_status))
+			list_ctrl.SetStringItem(index, 12, '{}'.format(mechanical_status))
+			list_ctrl.SetStringItem(index, 13, '{}'.format(electrical_status))
+			list_ctrl.SetStringItem(index, 14, '{}'.format(structural_status))
+			list_ctrl.SetStringItem(index, 15, '{}'.format(mechanical_engineer))
+			list_ctrl.SetStringItem(index, 16, '{}'.format(electrical_engineer))
+			list_ctrl.SetStringItem(index, 17, '{}'.format(structural_engineer))
+			list_ctrl.SetStringItem(index, 18, '{}'.format(mechanical_cad_designer))
+			list_ctrl.SetStringItem(index, 19, '{}'.format(electrical_cad_designer))
+			list_ctrl.SetStringItem(index, 20, '{}'.format(structural_cad_designer))
+
+		#auto fit the column widths
+		for index in range(list_ctrl.GetColumnCount()):
+			list_ctrl.SetColumnWidth(index, wx.LIST_AUTOSIZE_USEHEADER)
+			
+			#cap column width at max 400
+			if list_ctrl.GetColumnWidth(index) > 400:
+				list_ctrl.SetColumnWidth(index, 400)
+		
+		#hide id column
+		list_ctrl.SetColumnWidth(0, 0)
+		
+		list_ctrl.Thaw()
+
+
 
 
 	def on_close_frame(self, event):
