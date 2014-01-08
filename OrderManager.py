@@ -184,6 +184,7 @@ class MainFrame(wx.Frame, Search.SearchTab):
 		self.refresh_list_unreleased_ae()
 		self.refresh_list_unreleased_de()
 		self.refresh_list_exceptions_de()
+		self.refresh_list_sent_to_mmg()
 
 		self.Show()
 		
@@ -301,6 +302,25 @@ class MainFrame(wx.Frame, Search.SearchTab):
 						'Mechanical CAD Designer', 
 						'Electrical CAD Designer', 
 						'Structural CAD Designer']
+
+		for index, column_name in enumerate(column_names):
+			list_ctrl.InsertColumn(index, column_name)
+
+		#recently sent to mmg
+		list_ctrl = ctrl(self, 'list:sent_to_mmg')
+
+		#list_ctrl.printer_paper_type = wx.PAPER_11X17
+		list_ctrl.printer_header = 'Recently Sent to MMG'
+		list_ctrl.printer_font_size = 8
+		
+		self.Bind(wx.EVT_LIST_ITEM_ACTIVATED , self.on_activated_order, id=xrc.XRCID('list:sent_to_mmg'))
+		self.Bind(wx.EVT_BUTTON, self.refresh_list_sent_to_mmg, id=xrc.XRCID('button:refresh_sent_to_mmg'))
+		self.Bind(wx.EVT_BUTTON, list_ctrl.filter_list, id=xrc.XRCID('button:filter_sent_to_mmg')) 
+		self.Bind(wx.EVT_BUTTON, list_ctrl.export_list, id=xrc.XRCID('button:export_sent_to_mmg')) 
+		self.Bind(wx.EVT_BUTTON, list_ctrl.print_list, id=xrc.XRCID('button:print_sent_to_mmg')) 
+		
+		column_names = ['Id', 'Sales Order', 'Item', 'Production Order', 'Material', 'Customer',
+						'Filename', 'When Sent']
 
 		for index, column_name in enumerate(column_names):
 			list_ctrl.InsertColumn(index, column_name)
@@ -784,6 +804,73 @@ class MainFrame(wx.Frame, Search.SearchTab):
 		
 		list_ctrl.Thaw()
 
+	def refresh_list_sent_to_mmg(self, event=None):
+		list_ctrl = ctrl(self, 'list:sent_to_mmg')
+		list_ctrl.Freeze()
+		list_ctrl.DeleteAllItems()
+		list_ctrl.clean_headers()
+
+		records = db.query('''
+			SELECT TOP 30
+				orders.root.id,
+				orders.root.sales_order,
+				orders.root.item,
+				orders.root.production_order,
+				orders.root.material,
+				orders.root.sold_to_name,
+				
+				dbo.mmg_uploads.filename,
+				dbo.mmg_uploads.when_uploaded
+			FROM
+				orders.root
+			RIGHT JOIN
+				dbo.mmg_uploads ON orders.root.production_order = dbo.mmg_uploads.production_order
+			ORDER BY
+				dbo.mmg_uploads.when_uploaded DESC
+			''')
+		
+		#insert records into list
+		for index, record in enumerate(records):
+			#format all fields as strings
+			formatted_record = []
+			for field in record:
+				if field == None:
+					field = ''
+					
+				elif isinstance(field, dt.datetime):
+					field = field.strftime('%m/%d/%y %I:%M %p')
+					
+				else:
+					pass
+					
+				formatted_record.append(field)
+
+			id, sales_order, item, production_order, material, sold_to_name, \
+			filename, when_uploaded = formatted_record
+
+			list_ctrl.InsertStringItem(sys.maxint, '#')
+			list_ctrl.SetStringItem(index, 0, '{}'.format(id))
+			list_ctrl.SetStringItem(index, 1, '{}'.format(sales_order))
+			list_ctrl.SetStringItem(index, 2, '{}'.format(item))
+			list_ctrl.SetStringItem(index, 3, '{}'.format(production_order))
+			list_ctrl.SetStringItem(index, 4, '{}'.format(material))
+			list_ctrl.SetStringItem(index, 5, '{}'.format(sold_to_name))
+
+			list_ctrl.SetStringItem(index, 6, '{}'.format(filename))
+			list_ctrl.SetStringItem(index, 7, '{}'.format(when_uploaded))
+
+		#auto fit the column widths
+		for index in range(list_ctrl.GetColumnCount()):
+			list_ctrl.SetColumnWidth(index, wx.LIST_AUTOSIZE_USEHEADER)
+			
+			#cap column width at max 400
+			if list_ctrl.GetColumnWidth(index) > 400:
+				list_ctrl.SetColumnWidth(index, 400)
+		
+		#hide id column
+		list_ctrl.SetColumnWidth(0, 0)
+		
+		list_ctrl.Thaw()
 
 
 
