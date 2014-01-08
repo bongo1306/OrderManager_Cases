@@ -2,6 +2,8 @@
 # -*- coding: utf8 -*-
 
 #Change log:
+#v0.7 - 1/8/14
+#	*Copying rows now uses \r\n for line breaks to be backwards compatible with other software
 #v0.6 - 1/2/14
 #	*Added function to clean up sorting symbols from headers
 #	*Added function to trigger blank filter control
@@ -284,7 +286,7 @@ class BetterListCtrl(wx.ListCtrl):
 		for col in range(self.GetColumnCount()):
 			string_to_copy += u'{}\t'.format(self.GetColumn(col).GetText())
 		string_to_copy = string_to_copy.rstrip('\t')
-		string_to_copy += '\n'
+		string_to_copy += '\r\n'
 		
 		#copy selected rows
 		for row in range(self.GetItemCount()):
@@ -293,9 +295,9 @@ class BetterListCtrl(wx.ListCtrl):
 					string_to_copy += u'{}\t'.format(self.GetItem(row, col).GetText())
 
 				string_to_copy = string_to_copy.rstrip('\t')
-				string_to_copy += '\n'
+				string_to_copy += '\r\n'
 
-		string_to_copy = string_to_copy.rstrip('\n')
+		string_to_copy = string_to_copy.rstrip('\r\n')
 		
 		dataObj = wx.TextDataObject()
 		dataObj.SetText(string_to_copy)
