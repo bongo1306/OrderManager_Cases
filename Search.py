@@ -52,6 +52,12 @@ class SearchTab(object):
 			if table_id != '':
 				Item.ItemFrame(self, int(table_id))
 
+		if table_name == 'orders.time_logs':
+			table_id = selected_item.GetItem(selected_item.GetFirstSelected(), 1).GetText()
+			
+			if table_id != '':
+				Item.ItemFrame(self, int(table_id))
+
 
 	def on_choice_table(self, event=None):
 		table_panel = ctrl(self, 'panel:search_criteria')
