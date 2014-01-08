@@ -33,7 +33,6 @@ class ItemFrame(wx.Frame):
 		self.Bind(wx.EVT_BUTTON, self.on_click_goto_next_item, id=xrc.XRCID('button:next_item'))
 		self.Bind(wx.EVT_BUTTON, self.on_click_goto_previous_item, id=xrc.XRCID('button:previous_item'))
 		
-		#self.Bind(wx.EVT_BUTTON, self.on_click_log_time, id=xrc.XRCID('button:log_time_generic'))
 		self.Bind(wx.EVT_BUTTON, self.on_click_log_time, id=xrc.XRCID('button:log_time_applications_engineer'))
 		self.Bind(wx.EVT_BUTTON, self.on_click_log_time, id=xrc.XRCID('button:log_time_design_engineer'))
 		self.Bind(wx.EVT_BUTTON, self.on_click_log_time, id=xrc.XRCID('button:log_time_mechanical_engineer'))
@@ -43,6 +42,7 @@ class ItemFrame(wx.Frame):
 		self.Bind(wx.EVT_BUTTON, self.on_click_log_time, id=xrc.XRCID('button:log_time_electrical_cad_designer'))
 		self.Bind(wx.EVT_BUTTON, self.on_click_log_time, id=xrc.XRCID('button:log_time_structural_cad_designer'))
 
+		self.Bind(wx.EVT_BUTTON, self.on_click_log_time, id=xrc.XRCID('button:log_time'))
 
 		#for convenience, populate today's date when user focuses on a release field
 		ctrl(self, 'text:orders.target_dates.actual_ae_release').Bind(wx.EVT_SET_FOCUS, self.on_focus_insert_date)
@@ -57,6 +57,7 @@ class ItemFrame(wx.Frame):
 		self.init_details_panel()
 		self.init_responsibilities_tab()
 		self.init_changes_tab()
+		self.init_time_logs_tab()
 		
 		self.populate_all()
 
@@ -200,6 +201,7 @@ class ItemFrame(wx.Frame):
 		self.reset_target_dates_tab()
 		self.reset_labor_hours_tab()
 		self.reset_changes_tab()
+		self.reset_time_logs_tab()
 		
 	def populate_all(self):
 		self.populate_other_items_panel()
@@ -208,6 +210,7 @@ class ItemFrame(wx.Frame):
 		self.populate_target_dates_tab()
 		self.populate_labor_hours_tab()
 		self.populate_changes_tab()
+		self.populate_time_logs_tab()
 
 		ctrl(self, 'panel:main').Layout()
 
@@ -939,6 +942,64 @@ class ItemFrame(wx.Frame):
 		list_ctrl.Thaw()
 
 
+	def init_time_logs_tab(self):
+		column_names = ['Id', 'Hours', 'Who Logged', 'When Logged', 'Tags']
+
+		for index, column_name in enumerate(column_names):
+			ctrl(self, 'list:time_logs').InsertColumn(index, column_name)
+
+	def reset_time_logs_tab(self):
+		ctrl(self, 'list:time_logs').DeleteAllItems()
+
+	def populate_time_logs_tab(self):
+		list_ctrl = ctrl(self, 'list:time_logs')
+		list_ctrl.Freeze()
+		
+		records = db.query('''
+			SELECT
+				id,
+				hours,
+				who_logged,
+				when_logged,
+				tags
+			FROM
+				orders.time_logs
+			WHERE
+				order_id={}
+			ORDER BY
+				id DESC
+			'''.format(self.id))
+		
+		#insert records into list
+		for index, record in enumerate(records):
+			id, hours, who_logged, when_logged, tags = record
+			
+			if tags == None:
+				tags = ''
+
+			list_ctrl.InsertStringItem(sys.maxint, '#')
+			list_ctrl.SetStringItem(index, 0, '{}'.format(id))
+			list_ctrl.SetStringItem(index, 1, '{}'.format(hours))
+			list_ctrl.SetStringItem(index, 2, '{}'.format(who_logged))
+			list_ctrl.SetStringItem(index, 3, '{}'.format(when_logged.strftime('%m/%d/%y %I:%M %p')))
+			list_ctrl.SetStringItem(index, 4, '{}'.format(tags))
+
+		#auto fit the column widths
+		for index in range(list_ctrl.GetColumnCount()):
+			list_ctrl.SetColumnWidth(index, wx.LIST_AUTOSIZE_USEHEADER)
+			
+			#cap column width at max 400
+			if list_ctrl.GetColumnWidth(index) > 400:
+				list_ctrl.SetColumnWidth(index, 400)
+		
+		#hide id column
+		list_ctrl.SetColumnWidth(0, 0)
+		
+		list_ctrl.Thaw()
+
+
+
+
 	def on_click_log_time(self, event):
 		button = event.GetEventObject()
 		button_name = button.Name.split(':')[1].replace('log_time_', '')
@@ -1039,7 +1100,7 @@ class LogTimeDialog(wx.Dialog):
 			list_ctrl.SetStringItem(log_index, 0, '{}'.format(id))
 			#list_ctrl.SetStringItem(log_index, 1, '{:.1f}'.format(hours))
 			list_ctrl.SetStringItem(log_index, 1, '{}'.format(hours))
-			list_ctrl.SetStringItem(log_index, 2, '{}'.format(when_logged.strftime("%m/%d/%y   %I:%M %p")))
+			list_ctrl.SetStringItem(log_index, 2, '{}'.format(when_logged.strftime('%m/%d/%y %I:%M %p')))
 			list_ctrl.SetStringItem(log_index, 3, '{}'.format(tags))
 			
 			total_hours += hours
@@ -1084,6 +1145,11 @@ class LogTimeDialog(wx.Dialog):
 			("hours", hours),
 			("tags", tags_string),)
 		)
+
+		self.parent.Freeze()
+		self.parent.reset_all()
+		self.parent.populate_all()
+		self.parent.Thaw()
 
 		self.Close()
 
