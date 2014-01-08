@@ -202,7 +202,9 @@ class ItemFrame(wx.Frame):
 		self.reset_labor_hours_tab()
 		self.reset_changes_tab()
 		self.reset_time_logs_tab()
+		self.reset_misc_tab()
 		
+
 	def populate_all(self):
 		self.populate_other_items_panel()
 		self.populate_details_panel()
@@ -211,6 +213,7 @@ class ItemFrame(wx.Frame):
 		self.populate_labor_hours_tab()
 		self.populate_changes_tab()
 		self.populate_time_logs_tab()
+		self.populate_misc_tab()
 
 		ctrl(self, 'panel:main').Layout()
 
@@ -343,6 +346,62 @@ class ItemFrame(wx.Frame):
 			ctrl(self, 'label:date_actual_finish').SetLabel(date_actual_finish)
 			ctrl(self, 'label:date_request_delivered').SetLabel(date_request_delivered)
 			ctrl(self, 'label:date_shipped').SetLabel(date_shipped)
+
+
+	def reset_misc_tab(self):
+		ctrl(self, 'text:orders.misc.refrigerant').SetValue('')
+		ctrl(self, 'text:orders.misc.compressor_manufacturer').SetValue('')
+		ctrl(self, 'text:orders.misc.compressor_type').SetValue('')
+		ctrl(self, 'text:orders.misc.compressor_quantity').SetValue('')
+		ctrl(self, 'text:orders.misc.circuit_quantity').SetValue('')
+		ctrl(self, 'text:orders.misc.controller').SetValue('')
+		ctrl(self, 'text:orders.misc.length').SetValue('')
+		ctrl(self, 'text:orders.misc.width').SetValue('')
+		ctrl(self, 'text:orders.misc.height').SetValue('')
+
+
+	def populate_misc_tab(self):
+		record = db.query('''
+			SELECT
+				refrigerant,
+				compressor_manufacturer,
+				compressor_type,
+				compressor_quantity,
+				circuit_quantity,
+				controller,
+				length,
+				width,
+				height
+			FROM
+				orders.misc
+			WHERE
+				id={}
+			'''.format(self.id))
+
+		if record:
+			#format all fields as strings
+			formatted_record = []
+			for field in record[0]:
+				if field == None:
+					field = ''
+				else:
+					pass
+					
+				formatted_record.append(field)
+
+			refrigerant, compressor_manufacturer, compressor_type, compressor_quantity, \
+			circuit_quantity, controller, length, width, height = formatted_record
+
+			ctrl(self, 'text:orders.misc.refrigerant').SetValue(refrigerant)
+			ctrl(self, 'text:orders.misc.compressor_manufacturer').SetValue(compressor_manufacturer)
+			ctrl(self, 'text:orders.misc.compressor_type').SetValue(compressor_type)
+			ctrl(self, 'text:orders.misc.compressor_quantity').SetValue(compressor_quantity)
+			ctrl(self, 'text:orders.misc.circuit_quantity').SetValue(circuit_quantity)
+			ctrl(self, 'text:orders.misc.controller').SetValue(controller)
+			ctrl(self, 'text:orders.misc.length').SetValue(length)
+			ctrl(self, 'text:orders.misc.width').SetValue(width)
+			ctrl(self, 'text:orders.misc.height').SetValue(height)
+
 
 
 	def reset_labor_hours_tab(self):
