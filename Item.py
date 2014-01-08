@@ -869,7 +869,9 @@ class ItemFrame(wx.Frame):
 			ctrl(self, 'list:changes').InsertColumn(index, column_name)
 
 	def reset_changes_tab(self):
-		ctrl(self, 'list:changes').DeleteAllItems()
+		list_ctrl = ctrl(self, 'list:changes')
+		list_ctrl.DeleteAllItems()
+		list_ctrl.clean_headers()
 
 	def populate_changes_tab(self):
 		list_ctrl = ctrl(self, 'list:changes')
@@ -949,7 +951,9 @@ class ItemFrame(wx.Frame):
 			ctrl(self, 'list:time_logs').InsertColumn(index, column_name)
 
 	def reset_time_logs_tab(self):
-		ctrl(self, 'list:time_logs').DeleteAllItems()
+		list_ctrl = ctrl(self, 'list:time_logs')
+		list_ctrl.DeleteAllItems()
+		list_ctrl.clean_headers()
 
 	def populate_time_logs_tab(self):
 		list_ctrl = ctrl(self, 'list:time_logs')
@@ -1035,7 +1039,7 @@ class LogTimeDialog(wx.Dialog):
 
 		#set some toggle button defaults based on which "clock" was pressed
 		if button_name == 'applications_engineer':
-			ctrl(self, 'toggle:applications').SetValue(True)
+			ctrl(self, 'toggle:quoting').SetValue(True)
 
 		elif button_name == 'design_engineer':
 			#ctrl(self, 'toggle:planning').SetValue(True)
@@ -1125,7 +1129,7 @@ class LogTimeDialog(wx.Dialog):
 			return
 		
 		tags = []
-		if ctrl(self, 'toggle:applications').GetValue(): tags.append('Applications')
+		if ctrl(self, 'toggle:quoting').GetValue(): tags.append('Quoting')
 		if ctrl(self, 'toggle:planning').GetValue(): tags.append('Planning')
 		if ctrl(self, 'toggle:cad_design').GetValue(): tags.append('CAD Design')
 		if ctrl(self, 'toggle:review').GetValue(): tags.append('Review')
