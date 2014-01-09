@@ -39,8 +39,8 @@ def take_screenshot(frame):
 	#limit max screenshot width and height to prevent stupid print bug
 	if rect.width > 1000:
 		rect.width = 1000
-	if rect.height > 600:
-		rect.height = 600
+	if rect.height > 700:
+		rect.height = 700
 
 	#Create a DC for the whole screen area
 	dcScreen = wx.ScreenDC()
@@ -167,7 +167,7 @@ class SnapshotPrinter(wx.Frame):
 		self.printer.GetPrintData().SetPaperId(wx.PAPER_LETTER)
 		self.printer.GetPrintData().SetOrientation(wx.LANDSCAPE)
 		self.printer.GetPageSetupData().SetMarginTopLeft((0, 15))
-		self.printer.GetPageSetupData().SetMarginBottomRight((0, 15))
+		self.printer.GetPageSetupData().SetMarginBottomRight((0, 0))
 		self.printer.PrintFile(self.html.GetOpenedPage())
 
 	#----------------------------------------------------------------------
