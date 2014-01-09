@@ -5,6 +5,8 @@ import sys
 import os
 import subprocess
 
+import SnapshotPrinter		#for printing of wx window
+
 import wx
 from wx import xrc
 ctrl = xrc.XRCCTRL
@@ -32,6 +34,8 @@ class ItemFrame(wx.Frame):
 
 		self.Bind(wx.EVT_BUTTON, self.on_click_goto_next_item, id=xrc.XRCID('button:next_item'))
 		self.Bind(wx.EVT_BUTTON, self.on_click_goto_previous_item, id=xrc.XRCID('button:previous_item'))
+		
+		self.Bind(wx.EVT_BUTTON, self.on_click_print_window, id=xrc.XRCID('button:print'))
 		
 		self.Bind(wx.EVT_BUTTON, self.on_click_log_time, id=xrc.XRCID('button:log_time_applications_engineer'))
 		self.Bind(wx.EVT_BUTTON, self.on_click_log_time, id=xrc.XRCID('button:log_time_design_engineer'))
@@ -63,6 +67,11 @@ class ItemFrame(wx.Frame):
 
 
 		self.Show()
+
+
+	def on_click_print_window(self, event):
+		SnapshotPrinter.print_window(self)
+		wx.CallAfter(self.Raise)
 
 	
 	def on_focus_insert_date(self, event):
