@@ -89,7 +89,7 @@ class TweakedGrid(wx.grid.Grid):
 						data = data + str(self.GetCellValue(self.GetSelectionBlockTopLeft()[0][0] + r, self.GetSelectionBlockTopLeft()[0][1] + c))
 						if c < cols - 1:
 							data = data + '\t'
-					data = data + '\n'
+					data = data + '\r\n'
 				
 			# Create text data object
 			clipboard = wx.TextDataObject()
