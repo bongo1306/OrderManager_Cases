@@ -15,6 +15,8 @@ import datetime as dt
 import General as gn
 import Database as db
 
+import TweakedGrid
+
 
 class ItemFrame(wx.Frame):
 	def __init__(self, parent, id):
@@ -62,6 +64,7 @@ class ItemFrame(wx.Frame):
 		self.init_responsibilities_tab()
 		self.init_changes_tab()
 		self.init_time_logs_tab()
+		self.init_tabulated_data_tab()
 		
 		self.populate_all()
 
@@ -213,6 +216,7 @@ class ItemFrame(wx.Frame):
 		self.reset_time_logs_tab()
 		self.reset_misc_tab()
 		self.reset_financials_tab()
+		self.reset_tabulated_data_tab()
 		
 
 	def populate_all(self):
@@ -225,6 +229,7 @@ class ItemFrame(wx.Frame):
 		self.populate_time_logs_tab()
 		self.populate_misc_tab()
 		self.populate_financials_tab()
+		self.populate_tabulated_data_tab()
 
 		ctrl(self, 'panel:main').Layout()
 
@@ -674,6 +679,71 @@ class ItemFrame(wx.Frame):
 			
 		dialog.Destroy()
 
+
+	def init_tabulated_data_tab(self):
+		table_panel = ctrl(self, 'panel:tabulated_data')
+		
+		self.tabulated_data = TweakedGrid.TweakedGrid(table_panel)
+		
+		columns = list(db.get_table_column_names('orders.view_systems', presentable=False))
+		
+		for column_index, column in enumerate(columns):
+			if '_spacer_' in column:
+				column = ''
+			columns[column_index] = '{}'.format(column)
+
+		self.tabulated_data.CreateGrid(len(columns), 2)
+		self.tabulated_data.SetRowLabelSize(0)
+		self.tabulated_data.SetColLabelValue(0, 'Field')
+		self.tabulated_data.SetColLabelValue(1, 'Value')
+		
+		for row_index, row_value in enumerate(columns):
+			self.tabulated_data.SetCellValue(row_index, 0, row_value)
+			self.tabulated_data.SetReadOnly(row_index, 0)
+			self.tabulated_data.SetReadOnly(row_index, 1)
+			self.tabulated_data.SetCellAlignment(row_index, 0, wx.ALIGN_RIGHT, wx.ALIGN_CENTRE)
+		
+		self.tabulated_data.AutoSize()
+		self.tabulated_data.SetColSize(1, 400)
+		self.tabulated_data.EnableDragRowSize(False)
+		
+		sizer = wx.BoxSizer(wx.VERTICAL)
+		sizer.Add(self.tabulated_data, 1, wx.EXPAND)
+		table_panel.SetSizer(sizer)
+		
+		table_panel.Layout()
+
+
+	def reset_tabulated_data_tab(self):
+		for row_index in range(self.tabulated_data.GetNumberRows()):
+			self.tabulated_data.SetCellValue(row_index, 1, '')
+
+
+	def populate_tabulated_data_tab(self):
+		record = db.query('''
+			SELECT
+				*
+			FROM
+				orders.view_systems
+			WHERE
+				id={}
+			'''.format(self.id))
+
+		if record:
+			#format all fields as strings
+			formatted_record = []
+			for field in record[0]:
+				if field == None:
+					field = ''
+				elif isinstance(field, dt.datetime):
+					field = field.strftime('%m/%d/%Y')
+				else:
+					field = '{}'.format(field)
+					
+				formatted_record.append(field)
+		
+			for row_index, row_value in enumerate(formatted_record):
+				self.tabulated_data.SetCellValue(row_index, 1, row_value)
 
 
 	def init_details_panel(self):
