@@ -23,6 +23,7 @@ class SearchTab(object):
 		self.Bind(wx.EVT_CHOICE, self.on_choice_table, id=xrc.XRCID('choice:which_table'))
 		self.Bind(wx.EVT_CHECKBOX, self.on_choice_table, id=xrc.XRCID('checkbox:display_alphabetically'))
 		self.Bind(wx.EVT_BUTTON, self.on_click_begin_search, id=xrc.XRCID('button:search'))
+		self.Bind(wx.EVT_BUTTON, self.on_click_open_how_to_search, id=xrc.XRCID('button:how_to_search'))
 		self.Bind(wx.EVT_BUTTON, ctrl(self, 'list:search_results').export_list, id=xrc.XRCID('button:export_results'))
 		self.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self.on_activated_result, id=xrc.XRCID('list:search_results'))
 		
@@ -32,7 +33,11 @@ class SearchTab(object):
 		ctrl(self, 'choice:which_table').AppendItems(tables)
 		ctrl(self, 'choice:which_table').SetStringSelection('orders.view_systems')
 		self.on_choice_table()
-		
+
+
+	def on_click_open_how_to_search(self, event):
+		HowToSearchFrame(self)
+
 
 	def on_activated_result(self, event):
 		#open applicable records from search results based on table selected
@@ -380,4 +385,28 @@ class SearchTab(object):
 		results_list.Thaw()
 
 		event.GetEventObject().SetLabel('Begin Search')
-		
+
+
+
+class HowToSearchFrame(wx.Frame):
+	def __init__(self, parent):
+		#load frame XRC description
+		pre = wx.PreFrame()
+		res = xrc.XmlResource.Get() 
+		res.LoadOnFrame(pre, parent, "frame:how_to_search") 
+		self.PostCreate(pre)
+		self.SetIcon(wx.Icon(gn.resource_path('OrderManager.ico'), wx.BITMAP_TYPE_ICO))
+
+		#bindings
+		self.Bind(wx.EVT_BUTTON, self.on_click_close_frame, id=xrc.XRCID('button:close'))
+
+		self.Show()
+
+	def on_click_close_frame(self, event):
+		self.Close()
+
+
+	def on_close_frame(self, event):
+		print 'called on_close_frame'
+		self.Destroy()
+
