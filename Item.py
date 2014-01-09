@@ -212,6 +212,7 @@ class ItemFrame(wx.Frame):
 		self.reset_changes_tab()
 		self.reset_time_logs_tab()
 		self.reset_misc_tab()
+		self.reset_financials_tab()
 		
 
 	def populate_all(self):
@@ -223,6 +224,7 @@ class ItemFrame(wx.Frame):
 		self.populate_changes_tab()
 		self.populate_time_logs_tab()
 		self.populate_misc_tab()
+		self.populate_financials_tab()
 
 		ctrl(self, 'panel:main').Layout()
 
@@ -411,6 +413,79 @@ class ItemFrame(wx.Frame):
 			ctrl(self, 'text:orders.misc.width').SetValue(width)
 			ctrl(self, 'text:orders.misc.height').SetValue(height)
 
+
+	def reset_financials_tab(self):
+		ctrl(self, 'text:orders.financials.material_quote').SetValue('')
+		ctrl(self, 'text:orders.financials.labor_quote').SetValue('')
+		ctrl(self, 'text:orders.financials.overhead_quote').SetValue('')
+		ctrl(self, 'text:orders.financials.cost_quote').SetValue('')
+		ctrl(self, 'text:orders.financials.copper_surcharge_quote').SetValue('')
+		ctrl(self, 'text:orders.financials.steel_surcharge_quote').SetValue('')
+		ctrl(self, 'text:orders.financials.material_standard').SetValue('')
+		ctrl(self, 'text:orders.financials.labor').SetValue('')
+		ctrl(self, 'text:orders.financials.overhead').SetValue('')
+		ctrl(self, 'text:orders.financials.cost_standard').SetValue('')
+		ctrl(self, 'text:orders.financials.list_price').SetValue('')
+		ctrl(self, 'text:orders.financials.discount_multiplier').SetValue('')
+		ctrl(self, 'text:orders.financials.margin_standard').SetValue('')
+		ctrl(self, 'text:orders.financials.gross_margin_standard').SetValue('')
+		ctrl(self, 'text:orders.financials.net_sales').SetValue('')
+
+
+	def populate_financials_tab(self):
+		record = db.query('''
+			SELECT
+				material_quote, 
+				labor_quote, 
+				overhead_quote, 
+				cost_quote, 
+				copper_surcharge_quote, 
+				steel_surcharge_quote, 
+				material_standard, 
+				labor, 
+				overhead, 
+				cost_standard, 
+				list_price, 
+				discount_multiplier, 
+				margin_standard, 
+				gross_margin_standard, 
+				net_sales
+			FROM
+				orders.financials
+			WHERE
+				id={}
+			'''.format(self.id))
+
+		if record:
+			#format all fields as strings
+			formatted_record = []
+			for field in record[0]:
+				if field == None:
+					field = ''
+				else:
+					field = '{}'.format(field)
+					
+				formatted_record.append(field)
+
+			material_quote, labor_quote, overhead_quote, cost_quote, copper_surcharge_quote, steel_surcharge_quote, \
+			material_standard, labor, overhead, cost_standard, list_price, discount_multiplier, \
+			margin_standard, gross_margin_standard, net_sales = formatted_record
+
+			ctrl(self, 'text:orders.financials.material_quote').SetValue(material_quote)
+			ctrl(self, 'text:orders.financials.labor_quote').SetValue(labor_quote)
+			ctrl(self, 'text:orders.financials.overhead_quote').SetValue(overhead_quote)
+			ctrl(self, 'text:orders.financials.cost_quote').SetValue(cost_quote)
+			ctrl(self, 'text:orders.financials.copper_surcharge_quote').SetValue(copper_surcharge_quote)
+			ctrl(self, 'text:orders.financials.steel_surcharge_quote').SetValue(steel_surcharge_quote)
+			ctrl(self, 'text:orders.financials.material_standard').SetValue(material_standard)
+			ctrl(self, 'text:orders.financials.labor').SetValue(labor)
+			ctrl(self, 'text:orders.financials.overhead').SetValue(overhead)
+			ctrl(self, 'text:orders.financials.cost_standard').SetValue(cost_standard)
+			ctrl(self, 'text:orders.financials.list_price').SetValue(list_price)
+			ctrl(self, 'text:orders.financials.discount_multiplier').SetValue(discount_multiplier)
+			ctrl(self, 'text:orders.financials.margin_standard').SetValue(margin_standard)
+			ctrl(self, 'text:orders.financials.gross_margin_standard').SetValue(gross_margin_standard)
+			ctrl(self, 'text:orders.financials.net_sales').SetValue(net_sales)
 
 
 	def reset_labor_hours_tab(self):
