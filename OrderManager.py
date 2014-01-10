@@ -97,7 +97,7 @@ class LoginFrame(wx.Frame):
 		#gn.splash_frame.Close()
 		
 		##############
-		self.on_click_login()
+		#self.on_click_login()
 
 
 	def on_click_login(self, event=None):
