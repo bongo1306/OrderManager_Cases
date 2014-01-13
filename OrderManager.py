@@ -179,12 +179,14 @@ class MainFrame(wx.Frame, Search.SearchTab):
 
 		self.init_search_tab()
 		self.init_lists()
+		self.init_reports()
 		
 		self.refresh_list_lacking_quote_ae()
 		self.refresh_list_unreleased_ae()
 		self.refresh_list_unreleased_de()
 		self.refresh_list_exceptions_de()
 		self.refresh_list_sent_to_mmg()
+
 
 		self.Show()
 		
@@ -201,6 +203,138 @@ class MainFrame(wx.Frame, Search.SearchTab):
 
 		if table_id != '':
 			Item.ItemFrame(self, int(table_id))
+
+
+	def init_reports(self):
+		self.Bind(wx.EVT_BUTTON, self.on_click_calc_de_release_stats, id=xrc.XRCID('button:calc_de_release_stats'))
+		
+		today = dt.date.today()
+		first_day_last_week = today - dt.timedelta(days=today.weekday()-2) - dt.timedelta(days=3) - dt.timedelta(weeks=1)
+		last_day_last_week = first_day_last_week + dt.timedelta(days=6)
+		
+		ctrl(self, 'date:de_release_stats_from').SetValue(wx.DateTimeFromDMY(first_day_last_week.day, first_day_last_week.month-1, first_day_last_week.year))		
+		ctrl(self, 'date:de_release_stats_to').SetValue(wx.DateTimeFromDMY(last_day_last_week.day, last_day_last_week.month-1, last_day_last_week.year))		
+
+
+	def on_click_calc_de_release_stats(self, event):
+		start_date = gn.wxdate2pydate(ctrl(self, 'date:de_release_stats_from').GetValue())
+		end_date = gn.wxdate2pydate(ctrl(self, 'date:de_release_stats_to').GetValue())
+
+		report = ctrl(self.main_frame, 'text:de_release_stats')
+		report.SetValue('')
+		
+		#report.AppendText("Considering items DE released from {} to {},\n\n".format(start_date.strftime('%m/%d/%y'), end_date.strftime('%m/%d/%y')))
+
+		rel_items_data = db.query('''
+			SELECT 
+				item,
+				date_bpcs_de_req_rel,
+				date_de_com_rel,
+				date_de_released,
+				family,
+				hours_standard
+			FROM orders WHERE
+				date_de_released>='{}' AND
+				date_de_released<='{}'
+			ORDER BY date_de_released'''.format(start_date, '{} 23:59:59'.format(end_date)))
+
+		est_de_hours = 0
+		act_de_hours = 0
+
+		act_std_hours = 0
+		est_std_hours = 0
+
+		ontime_by_request = 0
+		ontime_by_planned = 0
+		
+		released_ahead_of_schedule = 0
+		released_ahead_of_schedule_std_hours = 0
+		
+		items_with_no_logged_time = []
+		
+		items_rel_late = []
+		
+		for rel_item_data in rel_items_data:
+			item, date_bpcs_de_req_rel, date_de_com_rel, date_de_released, family, hours_standard = rel_item_data
+			
+			#date_de_released += dt.timedelta(days=3)###
+			#date_de_released = workdayadd(date_de_released, 3)
+			
+			try:
+				if date_de_released <= date_bpcs_de_req_rel:
+					ontime_by_request += 1
+			except Exception as e:
+				print e
+				
+			try:
+				if date_de_released <= date_de_com_rel:
+					ontime_by_planned += 1
+				else:
+					items_rel_late.append("{} - released {} working days late".format(item, workdaysub(date_de_com_rel, date_de_released)-1))
+					
+			except Exception as e:
+				#items_rel_late.append("{} - no Com Rel Date".format(item))
+				#thinking positively, just assume on time if item was never scheduled to begin with.
+				ontime_by_planned += 1
+				print e
+			
+			est_de_hours += sum(db.query("SELECT mean_hours FROM family_hour_estimates WHERE family='{}'".format(family)))
+			
+			this_act_de_hours = sum(db.query("SELECT hours FROM time_logs WHERE item='{}'".format(item)))
+			if this_act_de_hours == 0:
+				#print item
+				items_with_no_logged_time.append(item)
+			else:
+				act_de_hours += this_act_de_hours
+				
+			this_est_std_hours = 0
+			if hours_standard == 0:
+				this_est_std_hours = db.query("SELECT mean_hours FROM std_family_hour_estimates WHERE family='{}'".format(family))[0]
+				est_std_hours += this_est_std_hours
+			else:
+				act_std_hours += hours_standard
+			
+			try:
+				#if date_de_com_rel > dt.datetime.combine(end_date, dt.time()):
+				if date_de_com_rel > date_de_released + dt.timedelta(days=6-date_de_released.weekday()):
+					#print item, '{}	{}'.format(date_de_com_rel, (hours_standard + this_est_std_hours))
+					released_ahead_of_schedule += 1
+					released_ahead_of_schedule_std_hours += (hours_standard + this_est_std_hours) #one of them is zero so it's koo
+			except Exception as e:
+				print 'checking if date_de_com_rel > end_date for {}'.format(item), e
+				
+
+		report.AppendText("{} items were released by DE between {} and {},\n\n".format(len(rel_items_data), start_date.strftime('%m/%d/%Y'), end_date.strftime('%m/%d/%Y')))
+		
+		if rel_items_data:
+			report.AppendText("     {} items or {:.0f}% were released on time based on Date BPCS DE Req Rel\n".format(ontime_by_request, ontime_by_request/float(len(rel_items_data))*100))
+			report.AppendText("     {} items or {:.0f}% were released on time based on Date DE Com Rel\n\n".format(ontime_by_planned, ontime_by_planned/float(len(rel_items_data))*100))
+
+			report.AppendText("     {:.0f} hours estimated worked by DE based on our family hour estimates\n".format(est_de_hours))
+			report.AppendText("     {:.0f} hours actually logged by DE\n\n".format(act_de_hours))
+
+			report.AppendText("     {:.0f} standard hours released, {:.0f} of which are actually known while {:.0f} are estimated\n".format(est_std_hours+act_std_hours, act_std_hours, est_std_hours))
+			report.AppendText("     {} items where released ahead of schedule, accounting for {:.0f} of the {:.0f} standard hours\n\n\n".format(released_ahead_of_schedule, released_ahead_of_schedule_std_hours, est_std_hours+act_std_hours))
+
+			if items_with_no_logged_time:
+				report.AppendText("The following items have no time logged for them:\n")
+				
+				for item_with_no_logged_time in items_with_no_logged_time:
+					#print item_with_no_logged_time
+					project_lead = db.query("SELECT project_lead FROM item_responsibilities2 WHERE item='{}'".format(item_with_no_logged_time))
+					
+					if project_lead:
+						report.AppendText("     {:<9} - Project Lead is {}\n".format(item_with_no_logged_time, project_lead[0]))
+					else:
+						report.AppendText("     {:<9} - No Project Lead... Maybe AE did it?\n".format(item_with_no_logged_time))
+						
+			if items_rel_late:
+				report.AppendText("\nThe following items are late according to DE Com Rel:\n")
+				
+				for entry in items_rel_late:
+					report.AppendText("     {}\n".format(entry))
+
+
 
 
 	def init_lists(self):
