@@ -603,7 +603,7 @@ class MainFrame(wx.Frame, Search.SearchTab):
 				production_order IS NOT NULL AND
 				status <> 'Canceled'
 			ORDER BY
-				date_planned_de_release, date_requested_de_release, sales_order, item ASC
+				date_requested_de_release, sales_order, item ASC
 			''')
 		
 		#insert records into list
