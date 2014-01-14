@@ -220,23 +220,28 @@ class MainFrame(wx.Frame, Search.SearchTab):
 		start_date = gn.wxdate2pydate(ctrl(self, 'date:de_release_stats_from').GetValue())
 		end_date = gn.wxdate2pydate(ctrl(self, 'date:de_release_stats_to').GetValue())
 
-		report = ctrl(self.main_frame, 'text:de_release_stats')
+		report = ctrl(self, 'text:de_release_stats')
 		report.SetValue('')
 		
 		#report.AppendText("Considering items DE released from {} to {},\n\n".format(start_date.strftime('%m/%d/%y'), end_date.strftime('%m/%d/%y')))
 
 		rel_items_data = db.query('''
-			SELECT 
-				item,
-				date_bpcs_de_req_rel,
-				date_de_com_rel,
-				date_de_released,
-				family,
+			SELECT
+				id,
+				production_order,
+				date_requested_de_release,
+				date_planned_de_release,
+				date_actual_de_release,
+				material,
 				hours_standard
-			FROM orders WHERE
-				date_de_released>='{}' AND
-				date_de_released<='{}'
-			ORDER BY date_de_released'''.format(start_date, '{} 23:59:59'.format(end_date)))
+			FROM
+				orders.view_systems
+			WHERE
+				date_actual_de_release >= '{}' AND
+				date_actual_de_release <= '{} 23:59:59'
+			ORDER BY
+				date_actual_de_release
+			'''.format(start_date, end_date))
 
 		est_de_hours = 0
 		act_de_hours = 0
@@ -255,22 +260,19 @@ class MainFrame(wx.Frame, Search.SearchTab):
 		items_rel_late = []
 		
 		for rel_item_data in rel_items_data:
-			item, date_bpcs_de_req_rel, date_de_com_rel, date_de_released, family, hours_standard = rel_item_data
-			
-			#date_de_released += dt.timedelta(days=3)###
-			#date_de_released = workdayadd(date_de_released, 3)
-			
+			id, production_order, date_requested_de_release, date_planned_de_release, date_actual_de_release, material, hours_standard = rel_item_data
+
 			try:
-				if date_de_released <= date_bpcs_de_req_rel:
+				if date_actual_de_release <= date_requested_de_release:
 					ontime_by_request += 1
 			except Exception as e:
 				print e
 				
 			try:
-				if date_de_released <= date_de_com_rel:
+				if date_actual_de_release <= date_planned_de_release:
 					ontime_by_planned += 1
 				else:
-					items_rel_late.append("{} - released {} working days late".format(item, workdaysub(date_de_com_rel, date_de_released)-1))
+					items_rel_late.append("{} - released {} working days late".format(production_order, gn.get_working_days(date_planned_de_release, date_actual_de_release)-1))
 					
 			except Exception as e:
 				#items_rel_late.append("{} - no Com Rel Date".format(item))
@@ -278,37 +280,37 @@ class MainFrame(wx.Frame, Search.SearchTab):
 				ontime_by_planned += 1
 				print e
 			
-			est_de_hours += sum(db.query("SELECT mean_hours FROM family_hour_estimates WHERE family='{}'".format(family)))
+			est_de_hours += sum(db.query("SELECT mean_hours FROM family_hour_estimates WHERE family='{}'".format(material)))
 			
-			this_act_de_hours = sum(db.query("SELECT hours FROM time_logs WHERE item='{}'".format(item)))
+			this_act_de_hours = sum(db.query("SELECT hours FROM orders.time_logs WHERE order_id={}".format(id)))
 			if this_act_de_hours == 0:
 				#print item
-				items_with_no_logged_time.append(item)
+				items_with_no_logged_time.append((id, production_order))
 			else:
 				act_de_hours += this_act_de_hours
 				
 			this_est_std_hours = 0
 			if hours_standard == 0:
-				this_est_std_hours = db.query("SELECT mean_hours FROM std_family_hour_estimates WHERE family='{}'".format(family))[0]
+				this_est_std_hours = db.query("SELECT mean_hours FROM std_family_hour_estimates WHERE family='{}'".format(material))[0]
 				est_std_hours += this_est_std_hours
 			else:
 				act_std_hours += hours_standard
 			
 			try:
-				#if date_de_com_rel > dt.datetime.combine(end_date, dt.time()):
-				if date_de_com_rel > date_de_released + dt.timedelta(days=6-date_de_released.weekday()):
-					#print item, '{}	{}'.format(date_de_com_rel, (hours_standard + this_est_std_hours))
+				#if date_planned_de_release > dt.datetime.combine(end_date, dt.time()):
+				if date_planned_de_release > date_actual_de_release + dt.timedelta(days=6-date_actual_de_release.weekday()):
+					#print item, '{}	{}'.format(date_planned_de_release, (hours_standard + this_est_std_hours))
 					released_ahead_of_schedule += 1
 					released_ahead_of_schedule_std_hours += (hours_standard + this_est_std_hours) #one of them is zero so it's koo
 			except Exception as e:
-				print 'checking if date_de_com_rel > end_date for {}'.format(item), e
+				print 'checking if date_planned_de_release > end_date for {}'.format(production_order), e
 				
 
 		report.AppendText("{} items were released by DE between {} and {},\n\n".format(len(rel_items_data), start_date.strftime('%m/%d/%Y'), end_date.strftime('%m/%d/%Y')))
 		
 		if rel_items_data:
-			report.AppendText("     {} items or {:.0f}% were released on time based on Date BPCS DE Req Rel\n".format(ontime_by_request, ontime_by_request/float(len(rel_items_data))*100))
-			report.AppendText("     {} items or {:.0f}% were released on time based on Date DE Com Rel\n\n".format(ontime_by_planned, ontime_by_planned/float(len(rel_items_data))*100))
+			report.AppendText("     {} items or {:.0f}% were released on time based on date_requested_de_release\n".format(ontime_by_request, ontime_by_request/float(len(rel_items_data))*100))
+			report.AppendText("     {} items or {:.0f}% were released on time based on date_planned_de_release\n\n".format(ontime_by_planned, ontime_by_planned/float(len(rel_items_data))*100))
 
 			report.AppendText("     {:.0f} hours estimated worked by DE based on our family hour estimates\n".format(est_de_hours))
 			report.AppendText("     {:.0f} hours actually logged by DE\n\n".format(act_de_hours))
@@ -320,19 +322,24 @@ class MainFrame(wx.Frame, Search.SearchTab):
 				report.AppendText("The following items have no time logged for them:\n")
 				
 				for item_with_no_logged_time in items_with_no_logged_time:
+					
+					ord_id, prod_ord = item_with_no_logged_time
+					
 					#print item_with_no_logged_time
-					project_lead = db.query("SELECT project_lead FROM item_responsibilities2 WHERE item='{}'".format(item_with_no_logged_time))
+					project_lead = db.query("SELECT design_engineer FROM orders.responsibilities WHERE id={}".format(ord_id))
 					
 					if project_lead:
-						report.AppendText("     {:<9} - Project Lead is {}\n".format(item_with_no_logged_time, project_lead[0]))
+						report.AppendText("     {:<9} - Project Lead is {}\n".format(prod_ord, project_lead[0]))
 					else:
-						report.AppendText("     {:<9} - No Project Lead... Maybe AE did it?\n".format(item_with_no_logged_time))
+						report.AppendText("     {:<9} - No Project Lead... Maybe AE did it?\n".format(prod_ord))
 						
 			if items_rel_late:
-				report.AppendText("\nThe following items are late according to DE Com Rel:\n")
+				report.AppendText("\nThe following items are late according to date_planned_de_release:\n")
 				
 				for entry in items_rel_late:
 					report.AppendText("     {}\n".format(entry))
+		
+		report.AppendText("\n\nElvis, remember this is still using dbo.family_hour_estimates and dbo.std_family_hour_estimates...")
 
 
 
