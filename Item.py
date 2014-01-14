@@ -306,6 +306,15 @@ class ItemFrame(wx.Frame):
 			requested_de_release, planned_de_release, planned_de_release_locked, suggested_de_start, actual_de_release, \
 			requested_mmg_release, planned_mmg_release, planned_mmg_release_locked, suggested_mmg_start, actual_mmg_release = formatted_record
 
+			if planned_ae_release_locked == '':
+				planned_ae_release_locked = False
+
+			if planned_de_release_locked == '':
+				planned_de_release_locked = False
+
+			if planned_mmg_release_locked == '':
+				planned_mmg_release_locked = False
+
 			ctrl(self, 'text:orders.target_dates.requested_ae_release').SetValue(requested_ae_release)
 			ctrl(self, 'text:orders.target_dates.planned_ae_release').SetValue(planned_ae_release)
 			ctrl(self, 'text:orders.target_dates.suggested_ae_start').SetValue(suggested_ae_start)
