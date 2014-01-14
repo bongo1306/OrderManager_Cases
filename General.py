@@ -16,9 +16,10 @@ updates_dir = r"\\kw_engineering\sharepoint$\Everyone\Management Software\OrderM
 app = None
 user = None
 
-#splash_frame = None
-#login_frame = None
-#main_frame = None
+#references needed for when closing on software update
+splash_frame = None
+login_frame = None
+main_frame = None
 
 
 #used in the resource_path function to prevent CWD changes from messing things up

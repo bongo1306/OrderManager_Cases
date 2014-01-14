@@ -7,12 +7,15 @@ import os
 import traceback
 import subprocess
 import threading
+import json
+import shutil
 
 import wx				#wxWidgets used as the GUI
 from wx import xrc		#allows the loading and access of xrc file (xml) that describes GUI
 ctrl = xrc.XRCCTRL		#define a shortined function name (just for convienience)
 import wx.lib.agw.advancedsplash as AS
 #import wx.lib.inspection
+import wx.richtext as rt
 
 import ConfigParser #for reading local config data (*.cfg)
 
@@ -31,9 +34,10 @@ import Item
 
 def check_for_updates():
 	try:
-		with open(os.path.join(gn.updates_dir, "updates.txt")) as file:
-			lines = file.readlines()
-			latest_version = lines[-1].split('`')[0]
+		with open(os.path.join(gn.updates_dir, "releases.json")) as file:
+			releases = json.load(file)
+			
+			latest_version = releases[0]['version']
 			
 			if version != latest_version:
 				wx.CallAfter(open_software_update_frame)
@@ -42,6 +46,160 @@ def check_for_updates():
 
 def open_software_update_frame():
 	SoftwareUpdateFrame(None)
+
+
+
+class SoftwareUpdateFrame(wx.Frame):
+	def __init__(self, parent):
+		#load frame XRC description
+		pre = wx.PreFrame()
+		res = xrc.XmlResource.Get()  
+		res.LoadOnFrame(pre, parent, "frame:software_update") 
+		self.PostCreate(pre)
+		self.SetIcon(wx.Icon(gn.resource_path('OrderManager.ico'), wx.BITMAP_TYPE_ICO))
+		
+		#read in update text data
+		with open(os.path.join(gn.updates_dir, "releases.json")) as file:
+			releases = json.load(file)
+			
+		latest_version = releases[0]['version']
+		self.install_filename = releases[0]['installer filename']
+
+		it_is_mandatory = False
+
+		#build up what changed text
+		changes_panel = ctrl(self, 'panel:changes')
+		richtext_ctrl = rt.RichTextCtrl(changes_panel, style=wx.VSCROLL|wx.HSCROLL|wx.TE_READONLY)
+		sizer = wx.BoxSizer(wx.VERTICAL)
+		sizer.Add(richtext_ctrl, 1, wx.EXPAND)
+		changes_panel.SetSizer(sizer)
+		changes_panel.Layout()
+
+		for release in releases:
+			if float(version) < float(release['version']):
+
+				richtext_ctrl.BeginBold()
+				richtext_ctrl.WriteText('v{} - {}'.format(release['version'], release['release date']))
+				richtext_ctrl.EndBold()
+				richtext_ctrl.Newline()
+				
+				richtext_ctrl.BeginStandardBullet('*', 50, 30)
+				
+				for change in release['changes']:
+					richtext_ctrl.WriteText('{}'.format(change))
+					richtext_ctrl.Newline()
+				
+				richtext_ctrl.EndStandardBullet()
+				
+				if release['mandatory'] == True:
+					it_is_mandatory = True
+
+
+		#bindings
+		self.Bind(wx.EVT_CLOSE, self.on_close_frame)
+		self.Bind(wx.EVT_BUTTON, self.on_click_cancel, id=xrc.XRCID('button:not_now'))
+		self.Bind(wx.EVT_BUTTON, self.on_click_update, id=xrc.XRCID('button:update'))
+		
+		#misc
+		ctrl(self, 'label:intro_version').SetLabel("A new version of the OrderManager software was found on the server: v{}".format(latest_version))
+		ctrl(self, 'button:update').SetFocus()
+		
+		if it_is_mandatory == False:
+			ctrl(self, 'button:not_now').Enable()
+			ctrl(self, 'label:mandatory').Hide()
+		
+		self.Show()
+
+
+
+	def on_click_cancel(self, event):
+		self.Close()
+
+
+	def on_click_update(self, event):
+		print 'copy install file over, open it, and close this program'
+		#create a dialog to show log of what's goin on
+		dialog = wx.Dialog(self, id = wx.ID_ANY, title = u"Starting Update...", pos = wx.DefaultPosition, size = wx.DefaultSize, style = wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
+		dialog.SetSizeHintsSz(wx.DefaultSize, wx.DefaultSize)
+		dialog.SetFont(wx.Font(10, 70, 90, 90, False, wx.EmptyString))
+		bSizer53 = wx.BoxSizer(wx.VERTICAL)
+		dialog.m_panel22 = wx.Panel(dialog, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL)
+		bSizer54 = wx.BoxSizer(wx.VERTICAL)
+		bSizer55 = wx.BoxSizer(wx.VERTICAL)
+		dialog.text_notice = wx.TextCtrl(dialog.m_panel22, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.Size(350,120), wx.TE_DONTWRAP|wx.TE_MULTILINE|wx.TE_READONLY)
+		bSizer55.Add(dialog.text_notice, 1, wx.ALL|wx.EXPAND, 5)
+		bSizer54.Add(bSizer55, 1, wx.EXPAND, 5)
+		dialog.m_panel22.SetSizer(bSizer54)
+		dialog.m_panel22.Layout()
+		bSizer54.Fit(dialog.m_panel22)
+		bSizer53.Add(dialog.m_panel22, 1, wx.EXPAND |wx.ALL, 5)
+		dialog.SetSizer(bSizer53)
+		dialog.Layout()
+		bSizer53.Fit(dialog)
+		dialog.Centre(wx.BOTH)
+		dialog.Show()
+		
+		dialog.text_notice.AppendText('Downloading install file from server... \n')
+		dialog.text_notice.AppendText('This may take several minutes depending\n')
+		dialog.text_notice.AppendText('on your connection... ')
+		wx.Yield()
+		
+		try:
+			source_filepath = os.path.join(gn.updates_dir, self.install_filename)
+			destination_filepath = gn.resource_path(self.install_filename)
+			
+			shutil.copy2(source_filepath, destination_filepath)
+			
+		except Exception as e:
+			dialog.text_notice.AppendText('[FAIL]\n')
+			dialog.text_notice.AppendText('ERROR: {}\n'.format(e))
+			dialog.text_notice.AppendText('\nSoftware update failed.\n')
+			wx.Yield()
+			return
+		
+
+		dialog.text_notice.AppendText('[OK]\n')
+		dialog.text_notice.AppendText('Opening install file... ')
+		wx.Yield()
+		
+		try:
+			os.startfile(destination_filepath)
+			
+		except Exception as e:
+			dialog.text_notice.AppendText('[FAIL]\n')
+			dialog.text_notice.AppendText('ERROR: {}\n'.format(e))
+			dialog.text_notice.AppendText('\nSoftware update failed.\n')
+			wx.Yield()
+			return
+			
+		dialog.text_notice.AppendText('[OK]\n')
+		dialog.text_notice.AppendText('Shutting down this program... ')
+		wx.Yield()
+		
+		try:
+			try: gn.splash_frame.Close()
+			except Exception as e: print 'splash', e
+
+			try: gn.login_frame.Close()
+			except Exception as e: print 'login', e
+
+			try: gn.main_frame.Close()
+			except Exception as e: print 'main', e
+			
+			self.Close()
+			
+		except Exception as e:
+			dialog.text_notice.AppendText('[FAIL]\n')
+			dialog.text_notice.AppendText('ERROR: {}\n'.format(e))
+			dialog.text_notice.AppendText('\nSoftware update failed.\n')
+			wx.Yield()
+			return
+		
+
+	def on_close_frame(self, event):
+		print 'called on_close_frame'
+		self.Destroy()
+
 
 
 class LoginFrame(wx.Frame):
@@ -136,9 +294,8 @@ class LoginFrame(wx.Frame):
 				config.write(configfile)
 
 			gn.user = selected_user
-			## don't need to store it??? gn.main_frame = MainFrame(None)
-			MainFrame(None)
-			
+			gn.main_frame = MainFrame(None)
+
 			self.Close()
 			
 		else:
