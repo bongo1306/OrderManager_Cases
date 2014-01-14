@@ -114,7 +114,7 @@ class SnapshotPrinter(wx.Frame):
 		if not os.path.exists(gn.resource_path('screenshot.htm')):
 			self.createHtml()
 		#self.createHtml() # get rid of!!1 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-		self.html.LoadPage('screenshot.htm')
+		#self.html.LoadPage('screenshot.htm')
 		self.html.LoadPage(gn.resource_path('screenshot.htm'))
 
 		pageSetupBtn = wx.Button(self.panel, wx.ID_ANY, 'Page Setup')
