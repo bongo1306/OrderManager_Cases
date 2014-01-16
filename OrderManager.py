@@ -810,7 +810,7 @@ class MainFrame(wx.Frame, Search.SearchTab):
 			
 			#remove the decimals from the std hours
 			try:
-				hours_standard = int(round(float(hours_standard)))
+				hours_standard = round(hours_standard, 1)
 			except:
 				pass
 
@@ -919,7 +919,7 @@ class MainFrame(wx.Frame, Search.SearchTab):
 			
 			#remove the decimals from the std hours
 			try:
-				hours_standard = int(round(float(hours_standard)))
+				hours_standard = round(hours_standard, 1)
 			except:
 				pass
 
@@ -1040,7 +1040,7 @@ class MainFrame(wx.Frame, Search.SearchTab):
 			
 			#remove the decimals from the std hours
 			try:
-				hours_standard = int(round(float(hours_standard)))
+				hours_standard = round(hours_standard, 1)
 			except:
 				pass
 
@@ -1172,7 +1172,7 @@ class MainFrame(wx.Frame, Search.SearchTab):
 			
 			#remove the decimals from the std hours
 			try:
-				hours_standard = int(round(float(hours_standard)))
+				hours_standard = round(hours_standard, 1)
 			except:
 				pass
 
