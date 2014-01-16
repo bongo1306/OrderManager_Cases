@@ -9,6 +9,7 @@ import subprocess
 import threading
 import json
 import shutil
+import workdays
 
 import wx				#wxWidgets used as the GUI
 from wx import xrc		#allows the loading and access of xrc file (xml) that describes GUI
@@ -328,6 +329,8 @@ class MainFrame(wx.Frame, Search.SearchTab):
 		#self.Bind(wx.EVT_BUTTON, self.on_click_login, id=xrc.XRCID('button:log_in'))
 		#self.Bind(wx.EVT_BUTTON, self.on_click_create_user, id=xrc.XRCID('button:create_user'))
 		
+		self.Bind(wx.EVT_BUTTON, self.on_click_proto_request_dates, id=xrc.XRCID('button:proto_request_dates'))
+		
 
 
 		#misc
@@ -353,6 +356,111 @@ class MainFrame(wx.Frame, Search.SearchTab):
 		#Item.ItemFrame(self, id=12588283)
 		#Item.ItemFrame(self, id=12587666)
 		#Item.ItemFrame(self, id=12585385)
+
+
+	def on_click_proto_request_dates(self, event):
+		records = db.query('''
+			SELECT
+				id,
+				
+				CASE
+					WHEN bpcs_sales_order IS NULL THEN sales_order
+					WHEN sales_order IS NULL THEN bpcs_sales_order
+					ELSE sales_order + '/' + bpcs_sales_order
+				END AS sales_order,
+
+				CASE
+					WHEN bpcs_line_up IS NULL THEN item
+					WHEN item IS NULL THEN bpcs_line_up
+					ELSE item + '/' + bpcs_line_up
+				END AS item,
+
+				CASE
+					WHEN bpcs_item IS NULL THEN production_order
+					WHEN production_order IS NULL THEN bpcs_item
+					ELSE production_order + '/' + bpcs_item
+				END AS production_order,
+
+				CASE
+					WHEN bpcs_family IS NULL THEN material
+					WHEN material IS NULL THEN bpcs_family
+					ELSE material + '/' + bpcs_family
+				END AS material,
+
+				date_basic_start,
+				date_requested_de_release
+			FROM
+				orders.view_systems
+			WHERE
+				date_actual_de_release IS NULL AND
+				production_order IS NOT NULL AND
+				material <> 'SPARTCOLS' AND
+				status <> 'Canceled'
+			ORDER BY
+				date_basic_start ASC
+			''')
+		
+		output = '	'.join(['Sales Order', 'Item', 'Production Order', 'When Got ProdOrd', 'Material', 'Basic Start', 'Ricky Request', 'Calculated Request'])
+		output += '\n'
+		
+		for index, record in enumerate(records):
+			id, sales_order, item, production_order, material, basic_start, ricky_request = record
+			
+			when_got_prod_ord = db.query('''
+				SELECT TOP 1
+					when_changed
+				FROM
+					orders.changes
+				WHERE
+					field = 'production_order' AND
+					table_id = {}
+				ORDER BY
+					id DESC
+				'''.format(id))
+
+
+			
+			try:
+				calc_request = workdays.workday(basic_start, -23)
+			except:
+				calc_request = ''
+
+
+
+			if when_got_prod_ord:
+				when_got_prod_ord = when_got_prod_ord[0].strftime('%m/%d/%Y')
+			else:
+				when_got_prod_ord = ''
+
+			if basic_start == None:
+				basic_start = ''
+				
+			if ricky_request == None:
+				ricky_request = ''
+			
+			try: basic_start = basic_start.strftime('%m/%d/%Y')
+			except: pass
+
+			try: ricky_request = ricky_request.strftime('%m/%d/%Y')
+			except: pass
+
+			try: calc_request = calc_request.strftime('%m/%d/%Y')
+			except: pass
+
+			output += '{}	'.format(sales_order)
+			output += '{}	'.format(item)
+			output += '{}	'.format(production_order)
+			output += '{}	'.format(when_got_prod_ord)
+			output += '{}	'.format(material)
+			output += '{}	'.format(basic_start)
+			output += '{}	'.format(ricky_request)
+			output += '{}\n'.format(calc_request)
+			
+			
+		ctrl(self, 'text:proto_request_dates').SetValue(output)
+
+
+
 
 	def on_activated_order(self, event):
 		selected_item = event.GetEventObject()
@@ -429,7 +537,7 @@ class MainFrame(wx.Frame, Search.SearchTab):
 				if date_actual_de_release <= date_planned_de_release:
 					ontime_by_planned += 1
 				else:
-					items_rel_late.append("{} - released {} working days late".format(production_order, gn.get_working_days(date_planned_de_release, date_actual_de_release)-1))
+					items_rel_late.append("{} - released {} working days late".format(production_order, workdays.networkdays(date_planned_de_release, date_actual_de_release)-1))
 					
 			except Exception as e:
 				#items_rel_late.append("{} - no Com Rel Date".format(item))
