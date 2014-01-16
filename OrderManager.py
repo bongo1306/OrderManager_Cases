@@ -556,7 +556,11 @@ class MainFrame(wx.Frame, Search.SearchTab):
 				
 			this_est_std_hours = 0
 			if hours_standard == 0:
-				this_est_std_hours = db.query("SELECT mean_hours FROM std_family_hour_estimates WHERE family='{}'".format(material))[0]
+				try:
+					this_est_std_hours = db.query("SELECT mean_hours FROM std_family_hour_estimates WHERE family='{}'".format(material))[0]
+				except:
+					print 'failed to gather this_est_std_hours for material:', material
+					this_est_std_hours = 0
 				est_std_hours += this_est_std_hours
 			else:
 				act_std_hours += hours_standard
@@ -580,8 +584,8 @@ class MainFrame(wx.Frame, Search.SearchTab):
 			report.AppendText("     {:.0f} hours estimated worked by DE based on our family hour estimates\n".format(est_de_hours))
 			report.AppendText("     {:.0f} hours actually logged by DE\n\n".format(act_de_hours))
 
-			report.AppendText("     {:.0f} standard hours released, {:.0f} of which are actually known while {:.0f} are estimated\n".format(est_std_hours+act_std_hours, act_std_hours, est_std_hours))
-			report.AppendText("     {} items where released ahead of schedule, accounting for {:.0f} of the {:.0f} standard hours\n\n\n".format(released_ahead_of_schedule, released_ahead_of_schedule_std_hours, est_std_hours+act_std_hours))
+			report.AppendText("     {:.0f} standard hours released, {:.0f} of which are actually known while {:.0f} are estimated\n".format(est_std_hours+float(act_std_hours), act_std_hours, est_std_hours))
+			report.AppendText("     {} items where released ahead of schedule, accounting for {:.0f} of the {:.0f} standard hours\n\n\n".format(released_ahead_of_schedule, released_ahead_of_schedule_std_hours, est_std_hours+float(act_std_hours)))
 
 			if items_with_no_logged_time:
 				report.AppendText("The following items have no time logged for them:\n")
