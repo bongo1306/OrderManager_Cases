@@ -806,8 +806,13 @@ class ItemFrame(wx.Frame):
 			'''.format(self.id))
 		
 		if not record:
+			#if no root record was found for this Id, likely it was a bad idea got from searching a table like orders.changes
+			# and then switching the table to orders.root where the Id locations are different in the search results list...
+			# let's go ahead and bail so we don't accidently create a new order with this trash Id
+			wx.MessageBox('An entry was not found with id={} in table orders.root.\n\nThis is likely caused by activating a search result in a table after switching to a new table to search in where the order id is not located in the same column as the other table. Redoing the search should solve the issue.'.format(self.id), 'Order Not Found', wx.OK | wx.ICON_INFORMATION)
+			self.Close()
 			return
-			
+
 		#format all fields as strings
 		formatted_record = []
 		for field in record[0]:
