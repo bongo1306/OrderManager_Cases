@@ -64,6 +64,36 @@ class SearchTab(object):
 			if table_id != '':
 				Item.ItemFrame(self, int(table_id))
 
+		if table_name == 'dbo.orders':
+			kw_item_sap_prod_ord = selected_item.GetItem(selected_item.GetFirstSelected(), 0).GetText()
+
+			#parse out the KW item or SAP prod order if applicable
+			if "/" in kw_item_sap_prod_ord:
+				sap_prod_ord = kw_item_sap_prod_ord.split("/")[1]
+				kw_item = kw_item_sap_prod_ord.split("/")[0]
+			else:
+				sap_prod_ord = None
+				kw_item = kw_item_sap_prod_ord
+
+			if sap_prod_ord == None and kw_item_sap_prod_ord[0] == '2':
+				sap_prod_ord = kw_item
+				kw_item = None
+
+			if sap_prod_ord:
+				table_id = db.query("SELECT TOP 1 id FROM orders.root WHERE production_order = '{}'".format(sap_prod_ord))
+
+			elif kw_item:
+				table_id = db.query("SELECT TOP 1 id FROM orders.root WHERE bpcs_item = '{}'".format(kw_item))
+				
+			else:
+				table_id = None
+				
+			if table_id:
+				Item.ItemFrame(self, int(table_id[0]))
+			
+			else:
+				wx.MessageBox('Order was not found in the new database.', 'Order Not Found', wx.OK | wx.ICON_ERROR)
+
 
 	def on_choice_table(self, event=None):
 		table_panel = ctrl(self, 'panel:search_criteria')
