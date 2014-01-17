@@ -710,7 +710,11 @@ class MainFrame(wx.Frame, Search.SearchTab):
 						'Structural CAD Designer']
 
 		for index, column_name in enumerate(column_names):
-			list_ctrl.InsertColumn(index, column_name)
+			if column_name == 'Std Hours':
+				list_ctrl.InsertColumn(index, column_name, wx.LIST_FORMAT_RIGHT)
+			else:
+				list_ctrl.InsertColumn(index, column_name)
+			
 
 		#design release exceptions
 		list_ctrl = ctrl(self, 'list:exceptions_de')
