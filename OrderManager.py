@@ -331,6 +331,8 @@ class MainFrame(wx.Frame, Search.SearchTab):
 		
 		self.Bind(wx.EVT_BUTTON, self.on_click_proto_request_dates, id=xrc.XRCID('button:proto_request_dates'))
 		
+		self.Bind(wx.EVT_BUTTON, self.on_click_calc_and_set_requested_de_release, id=xrc.XRCID('button:calc_and_set_requested_de_release'))
+		
 
 
 		#misc
@@ -356,6 +358,28 @@ class MainFrame(wx.Frame, Search.SearchTab):
 		#Item.ItemFrame(self, id=12588283)
 		#Item.ItemFrame(self, id=12587666)
 		#Item.ItemFrame(self, id=12585385)
+
+
+	def on_click_calc_and_set_requested_de_release(self, event):
+		records = db.query('''
+			SELECT
+				id,
+				date_basic_start
+			FROM
+				orders.view_systems
+			WHERE
+				date_actual_de_release IS NULL AND
+				date_basic_start IS NOT NULL AND
+				material <> 'SPARTCOLS' AND
+				status <> 'Canceled'
+			''')
+		
+		for record in records:
+			id, date_basic_start = record
+			
+			calc_requested_de_release = workdays.workday(date_basic_start, -23)
+			
+			print record, calc_requested_de_release
 
 
 	def on_click_proto_request_dates(self, event):
