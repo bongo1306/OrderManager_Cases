@@ -952,7 +952,7 @@
                 </object>
             </object>
         </object>
-        <object class="Frame" expanded="1">
+        <object class="Frame" expanded="0">
             <property name="aui_managed">0</property>
             <property name="aui_manager_style">wxAUI_MGR_DEFAULT</property>
             <property name="bg"></property>
@@ -1014,16 +1014,16 @@
             <event name="OnSetFocus"></event>
             <event name="OnSize"></event>
             <event name="OnUpdateUI"></event>
-            <object class="wxBoxSizer" expanded="1">
+            <object class="wxBoxSizer" expanded="0">
                 <property name="minimum_size"></property>
                 <property name="name">bSizer6</property>
                 <property name="orient">wxVERTICAL</property>
                 <property name="permission">none</property>
-                <object class="sizeritem" expanded="1">
+                <object class="sizeritem" expanded="0">
                     <property name="border">5</property>
                     <property name="flag">wxEXPAND</property>
                     <property name="proportion">1</property>
-                    <object class="wxNotebook" expanded="1">
+                    <object class="wxNotebook" expanded="0">
                         <property name="BottomDockable">1</property>
                         <property name="LeftDockable">1</property>
                         <property name="RightDockable">1</property>
@@ -2569,11 +2569,11 @@
                                 </object>
                             </object>
                         </object>
-                        <object class="notebookpage" expanded="1">
+                        <object class="notebookpage" expanded="0">
                             <property name="bitmap"></property>
                             <property name="label"> Design </property>
                             <property name="select">1</property>
-                            <object class="wxPanel" expanded="1">
+                            <object class="wxPanel" expanded="0">
                                 <property name="BottomDockable">1</property>
                                 <property name="LeftDockable">1</property>
                                 <property name="RightDockable">1</property>
@@ -2647,7 +2647,7 @@
                                 <event name="OnSetFocus"></event>
                                 <event name="OnSize"></event>
                                 <event name="OnUpdateUI"></event>
-                                <object class="wxBoxSizer" expanded="1">
+                                <object class="wxBoxSizer" expanded="0">
                                     <property name="minimum_size"></property>
                                     <property name="name">bSizer281</property>
                                     <property name="orient">wxVERTICAL</property>
@@ -2662,11 +2662,11 @@
                                             <property name="width">0</property>
                                         </object>
                                     </object>
-                                    <object class="sizeritem" expanded="1">
+                                    <object class="sizeritem" expanded="0">
                                         <property name="border">5</property>
                                         <property name="flag">wxEXPAND|wxLEFT</property>
                                         <property name="proportion">1</property>
-                                        <object class="wxNotebook" expanded="1">
+                                        <object class="wxNotebook" expanded="0">
                                             <property name="BottomDockable">1</property>
                                             <property name="LeftDockable">1</property>
                                             <property name="RightDockable">1</property>
@@ -4593,11 +4593,11 @@
                                                     </object>
                                                 </object>
                                             </object>
-                                            <object class="notebookpage" expanded="1">
+                                            <object class="notebookpage" expanded="0">
                                                 <property name="bitmap"></property>
                                                 <property name="label"> Scheduling </property>
                                                 <property name="select">0</property>
-                                                <object class="wxPanel" expanded="1">
+                                                <object class="wxPanel" expanded="0">
                                                     <property name="BottomDockable">1</property>
                                                     <property name="LeftDockable">1</property>
                                                     <property name="RightDockable">1</property>
@@ -4671,35 +4671,35 @@
                                                     <event name="OnSetFocus"></event>
                                                     <event name="OnSize"></event>
                                                     <event name="OnUpdateUI"></event>
-                                                    <object class="wxBoxSizer" expanded="1">
+                                                    <object class="wxBoxSizer" expanded="0">
                                                         <property name="minimum_size"></property>
                                                         <property name="name">bSizer71</property>
                                                         <property name="orient">wxVERTICAL</property>
                                                         <property name="permission">none</property>
-                                                        <object class="sizeritem" expanded="1">
+                                                        <object class="sizeritem" expanded="0">
                                                             <property name="border">5</property>
                                                             <property name="flag">wxEXPAND</property>
                                                             <property name="proportion">0</property>
-                                                            <object class="spacer" expanded="1">
+                                                            <object class="spacer" expanded="0">
                                                                 <property name="height">10</property>
                                                                 <property name="permission">protected</property>
                                                                 <property name="width">0</property>
                                                             </object>
                                                         </object>
-                                                        <object class="sizeritem" expanded="1">
+                                                        <object class="sizeritem" expanded="0">
                                                             <property name="border">5</property>
                                                             <property name="flag"></property>
                                                             <property name="proportion">0</property>
-                                                            <object class="wxBoxSizer" expanded="1">
+                                                            <object class="wxBoxSizer" expanded="0">
                                                                 <property name="minimum_size"></property>
                                                                 <property name="name">bSizer72</property>
                                                                 <property name="orient">wxHORIZONTAL</property>
                                                                 <property name="permission">none</property>
-                                                                <object class="sizeritem" expanded="1">
+                                                                <object class="sizeritem" expanded="0">
                                                                     <property name="border">5</property>
                                                                     <property name="flag">wxALL|wxALIGN_CENTER_VERTICAL</property>
                                                                     <property name="proportion">0</property>
-                                                                    <object class="wxButton" expanded="1">
+                                                                    <object class="wxButton" expanded="0">
                                                                         <property name="BottomDockable">1</property>
                                                                         <property name="LeftDockable">1</property>
                                                                         <property name="RightDockable">1</property>
@@ -4783,11 +4783,11 @@
                                                                         <event name="OnUpdateUI"></event>
                                                                     </object>
                                                                 </object>
-                                                                <object class="sizeritem" expanded="1">
+                                                                <object class="sizeritem" expanded="0">
                                                                     <property name="border">5</property>
                                                                     <property name="flag">wxALL|wxALIGN_CENTER_VERTICAL</property>
                                                                     <property name="proportion">0</property>
-                                                                    <object class="wxStaticText" expanded="1">
+                                                                    <object class="wxStaticText" expanded="0">
                                                                         <property name="BottomDockable">1</property>
                                                                         <property name="LeftDockable">1</property>
                                                                         <property name="RightDockable">1</property>
@@ -4868,11 +4868,11 @@
                                                                 </object>
                                                             </object>
                                                         </object>
-                                                        <object class="sizeritem" expanded="1">
+                                                        <object class="sizeritem" expanded="0">
                                                             <property name="border">5</property>
                                                             <property name="flag">wxALL|wxEXPAND</property>
                                                             <property name="proportion">1</property>
-                                                            <object class="wxStaticBoxSizer" expanded="1">
+                                                            <object class="wxStaticBoxSizer" expanded="0">
                                                                 <property name="id">wxID_ANY</property>
                                                                 <property name="label">Prototyping:</property>
                                                                 <property name="minimum_size"></property>
@@ -4880,11 +4880,11 @@
                                                                 <property name="orient">wxVERTICAL</property>
                                                                 <property name="permission">none</property>
                                                                 <event name="OnUpdateUI"></event>
-                                                                <object class="sizeritem" expanded="1">
+                                                                <object class="sizeritem" expanded="0">
                                                                     <property name="border">5</property>
                                                                     <property name="flag">wxALL</property>
                                                                     <property name="proportion">0</property>
-                                                                    <object class="wxButton" expanded="1">
+                                                                    <object class="wxButton" expanded="0">
                                                                         <property name="BottomDockable">1</property>
                                                                         <property name="LeftDockable">1</property>
                                                                         <property name="RightDockable">1</property>
@@ -4968,11 +4968,11 @@
                                                                         <event name="OnUpdateUI"></event>
                                                                     </object>
                                                                 </object>
-                                                                <object class="sizeritem" expanded="1">
+                                                                <object class="sizeritem" expanded="0">
                                                                     <property name="border">5</property>
                                                                     <property name="flag">wxALL|wxEXPAND</property>
                                                                     <property name="proportion">1</property>
-                                                                    <object class="wxTextCtrl" expanded="1">
+                                                                    <object class="wxTextCtrl" expanded="0">
                                                                         <property name="BottomDockable">1</property>
                                                                         <property name="LeftDockable">1</property>
                                                                         <property name="RightDockable">1</property>
@@ -8039,7 +8039,7 @@
                 </object>
             </object>
         </object>
-        <object class="Frame" expanded="0">
+        <object class="Frame" expanded="1">
             <property name="aui_managed">0</property>
             <property name="aui_manager_style">wxAUI_MGR_DEFAULT</property>
             <property name="bg"></property>
@@ -27313,11 +27313,11 @@
                                                                             <event name="OnUpdateUI"></event>
                                                                         </object>
                                                                     </object>
-                                                                    <object class="sizeritem" expanded="0">
+                                                                    <object class="sizeritem" expanded="1">
                                                                         <property name="border">5</property>
-                                                                        <property name="flag">wxALIGN_CENTER_VERTICAL|wxALL</property>
+                                                                        <property name="flag">wxALL|wxALIGN_CENTER_VERTICAL</property>
                                                                         <property name="proportion">0</property>
-                                                                        <object class="wxTextCtrl" expanded="0">
+                                                                        <object class="wxComboBox" expanded="1">
                                                                             <property name="BottomDockable">1</property>
                                                                             <property name="LeftDockable">1</property>
                                                                             <property name="RightDockable">1</property>
@@ -27331,6 +27331,7 @@
                                                                             <property name="caption"></property>
                                                                             <property name="caption_visible">1</property>
                                                                             <property name="center_pane">0</property>
+                                                                            <property name="choices">&quot;R22&quot; &quot;R134a&quot; &quot;R404A&quot; &quot;R407A&quot; &quot;R407C&quot; &quot;R422D&quot; &quot;R502&quot; &quot;R507&quot; &quot;CO2&quot; &quot;R717&quot; &quot;R744&quot;</property>
                                                                             <property name="close_button">1</property>
                                                                             <property name="context_help"></property>
                                                                             <property name="context_menu">1</property>
@@ -27348,12 +27349,11 @@
                                                                             <property name="max_size"></property>
                                                                             <property name="maximize_button">0</property>
                                                                             <property name="maximum_size"></property>
-                                                                            <property name="maxlength"></property>
                                                                             <property name="min_size"></property>
                                                                             <property name="minimize_button">0</property>
                                                                             <property name="minimum_size"></property>
                                                                             <property name="moveable">1</property>
-                                                                            <property name="name">text:orders.misc.refrigerant</property>
+                                                                            <property name="name">combo:orders.misc.refrigerant</property>
                                                                             <property name="pane_border">1</property>
                                                                             <property name="pane_position"></property>
                                                                             <property name="pane_size"></property>
@@ -27361,10 +27361,11 @@
                                                                             <property name="pin_button">1</property>
                                                                             <property name="pos"></property>
                                                                             <property name="resize">Resizable</property>
+                                                                            <property name="selection">-1</property>
                                                                             <property name="show">1</property>
                                                                             <property name="size">140,-1</property>
                                                                             <property name="style"></property>
-                                                                            <property name="subclass">TextCtrlDbLinker.TextCtrlDbLinker; </property>
+                                                                            <property name="subclass">ComboCtrlDbLinker.ComboCtrlDbLinker; </property>
                                                                             <property name="toolbar_pane">0</property>
                                                                             <property name="tooltip"></property>
                                                                             <property name="validator_data_type"></property>
@@ -27376,6 +27377,7 @@
                                                                             <property name="window_name"></property>
                                                                             <property name="window_style"></property>
                                                                             <event name="OnChar"></event>
+                                                                            <event name="OnCombobox"></event>
                                                                             <event name="OnEnterWindow"></event>
                                                                             <event name="OnEraseBackground"></event>
                                                                             <event name="OnKeyDown"></event>
@@ -27399,8 +27401,6 @@
                                                                             <event name="OnSize"></event>
                                                                             <event name="OnText"></event>
                                                                             <event name="OnTextEnter"></event>
-                                                                            <event name="OnTextMaxLen"></event>
-                                                                            <event name="OnTextURL"></event>
                                                                             <event name="OnUpdateUI"></event>
                                                                         </object>
                                                                     </object>
@@ -27487,11 +27487,11 @@
                                                                             <event name="OnUpdateUI"></event>
                                                                         </object>
                                                                     </object>
-                                                                    <object class="sizeritem" expanded="0">
+                                                                    <object class="sizeritem" expanded="1">
                                                                         <property name="border">5</property>
-                                                                        <property name="flag">wxBOTTOM|wxRIGHT|wxLEFT|wxALIGN_CENTER_VERTICAL|wxEXPAND</property>
+                                                                        <property name="flag">wxEXPAND|wxBOTTOM|wxRIGHT|wxLEFT|wxALIGN_CENTER_VERTICAL</property>
                                                                         <property name="proportion">0</property>
-                                                                        <object class="wxTextCtrl" expanded="0">
+                                                                        <object class="wxComboBox" expanded="1">
                                                                             <property name="BottomDockable">1</property>
                                                                             <property name="LeftDockable">1</property>
                                                                             <property name="RightDockable">1</property>
@@ -27505,6 +27505,7 @@
                                                                             <property name="caption"></property>
                                                                             <property name="caption_visible">1</property>
                                                                             <property name="center_pane">0</property>
+                                                                            <property name="choices">&quot;Bitzer&quot; &quot;Carlyle&quot; &quot;Copeland&quot;</property>
                                                                             <property name="close_button">1</property>
                                                                             <property name="context_help"></property>
                                                                             <property name="context_menu">1</property>
@@ -27522,12 +27523,11 @@
                                                                             <property name="max_size"></property>
                                                                             <property name="maximize_button">0</property>
                                                                             <property name="maximum_size"></property>
-                                                                            <property name="maxlength"></property>
                                                                             <property name="min_size"></property>
                                                                             <property name="minimize_button">0</property>
                                                                             <property name="minimum_size"></property>
                                                                             <property name="moveable">1</property>
-                                                                            <property name="name">text:orders.misc.compressor_manufacturer</property>
+                                                                            <property name="name">combo:orders.misc.compressor_manufacturer</property>
                                                                             <property name="pane_border">1</property>
                                                                             <property name="pane_position"></property>
                                                                             <property name="pane_size"></property>
@@ -27535,10 +27535,11 @@
                                                                             <property name="pin_button">1</property>
                                                                             <property name="pos"></property>
                                                                             <property name="resize">Resizable</property>
+                                                                            <property name="selection">-1</property>
                                                                             <property name="show">1</property>
                                                                             <property name="size"></property>
                                                                             <property name="style"></property>
-                                                                            <property name="subclass">TextCtrlDbLinker.TextCtrlDbLinker; </property>
+                                                                            <property name="subclass">ComboCtrlDbLinker.ComboCtrlDbLinker; </property>
                                                                             <property name="toolbar_pane">0</property>
                                                                             <property name="tooltip"></property>
                                                                             <property name="validator_data_type"></property>
@@ -27550,6 +27551,7 @@
                                                                             <property name="window_name"></property>
                                                                             <property name="window_style"></property>
                                                                             <event name="OnChar"></event>
+                                                                            <event name="OnCombobox"></event>
                                                                             <event name="OnEnterWindow"></event>
                                                                             <event name="OnEraseBackground"></event>
                                                                             <event name="OnKeyDown"></event>
@@ -27573,8 +27575,6 @@
                                                                             <event name="OnSize"></event>
                                                                             <event name="OnText"></event>
                                                                             <event name="OnTextEnter"></event>
-                                                                            <event name="OnTextMaxLen"></event>
-                                                                            <event name="OnTextURL"></event>
                                                                             <event name="OnUpdateUI"></event>
                                                                         </object>
                                                                     </object>
@@ -27661,11 +27661,11 @@
                                                                             <event name="OnUpdateUI"></event>
                                                                         </object>
                                                                     </object>
-                                                                    <object class="sizeritem" expanded="0">
+                                                                    <object class="sizeritem" expanded="1">
                                                                         <property name="border">5</property>
-                                                                        <property name="flag">wxBOTTOM|wxRIGHT|wxLEFT|wxALIGN_CENTER_VERTICAL|wxEXPAND</property>
+                                                                        <property name="flag">wxALIGN_CENTER_VERTICAL|wxBOTTOM|wxRIGHT|wxLEFT|wxEXPAND</property>
                                                                         <property name="proportion">0</property>
-                                                                        <object class="wxTextCtrl" expanded="0">
+                                                                        <object class="wxComboBox" expanded="1">
                                                                             <property name="BottomDockable">1</property>
                                                                             <property name="LeftDockable">1</property>
                                                                             <property name="RightDockable">1</property>
@@ -27679,6 +27679,7 @@
                                                                             <property name="caption"></property>
                                                                             <property name="caption_visible">1</property>
                                                                             <property name="center_pane">0</property>
+                                                                            <property name="choices">&quot;Recip&quot; &quot;Compound&quot; &quot;Scroll&quot; &quot;Screw Semi&quot; &quot;Screw Open&quot;</property>
                                                                             <property name="close_button">1</property>
                                                                             <property name="context_help"></property>
                                                                             <property name="context_menu">1</property>
@@ -27696,12 +27697,11 @@
                                                                             <property name="max_size"></property>
                                                                             <property name="maximize_button">0</property>
                                                                             <property name="maximum_size"></property>
-                                                                            <property name="maxlength"></property>
                                                                             <property name="min_size"></property>
                                                                             <property name="minimize_button">0</property>
                                                                             <property name="minimum_size"></property>
                                                                             <property name="moveable">1</property>
-                                                                            <property name="name">text:orders.misc.compressor_type</property>
+                                                                            <property name="name">combo:orders.misc.compressor_type</property>
                                                                             <property name="pane_border">1</property>
                                                                             <property name="pane_position"></property>
                                                                             <property name="pane_size"></property>
@@ -27709,10 +27709,11 @@
                                                                             <property name="pin_button">1</property>
                                                                             <property name="pos"></property>
                                                                             <property name="resize">Resizable</property>
+                                                                            <property name="selection">-1</property>
                                                                             <property name="show">1</property>
                                                                             <property name="size"></property>
                                                                             <property name="style"></property>
-                                                                            <property name="subclass">TextCtrlDbLinker.TextCtrlDbLinker; </property>
+                                                                            <property name="subclass">ComboCtrlDbLinker.ComboCtrlDbLinker; </property>
                                                                             <property name="toolbar_pane">0</property>
                                                                             <property name="tooltip"></property>
                                                                             <property name="validator_data_type"></property>
@@ -27724,6 +27725,7 @@
                                                                             <property name="window_name"></property>
                                                                             <property name="window_style"></property>
                                                                             <event name="OnChar"></event>
+                                                                            <event name="OnCombobox"></event>
                                                                             <event name="OnEnterWindow"></event>
                                                                             <event name="OnEraseBackground"></event>
                                                                             <event name="OnKeyDown"></event>
@@ -27747,8 +27749,6 @@
                                                                             <event name="OnSize"></event>
                                                                             <event name="OnText"></event>
                                                                             <event name="OnTextEnter"></event>
-                                                                            <event name="OnTextMaxLen"></event>
-                                                                            <event name="OnTextURL"></event>
                                                                             <event name="OnUpdateUI"></event>
                                                                         </object>
                                                                     </object>
@@ -28183,11 +28183,11 @@
                                                                             <event name="OnUpdateUI"></event>
                                                                         </object>
                                                                     </object>
-                                                                    <object class="sizeritem" expanded="0">
+                                                                    <object class="sizeritem" expanded="1">
                                                                         <property name="border">5</property>
-                                                                        <property name="flag">wxBOTTOM|wxRIGHT|wxLEFT|wxALIGN_CENTER_VERTICAL|wxEXPAND</property>
+                                                                        <property name="flag">wxALIGN_CENTER_VERTICAL|wxBOTTOM|wxRIGHT|wxLEFT|wxEXPAND</property>
                                                                         <property name="proportion">0</property>
-                                                                        <object class="wxTextCtrl" expanded="0">
+                                                                        <object class="wxComboBox" expanded="1">
                                                                             <property name="BottomDockable">1</property>
                                                                             <property name="LeftDockable">1</property>
                                                                             <property name="RightDockable">1</property>
@@ -28201,6 +28201,7 @@
                                                                             <property name="caption"></property>
                                                                             <property name="caption_visible">1</property>
                                                                             <property name="center_pane">0</property>
+                                                                            <property name="choices">&quot;Altech Eagle&quot; &quot;CPC Einstein 2&quot; &quot;Danfoss AK2&quot; &quot;MicroThermo&quot; &quot;Novar Opus&quot; &quot;Novar Spectrum&quot; &quot;RDM&quot; &quot;AK2&quot; &quot;AKC-55&quot; &quot;Comtrol 4K2e&quot; &quot;CPC&quot; &quot;Danfoss&quot; &quot;Eagle&quot; &quot;Einstein&quot; &quot;Einstein 2&quot; &quot;IPC&quot; &quot;IPC Jr.&quot; &quot;LPPC&quot; &quot;MCS-4000&quot; &quot;MicroThermo&quot; &quot;NC-25&quot; &quot;Novar&quot; &quot;Performer&quot; &quot;RC-1000&quot; &quot;RC-2000&quot; &quot;RMC&quot; &quot;RMCC&quot; &quot;SMPC&quot; &quot;SPN&quot; &quot;SSPC&quot; &quot;Transformer&quot; &quot;XPRT4&quot; &quot;XPRT5&quot;</property>
                                                                             <property name="close_button">1</property>
                                                                             <property name="context_help"></property>
                                                                             <property name="context_menu">1</property>
@@ -28218,12 +28219,11 @@
                                                                             <property name="max_size"></property>
                                                                             <property name="maximize_button">0</property>
                                                                             <property name="maximum_size"></property>
-                                                                            <property name="maxlength"></property>
                                                                             <property name="min_size"></property>
                                                                             <property name="minimize_button">0</property>
                                                                             <property name="minimum_size"></property>
                                                                             <property name="moveable">1</property>
-                                                                            <property name="name">text:orders.misc.controller</property>
+                                                                            <property name="name">combo:orders.misc.controller</property>
                                                                             <property name="pane_border">1</property>
                                                                             <property name="pane_position"></property>
                                                                             <property name="pane_size"></property>
@@ -28231,10 +28231,11 @@
                                                                             <property name="pin_button">1</property>
                                                                             <property name="pos"></property>
                                                                             <property name="resize">Resizable</property>
+                                                                            <property name="selection">-1</property>
                                                                             <property name="show">1</property>
                                                                             <property name="size"></property>
                                                                             <property name="style"></property>
-                                                                            <property name="subclass">TextCtrlDbLinker.TextCtrlDbLinker; </property>
+                                                                            <property name="subclass">ComboCtrlDbLinker.ComboCtrlDbLinker; </property>
                                                                             <property name="toolbar_pane">0</property>
                                                                             <property name="tooltip"></property>
                                                                             <property name="validator_data_type"></property>
@@ -28246,6 +28247,7 @@
                                                                             <property name="window_name"></property>
                                                                             <property name="window_style"></property>
                                                                             <event name="OnChar"></event>
+                                                                            <event name="OnCombobox"></event>
                                                                             <event name="OnEnterWindow"></event>
                                                                             <event name="OnEraseBackground"></event>
                                                                             <event name="OnKeyDown"></event>
@@ -28269,8 +28271,6 @@
                                                                             <event name="OnSize"></event>
                                                                             <event name="OnText"></event>
                                                                             <event name="OnTextEnter"></event>
-                                                                            <event name="OnTextMaxLen"></event>
-                                                                            <event name="OnTextURL"></event>
                                                                             <event name="OnUpdateUI"></event>
                                                                         </object>
                                                                     </object>
