@@ -26,6 +26,7 @@ import BetterListCtrl
 import TextCtrlDbLinker
 import CheckboxCtrlDbLinker
 import ChoiceCtrlDbLinker
+import ComboCtrlDbLinker
 
 import General as gn
 import Database as db

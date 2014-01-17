@@ -374,12 +374,12 @@ class ItemFrame(wx.Frame):
 
 
 	def reset_misc_tab(self):
-		ctrl(self, 'text:orders.misc.refrigerant').SetValue('')
-		ctrl(self, 'text:orders.misc.compressor_manufacturer').SetValue('')
-		ctrl(self, 'text:orders.misc.compressor_type').SetValue('')
+		ctrl(self, 'combo:orders.misc.refrigerant').SetValue('')
+		ctrl(self, 'combo:orders.misc.compressor_manufacturer').SetValue('')
+		ctrl(self, 'combo:orders.misc.compressor_type').SetValue('')
 		ctrl(self, 'text:orders.misc.compressor_quantity').SetValue('')
 		ctrl(self, 'text:orders.misc.circuit_quantity').SetValue('')
-		ctrl(self, 'text:orders.misc.controller').SetValue('')
+		ctrl(self, 'combo:orders.misc.controller').SetValue('')
 		ctrl(self, 'text:orders.misc.length').SetValue('')
 		ctrl(self, 'text:orders.misc.width').SetValue('')
 		ctrl(self, 'text:orders.misc.height').SetValue('')
@@ -417,12 +417,12 @@ class ItemFrame(wx.Frame):
 			refrigerant, compressor_manufacturer, compressor_type, compressor_quantity, \
 			circuit_quantity, controller, length, width, height = formatted_record
 
-			ctrl(self, 'text:orders.misc.refrigerant').SetValue(refrigerant)
-			ctrl(self, 'text:orders.misc.compressor_manufacturer').SetValue(compressor_manufacturer)
-			ctrl(self, 'text:orders.misc.compressor_type').SetValue(compressor_type)
+			ctrl(self, 'combo:orders.misc.refrigerant').SetValue(refrigerant)
+			ctrl(self, 'combo:orders.misc.compressor_manufacturer').SetValue(compressor_manufacturer)
+			ctrl(self, 'combo:orders.misc.compressor_type').SetValue(compressor_type)
 			ctrl(self, 'text:orders.misc.compressor_quantity').SetValue(compressor_quantity)
 			ctrl(self, 'text:orders.misc.circuit_quantity').SetValue(circuit_quantity)
-			ctrl(self, 'text:orders.misc.controller').SetValue(controller)
+			ctrl(self, 'combo:orders.misc.controller').SetValue(controller)
 			ctrl(self, 'text:orders.misc.length').SetValue(length)
 			ctrl(self, 'text:orders.misc.width').SetValue(width)
 			ctrl(self, 'text:orders.misc.height').SetValue(height)
