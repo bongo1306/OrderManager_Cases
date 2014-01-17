@@ -49,7 +49,7 @@ def edit(sql, connection=None):
 
 
 
-def update_order(table, table_id, field, new_value):
+def update_order(table, table_id, field, new_value, who_changed=None):
 	connection = eng04_connection
 
 	#first, get the previous values so we can see which ones changed...
@@ -112,6 +112,8 @@ def update_order(table, table_id, field, new_value):
 		sql += " WHERE id={}".format(table_id)
 		edit(sql)
 
+		if who_changed == None:
+			who_changed = gn.user
 
 		#record any changes in fields
 		insert('orders.changes', (
@@ -120,7 +122,7 @@ def update_order(table, table_id, field, new_value):
 			("field", field),
 			("previous_value", prev_value),
 			("new_value", new_value),
-			("who_changed", gn.user),
+			("who_changed", who_changed),
 			("when_changed", 'CURRENT_TIMESTAMP'),)
 		)
 
