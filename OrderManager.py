@@ -815,7 +815,8 @@ class MainFrame(wx.Frame, Search.SearchTab):
 			''')
 		
 		#insert records into list
-		for index, record in enumerate(records):
+		index = -1
+		for record in records:
 			#format all fields as strings
 			formatted_record = []
 			for field in record:
@@ -833,7 +834,16 @@ class MainFrame(wx.Frame, Search.SearchTab):
 			id, sales_order, item, production_order, material, sold_to_name, hours_standard, \
 			date_requested_ae_release, date_planned_ae_release, \
 			applications_engineer, applications_status = formatted_record
+
+			#only display orders with CMATs that AE cares about
+			if material not in ('CDA', 'CPP', 'CSS', 'CTL', 'CVS', 'DBV', 'DSP', 'DSS', 'DSSIIX', \
+							'FAH', 'FAV', 'FAX', 'HPM', 'HVS', 'MISC', 'NH2', 'NHS', 'NV2', \
+							'NX2', 'OHD', 'OHN', 'OHS', 'OHW', 'ONH', 'ONV', 'PSM', 'RCA', \
+							'RHD', 'SHIP_LOOSE', 'WEE', 'WEH', 'WEM'):
+				continue
 			
+			index += 1
+
 			#remove the decimals from the std hours
 			try:
 				hours_standard = round(hours_standard, 1)
