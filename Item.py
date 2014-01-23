@@ -55,6 +55,42 @@ class ItemFrame(wx.Frame):
 		ctrl(self, 'text:orders.target_dates.actual_de_release').Bind(wx.EVT_SET_FOCUS, self.on_focus_insert_date)
 		ctrl(self, 'text:orders.target_dates.actual_mmg_release').Bind(wx.EVT_SET_FOCUS, self.on_focus_insert_date)
 
+		self.applicable_labor_hours_per_material = {
+			'CDA': ('welding', 'base_assembly', 'tube_fab', 'brazing', 'box_wire', 'hookup', 'testing', 'finishing'), 
+			'CPP': ('welding', 'painting', 'base_assembly', 'tube_fab', 'brazing', 'box_wire', 'hookup', 'testing', 'finishing'), 
+			'CSS': ('welding', 'painting', 'base_assembly', 'tube_fab_header', 'tube_fab', 'brazing', 'box_wire', 'hookup', 'testing', 'finishing'), 
+			'CTL': ('box_wire', 'testing', 'finishing'), 
+			'CVS': ('welding', 'painting', 'base_assembly', 'tube_fab', 'brazing', 'box_wire', 'hookup', 'testing', 'finishing'), 
+			'DBV': ('welding', 'painting', 'base_assembly', 'tube_fab_header', 'tube_fab', 'brazing', 'box_wire', 'hookup', 'testing', 'finishing'), 
+			'DSP': ('welding', 'base_assembly', 'tube_fab', 'brazing', 'box_wire', 'hookup', 'testing', 'finishing'), 
+			'DSS': ('welding', 'base_assembly', 'tube_fab_header', 'tube_fab', 'brazing', 'box_wire', 'hookup', 'testing', 'finishing'), 
+			'DSSIIX': ('welding', 'base_assembly', 'tube_fab_header', 'tube_fab', 'brazing', 'box_wire', 'hookup', 'testing', 'finishing'), 
+			'FAH': ('welding', 'painting', 'base_assembly', 'tube_fab_header', 'tube_fab', 'brazing', 'box_wire', 'hookup', 'testing', 'finishing'), 
+			'FAV': ('welding', 'painting', 'base_assembly', 'tube_fab_header', 'tube_fab', 'brazing', 'box_wire', 'hookup', 'testing', 'finishing'), 
+			'FAX': ('welding', 'painting', 'base_assembly', 'tube_fab_header', 'tube_fab', 'brazing', 'box_wire', 'hookup', 'testing', 'finishing'), 
+			'HPM': ('welding', 'painting', 'base_assembly', 'tube_fab', 'brazing', 'box_wire', 'hookup', 'testing', 'finishing'), 
+			'HVS': ('welding', 'painting', 'base_assembly', 'tube_fab', 'brazing', 'box_wire', 'hookup', 'testing', 'finishing'), 
+			'MISC': ('welding', 'painting', 'base_assembly', 'tube_fab', 'brazing', 'box_wire', 'hookup', 'testing', 'finishing'), 
+			'NH2': ('welding', 'painting', 'base_assembly', 'tube_fab_header', 'tube_fab', 'brazing', 'box_wire', 'hookup', 'testing', 'finishing'), 
+			'NHS': ('welding', 'painting', 'base_assembly', 'tube_fab_header', 'tube_fab', 'brazing', 'box_wire', 'hookup', 'testing', 'finishing'), 
+			'NV2': ('welding', 'painting', 'base_assembly', 'tube_fab_header', 'tube_fab', 'brazing', 'box_wire', 'hookup', 'testing', 'finishing'), 
+			'NX2': ('welding', 'painting', 'base_assembly', 'tube_fab_header', 'tube_fab', 'brazing', 'box_wire', 'hookup', 'testing', 'finishing'), 
+			'OHD': ('welding', 'painting', 'base_assembly', 'tube_fab_header', 'tube_fab', 'brazing', 'box_wire', 'hookup', 'testing', 'finishing'), 
+			'OHN': ('welding', 'painting', 'base_assembly', 'tube_fab_header', 'tube_fab', 'brazing', 'box_wire', 'hookup', 'testing', 'finishing'), 
+			'OHS': ('welding', 'painting', 'base_assembly', 'tube_fab_header', 'tube_fab', 'brazing', 'box_wire', 'hookup', 'testing', 'finishing'), 
+			'OHW': ('welding', 'painting', 'base_assembly', 'tube_fab_header', 'tube_fab', 'brazing', 'box_wire', 'hookup', 'testing', 'finishing'), 
+			'ONH': ('welding', 'painting', 'base_assembly', 'tube_fab_header', 'tube_fab', 'brazing', 'box_wire', 'hookup', 'testing', 'finishing'), 
+			'ONV': ('welding', 'painting', 'base_assembly', 'tube_fab_header', 'tube_fab', 'brazing', 'box_wire', 'hookup', 'testing', 'finishing'), 
+			'PSM': ('welding', 'painting', 'base_assembly', 'tube_fab', 'brazing', 'box_wire', 'hookup', 'testing', 'finishing'), 
+			'RCA': ('welding', 'painting', 'base_assembly', 'tube_fab', 'brazing', 'box_wire', 'hookup', 'testing', 'finishing'), 
+			'RHD': ('welding', 'painting', 'base_assembly', 'tube_fab_header', 'tube_fab', 'brazing', 'box_wire', 'hookup', 'testing', 'finishing'), 
+			'SHIP_LOOSE': ('ship_loose'), 
+			'SPARTCOLS': ('finishing'), 
+			'WEE': ('welding', 'painting', 'tube_fab', 'brazing', 'box_wire', 'testing', 'finishing', 'assembly'), 
+			'WEH': ('welding', 'painting', 'tube_fab', 'brazing', 'box_wire', 'testing', 'finishing', 'assembly'), 
+			'WEM': ('welding', 'painting', 'tube_fab', 'brazing', 'box_wire', 'testing', 'finishing', 'assembly'), 
+		}
+		
 		#misc
 		self.SetTitle('Item ID {}'.format(self.id))
 		self.SetSize((976, 690))
