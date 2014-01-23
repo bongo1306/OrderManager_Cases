@@ -53,6 +53,7 @@ class ItemFrame(wx.Frame):
 		#for convenience, populate today's date when user focuses on a release field
 		ctrl(self, 'text:orders.target_dates.actual_ae_release').Bind(wx.EVT_SET_FOCUS, self.on_focus_insert_date)
 		ctrl(self, 'text:orders.target_dates.actual_de_release').Bind(wx.EVT_SET_FOCUS, self.on_focus_insert_date)
+		ctrl(self, 'text:orders.target_dates.actual_de_release').Bind(wx.EVT_KILL_FOCUS, self.on_kill_focus_check_if_sent_to_mmg)
 		ctrl(self, 'text:orders.target_dates.actual_mmg_release').Bind(wx.EVT_SET_FOCUS, self.on_focus_insert_date)
 
 		self.applicable_labor_hours_per_material = {
@@ -119,7 +120,21 @@ class ItemFrame(wx.Frame):
 		
 		if text_ctrl.GetValue() == '':
 			text_ctrl.SetValue(dt.date.today().strftime('%m/%d/%Y'))
-	
+		
+		event.Skip()
+
+
+	def on_kill_focus_check_if_sent_to_mmg(self, event):
+		production_order = db.query("SELECT production_order FROM orders.root WHERE id={}".format(self.id))[0]
+		
+		result = db.query("SELECT TOP 1 production_order FROM dbo.mmg_uploads WHERE production_order='{}'".format(production_order))
+		
+		if not result and event.GetEventObject().GetValue() != '':
+			wx.MessageBox("An entry in dbo.mmg_uploads for this production order was not found.\nThis probably means the BOM for this order still needs to be processed and sent to MMG.\n\nThe MeatGrinder will now open to encourage you to send {} to MMG.".format(production_order), 'Notice', wx.OK | wx.ICON_INFORMATION)
+			os.startfile(r"\\kw_engineering\sharepoint$\Everyone\Management Software\eng2mmgBOMupload\eng2mmgBOMupload.xlsm")
+		
+		event.Skip()
+
 	
 	def on_click_open_order_folder(self, event):
 		event.GetEventObject().Disable()
