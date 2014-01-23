@@ -671,7 +671,7 @@ class ItemFrame(wx.Frame):
 		#format all fields as strings
 		formatted_record = []
 		for field in record[0]:
-			if field == None:
+			if field == None or field == 0:
 				field = ''
 				
 			else:
