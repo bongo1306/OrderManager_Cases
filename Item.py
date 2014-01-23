@@ -84,8 +84,8 @@ class ItemFrame(wx.Frame):
 			'PSM': ('welding', 'painting', 'base_assembly', 'tube_fab', 'brazing', 'box_wire', 'hookup', 'testing', 'finishing'), 
 			'RCA': ('welding', 'painting', 'base_assembly', 'tube_fab', 'brazing', 'box_wire', 'hookup', 'testing', 'finishing'), 
 			'RHD': ('welding', 'painting', 'base_assembly', 'tube_fab_header', 'tube_fab', 'brazing', 'box_wire', 'hookup', 'testing', 'finishing'), 
-			'SHIP_LOOSE': ('ship_loose'), 
-			'SPARTCOLS': ('finishing'), 
+			'SHIP_LOOSE': ('ship_loose', ), 
+			'SPARTCOLS': ('finishing', ), 
 			'WEE': ('welding', 'painting', 'tube_fab', 'brazing', 'box_wire', 'testing', 'finishing', 'assembly'), 
 			'WEH': ('welding', 'painting', 'tube_fab', 'brazing', 'box_wire', 'testing', 'finishing', 'assembly'), 
 			'WEM': ('welding', 'painting', 'tube_fab', 'brazing', 'box_wire', 'testing', 'finishing', 'assembly'), 
@@ -615,6 +615,24 @@ class ItemFrame(wx.Frame):
 
 
 	def populate_labor_hours_tab(self):
+		#darken the fields that do not apply to this material
+		material = db.query("SELECT material FROM orders.root WHERE id={}".format(self.id))
+		
+		labor_hour_fields = ('welding', 'painting', 'base_assembly', 'tube_fab_header', 'tube_fab', 
+			'brazing', 'box_wire', 'hookup', 'testing', 'finishing', 'ship_loose', 'assembly', 'sheet_metal')
+		
+		try:
+			applicable_fields = self.applicable_labor_hours_per_material[material[0]]
+		except:
+			applicable_fields = labor_hour_fields
+			
+		for field in labor_hour_fields:
+			if field not in applicable_fields:
+				text_ctrl = ctrl(self, 'text:orders.labor_hours.{}'.format(field))
+				text_ctrl.SetBackgroundColour(wx.Colour(150, 160, 170))
+				text_ctrl.SetForegroundColour(wx.Colour(255, 20, 20))
+
+
 		record = db.query('''
 			SELECT
 				applications_engineering,
