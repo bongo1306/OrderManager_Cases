@@ -33,3 +33,5 @@ class ChoiceCtrlDbLinker(wx.Choice):
 		parent_frame.reset_all()
 		parent_frame.populate_all()
 		parent_frame.Thaw()
+		
+		event.Skip()
