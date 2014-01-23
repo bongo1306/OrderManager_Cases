@@ -508,19 +508,71 @@ class ItemFrame(wx.Frame):
 		ctrl(self, 'text:orders.labor_hours.electrical_engineering').SetValue('')
 		ctrl(self, 'text:orders.labor_hours.structural_engineering').SetValue('')
 
-		ctrl(self, 'text:orders.labor_hours.welding').SetValue('')
-		ctrl(self, 'text:orders.labor_hours.painting').SetValue('')
-		ctrl(self, 'text:orders.labor_hours.base_assembly').SetValue('')
-		ctrl(self, 'text:orders.labor_hours.tube_fab_header').SetValue('')
-		ctrl(self, 'text:orders.labor_hours.tube_fab').SetValue('')
-		ctrl(self, 'text:orders.labor_hours.brazing').SetValue('')
-		ctrl(self, 'text:orders.labor_hours.box_wire').SetValue('')
-		ctrl(self, 'text:orders.labor_hours.hookup').SetValue('')
-		ctrl(self, 'text:orders.labor_hours.testing').SetValue('')
-		ctrl(self, 'text:orders.labor_hours.finishing').SetValue('')
-		ctrl(self, 'text:orders.labor_hours.ship_loose').SetValue('')
-		ctrl(self, 'text:orders.labor_hours.assembly').SetValue('')
-		ctrl(self, 'text:orders.labor_hours.sheet_metal').SetValue('')
+		text_ctrl = ctrl(self, 'text:orders.labor_hours.welding')
+		text_ctrl.SetValue('')
+		text_ctrl.SetBackgroundColour(wx.NullColour)
+		text_ctrl.SetForegroundColour(wx.NullColour)
+
+		text_ctrl = ctrl(self, 'text:orders.labor_hours.painting')
+		text_ctrl.SetValue('')
+		text_ctrl.SetBackgroundColour(wx.NullColour)
+		text_ctrl.SetForegroundColour(wx.NullColour)
+
+		text_ctrl = ctrl(self, 'text:orders.labor_hours.base_assembly')
+		text_ctrl.SetValue('')
+		text_ctrl.SetBackgroundColour(wx.NullColour)
+		text_ctrl.SetForegroundColour(wx.NullColour)
+
+		text_ctrl = ctrl(self, 'text:orders.labor_hours.tube_fab_header')
+		text_ctrl.SetValue('')
+		text_ctrl.SetBackgroundColour(wx.NullColour)
+		text_ctrl.SetForegroundColour(wx.NullColour)
+
+		text_ctrl = ctrl(self, 'text:orders.labor_hours.tube_fab')
+		text_ctrl.SetValue('')
+		text_ctrl.SetBackgroundColour(wx.NullColour)
+		text_ctrl.SetForegroundColour(wx.NullColour)
+
+		text_ctrl = ctrl(self, 'text:orders.labor_hours.brazing')
+		text_ctrl.SetValue('')
+		text_ctrl.SetBackgroundColour(wx.NullColour)
+		text_ctrl.SetForegroundColour(wx.NullColour)
+
+		text_ctrl = ctrl(self, 'text:orders.labor_hours.box_wire')
+		text_ctrl.SetValue('')
+		text_ctrl.SetBackgroundColour(wx.NullColour)
+		text_ctrl.SetForegroundColour(wx.NullColour)
+
+		text_ctrl = ctrl(self, 'text:orders.labor_hours.hookup')
+		text_ctrl.SetValue('')
+		text_ctrl.SetBackgroundColour(wx.NullColour)
+		text_ctrl.SetForegroundColour(wx.NullColour)
+
+		text_ctrl = ctrl(self, 'text:orders.labor_hours.testing')
+		text_ctrl.SetValue('')
+		text_ctrl.SetBackgroundColour(wx.NullColour)
+		text_ctrl.SetForegroundColour(wx.NullColour)
+
+		text_ctrl = ctrl(self, 'text:orders.labor_hours.finishing')
+		text_ctrl.SetValue('')
+		text_ctrl.SetBackgroundColour(wx.NullColour)
+		text_ctrl.SetForegroundColour(wx.NullColour)
+
+		text_ctrl = ctrl(self, 'text:orders.labor_hours.ship_loose')
+		text_ctrl.SetValue('')
+		text_ctrl.SetBackgroundColour(wx.NullColour)
+		text_ctrl.SetForegroundColour(wx.NullColour)
+
+		text_ctrl = ctrl(self, 'text:orders.labor_hours.assembly')
+		text_ctrl.SetValue('')
+		text_ctrl.SetBackgroundColour(wx.NullColour)
+		text_ctrl.SetForegroundColour(wx.NullColour)
+
+		text_ctrl = ctrl(self, 'text:orders.labor_hours.sheet_metal')
+		text_ctrl.SetValue('')
+		text_ctrl.SetBackgroundColour(wx.NullColour)
+		text_ctrl.SetForegroundColour(wx.NullColour)
+
 
 		ctrl(self, 'label:standard_hours').SetLabel('...')
 
