@@ -629,8 +629,8 @@ class ItemFrame(wx.Frame):
 		for field in labor_hour_fields:
 			if field not in applicable_fields:
 				text_ctrl = ctrl(self, 'text:orders.labor_hours.{}'.format(field))
-				text_ctrl.SetBackgroundColour(wx.Colour(150, 160, 170))
-				text_ctrl.SetForegroundColour(wx.Colour(255, 20, 20))
+				text_ctrl.SetBackgroundColour(wx.Colour(125, 135, 140))
+				text_ctrl.SetForegroundColour(wx.Colour(255, 250, 250))
 
 
 		record = db.query('''
