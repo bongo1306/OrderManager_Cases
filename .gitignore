@@ -3,6 +3,7 @@
 *.pyc
 *.pyo
 *.pdf
+VisualizeEtoForecast.txt
 screenshot.htm
 screenshot.png
 OrderManager.cfg

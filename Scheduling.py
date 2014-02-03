@@ -21,7 +21,12 @@ class SchedulingTab(object):
 		
 		self.Bind(wx.EVT_BUTTON, self.on_click_proto_request_dates, id=xrc.XRCID('button:proto_request_dates'))
 		self.Bind(wx.EVT_BUTTON, self.on_click_calc_and_set_requested_de_release, id=xrc.XRCID('button:calc_and_set_requested_de_release'))
+		
+		self.Bind(wx.EVT_BUTTON, self.on_click_visualize_forecast, id=xrc.XRCID('button:visualize_forecast'))
 
+
+	def on_click_visualize_forecast(self, event):
+		print 'hey'
 
 
 	def on_click_calc_and_set_requested_de_release(self, event):
