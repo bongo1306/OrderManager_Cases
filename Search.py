@@ -29,10 +29,10 @@ class SearchTab(object):
 		
 		#tables or views the user can search in
 		#tables = ('orders.root', 'orders.changes', 'orders.time_logs', 'orders.labor_hours', 'orders.responsibilities', 'orders.view_systems', 'dbo.orders', 'dbo.view_orders_old', 'dbo.mmg_uploads')
-		tables = ('orders.root', 'orders.view_systems', 'orders.responsibilities', 'orders.target_dates', 'orders.labor_hours', 'orders.financials', 'orders.misc', 'orders.changes', 'orders.time_logs', 'dbo.orders', 'dbo.mmg_uploads')
+		tables = ('orders.root', 'orders.view_systems', 'orders.view_systems_abridged', 'orders.responsibilities', 'orders.target_dates', 'orders.labor_hours', 'orders.financials', 'orders.misc', 'orders.changes', 'orders.time_logs', 'dbo.orders', 'dbo.mmg_uploads')
 		
 		ctrl(self, 'choice:which_table').AppendItems(tables)
-		ctrl(self, 'choice:which_table').SetStringSelection('orders.view_systems')
+		ctrl(self, 'choice:which_table').SetStringSelection('orders.view_systems_abridged')
 		self.on_choice_table()
 
 
