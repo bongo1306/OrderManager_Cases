@@ -45,7 +45,7 @@ class SearchTab(object):
 		selected_item = event.GetEventObject()
 		table_name = ctrl(self, 'choice:which_table').GetStringSelection()
 		
-		if table_name in ('orders.root', 'orders.view_systems', 'orders.view_case', 'orders.responsibilities', 
+		if table_name in ('orders.root', 'orders.view_systems', 'orders.view_systems_abridged', 'orders.view_case', 'orders.responsibilities', 
 						'orders.target_dates', 'orders.labor_hours', 'orders.financials', 'orders.misc'):
 			table_id = selected_item.GetItem(selected_item.GetFirstSelected(), 0).GetText()
 			
