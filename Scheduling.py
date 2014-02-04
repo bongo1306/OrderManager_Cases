@@ -39,11 +39,11 @@ class SchedulingTab(object):
 		ctrl(self, 'button:visualize_forecast').Disable()
 		
 		#make the excel read only
-		#os.chmod(gn.resource_path('VisualizeEtoForecast.xlsm'), stat.S_IREAD)
+		os.chmod(gn.resource_path('VisualizeEtoForecast.xlsm'), stat.S_IREAD)
 
 		today = dt.date.today()
 		first_day_last_week = today - dt.timedelta(days=today.weekday()-2) - dt.timedelta(days=3) - dt.timedelta(weeks=1)
-		last_day_of_report = first_day_last_week + dt.timedelta(weeks=25) #5)#dt.timedelta(days=7*5)
+		last_day_of_report = first_day_last_week + dt.timedelta(weeks=16) #5)#dt.timedelta(days=7*5)
 
 		with open(gn.resource_path("VisualizeEtoForecast.txt"), "w") as text_file:
 			#write out headers
@@ -53,8 +53,15 @@ class SchedulingTab(object):
 			#write out data
 			for date_instance in gn.date_range(first_day_last_week, last_day_of_report):
 
+				formatted_data = []
+
 				capacity = self.get_engineering_capacity(date_instance)
+
+				formatted_data.append(date_instance.strftime('%m/%d/%y'))
+				formatted_data.append(str(capacity))
 				
+				#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+				#requested
 				records = db.query('''
 					SELECT
 						material
@@ -94,13 +101,55 @@ class SchedulingTab(object):
 				for material in records:
 					in_process_eto_hours += sum(db.query("SELECT mean_hours FROM orders.material_eto_hour_estimates WHERE material='{}'".format(material)))
 
-				formatted_data = (
-					date_instance.strftime('%m/%d/%y'), 
-					str(capacity), 
-					str(in_process_eto_hours), 
-					str(all_eto_hours - in_process_eto_hours)
-				)
+				formatted_data.append(str(in_process_eto_hours))
+				formatted_data.append(str(all_eto_hours - in_process_eto_hours))
 
+				#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+				#planned
+				records = db.query('''
+					SELECT
+						material
+					FROM
+						orders.view_systems
+					WHERE
+						date_actual_de_release IS NULL AND
+						production_order IS NOT NULL AND
+						status <> 'Canceled' AND
+						
+						date_planned_de_release = '{}'
+					'''.format(date_instance))
+				
+				all_eto_hours = 0
+				for material in records:
+					all_eto_hours += sum(db.query("SELECT mean_hours FROM orders.material_eto_hour_estimates WHERE material='{}'".format(material)))
+
+				records = db.query('''
+					SELECT
+						material
+					FROM
+						orders.view_systems
+					WHERE
+						date_actual_de_release IS NULL AND
+						production_order IS NOT NULL AND
+						status <> 'Canceled' AND
+						
+						date_planned_de_release = '{}' AND
+						
+						(design_status='In Process' OR 
+						mechanical_status='In Process' OR 
+						electrical_status='In Process' OR 
+						structural_status='In Process')
+					'''.format(date_instance))
+
+				in_process_eto_hours = 0
+				for material in records:
+					in_process_eto_hours += sum(db.query("SELECT mean_hours FROM orders.material_eto_hour_estimates WHERE material='{}'".format(material)))
+
+				formatted_data.append(str(in_process_eto_hours))
+				formatted_data.append(str(all_eto_hours - in_process_eto_hours))
+
+
+				#-------
 				text_file.write('{}\n'.format('`````'.join(formatted_data)))
 
 		os.startfile(gn.resource_path('VisualizeEtoForecast.xlsm'))
