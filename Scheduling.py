@@ -3,6 +3,7 @@
 
 import pyodbc
 import sys
+import os
 import wx
 from wx import xrc
 ctrl = xrc.XRCCTRL
@@ -25,8 +26,62 @@ class SchedulingTab(object):
 		self.Bind(wx.EVT_BUTTON, self.on_click_visualize_forecast, id=xrc.XRCID('button:visualize_forecast'))
 
 
+	def get_engineering_capacity(self, date):
+		if date.weekday() < 5:
+			return 400
+			
+		else:
+			return 0
+
+
 	def on_click_visualize_forecast(self, event):
-		print 'hey'
+		ctrl(self, 'button:visualize_forecast').Disable()
+		
+		#make the excel read only
+		os.chmod(General.resource_path('VisualizeEtoForecast.xlsm'), stat.S_IREAD)
+
+		today = dt.date.today()
+		first_day_last_week = today - dt.timedelta(days=today.weekday()-2) - dt.timedelta(days=3) - dt.timedelta(weeks=1)
+		last_day_of_report = first_day_last_week + dt.timedelta(weeks=5)#dt.timedelta(days=7*5)
+
+		with open(General.resource_path("VisualizeEtoForecast.txt"), "w") as text_file:
+			#write out headers
+			headers = ['Date', 'Engineering Capacity', 'Requested', 'Planned', 'Start']
+			text_file.write('{}\n'.format('`````'.join(headers)))
+			
+			#write out data
+			for date_instance in daterange(first_day_last_week, last_day_of_report):
+
+				capacity = self.get_engineering_capacity(date_instance)
+
+				records = db.query('''
+					SELECT
+						material
+						date_requested_de_release
+					FROM
+						orders.view_systems
+					WHERE
+						date_actual_de_release IS NULL AND
+						production_order IS NOT NULL AND
+						material <> 'SPARTCOLS' AND
+						status <> 'Canceled' AND
+						
+						
+					ORDER BY
+						date_basic_start ASC
+					''')
+
+				if type(field) == dt.datetime:
+					formatted_ecr_data.append(field.strftime('%m/%d/%Y %I:%M %p').replace(' 11:59 PM', ''))
+				else:
+					formatted_ecr_data.append(str(field).replace('None', '').replace('\n', '~~~~~'))
+			
+				text_file.write('{}\n'.format('`````'.join(formatted_ecr_data)))
+
+		os.startfile(General.resource_path('VisualizeEtoForecast.xlsm'))
+
+		ctrl(self, 'button:visualize_forecast').Enable()
+
 
 
 	def on_click_calc_and_set_requested_de_release(self, event):

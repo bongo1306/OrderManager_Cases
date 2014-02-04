@@ -38,13 +38,17 @@ def resource_path(relative):
 
 
 def wxdate2pydate(date): 
-     assert isinstance(date, wx.DateTime) 
-     if date.IsValid(): 
-         ymd = map(int, date.FormatISODate().split('-')) 
-         return dt.date(*ymd) 
-     else: 
-         return None 
+	assert isinstance(date, wx.DateTime) 
+	if date.IsValid(): 
+		ymd = map(int, date.FormatISODate().split('-')) 
+		return dt.date(*ymd) 
+	else: 
+		return None 
 
+
+def date_range(start_date, end_date):
+	for n in range(int ((end_date - start_date).days)):
+		yield start_date + dt.timedelta(n)
 
 #gets a string cleaned up for use in an SQL query
 #def clean(string):
