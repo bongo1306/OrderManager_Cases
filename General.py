@@ -106,3 +106,8 @@ def remove_notebook_page(notebook, page_name):
 		notebook.RemovePage(index-removed_count)
 		removed_count += 1
 
+
+def rename_notebook_page(notebook, base_page_name, new_page_name):
+	for index in range(notebook.GetPageCount()):
+		if base_page_name in notebook.GetPageText(index):
+			notebook.SetPageText(index, new_page_name)

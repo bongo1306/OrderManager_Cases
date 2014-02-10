@@ -770,6 +770,9 @@ class MainFrame(wx.Frame, Search.SearchTab, Scheduling.SchedulingTab):
 		list_ctrl.SetColumnWidth(0, 0)
 		
 		list_ctrl.Thaw()
+		
+		#show how many in tab title
+		gn.rename_notebook_page(ctrl(self, 'notebook:sub_applications'), 'Lacking Quote Number', ' Lacking Quote Number ({}) '.format(list_ctrl.GetItemCount()))
 
 
 
@@ -945,6 +948,7 @@ class MainFrame(wx.Frame, Search.SearchTab, Scheduling.SchedulingTab):
 				date_requested_de_release, sales_order, item ASC
 			''')
 		
+
 		#insert records into list
 		for index, record in enumerate(records):
 			#format all fields as strings
@@ -1011,6 +1015,9 @@ class MainFrame(wx.Frame, Search.SearchTab, Scheduling.SchedulingTab):
 		
 		list_ctrl.Thaw()
 
+		#show how many in tab title
+		gn.rename_notebook_page(ctrl(self, 'notebook:sub_design'), ' Unreleased', '  Unreleased ({}) '.format(list_ctrl.GetItemCount()))
+
 
 	def refresh_list_exceptions_de(self, event=None):
 		list_ctrl = ctrl(self, 'list:exceptions_de')
@@ -1076,7 +1083,7 @@ class MainFrame(wx.Frame, Search.SearchTab, Scheduling.SchedulingTab):
 			ORDER BY
 				days_off_by DESC
 			''')
-		
+
 		#insert records into list
 		for index, record in enumerate(records):
 			#format all fields as strings
@@ -1142,6 +1149,10 @@ class MainFrame(wx.Frame, Search.SearchTab, Scheduling.SchedulingTab):
 		list_ctrl.SetColumnWidth(0, 0)
 		
 		list_ctrl.Thaw()
+		
+		#show how many in tab title
+		gn.rename_notebook_page(ctrl(self, 'notebook:sub_design'), 'Release Exceptions', ' Release Exceptions ({}) '.format(list_ctrl.GetItemCount()))
+
 
 
 	def refresh_list_pending_ecms_de(self, event=None):
@@ -1191,7 +1202,8 @@ class MainFrame(wx.Frame, Search.SearchTab, Scheduling.SchedulingTab):
 			ORDER BY
 				date_actual_de_release ASC
 			''')
-		
+
+
 		#insert records into list
 		for index, record in enumerate(records):
 			#format all fields as strings
@@ -1238,7 +1250,8 @@ class MainFrame(wx.Frame, Search.SearchTab, Scheduling.SchedulingTab):
 		
 		list_ctrl.Thaw()
 
-
+		#show how many in tab title
+		gn.rename_notebook_page(ctrl(self, 'notebook:sub_design'), 'Pending ECMs', ' Pending ECMs ({}) '.format(list_ctrl.GetItemCount()))
 
 
 	def refresh_list_sent_to_mmg(self, event=None):
