@@ -9,7 +9,8 @@ interface.xrc,
 Splash.png,
 OrderManager.ico,
 clock.png,
-printer.png
+printer.png,
+VisualizeEtoForecast.xlsm
 '''
 
 for file_to_include in files_to_include.split(','):
