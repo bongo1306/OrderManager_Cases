@@ -310,6 +310,8 @@ class ItemFrame(wx.Frame):
 		ctrl(self, 'label:date_actual_finish').SetLabel('...')
 		ctrl(self, 'label:date_request_delivered').SetLabel('...')
 		ctrl(self, 'label:date_shipped').SetLabel('...')
+		
+		ctrl(self, 'checkbox:orders.misc.pending_ecms').SetValue(False)
 
 
 	def populate_target_dates_tab(self):
@@ -422,6 +424,20 @@ class ItemFrame(wx.Frame):
 			ctrl(self, 'label:date_actual_finish').SetLabel(date_actual_finish)
 			ctrl(self, 'label:date_request_delivered').SetLabel(date_request_delivered)
 			ctrl(self, 'label:date_shipped').SetLabel(date_shipped)
+
+
+		record = db.query('''
+			SELECT
+				pending_ecms
+			FROM
+				orders.misc
+			WHERE
+				id={}
+			'''.format(self.id))
+	
+		if record:
+			pending_ecms = record[0]
+			ctrl(self, 'checkbox:orders.misc.pending_ecms').SetValue(pending_ecms)
 
 
 	def reset_misc_tab(self):
