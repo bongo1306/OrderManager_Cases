@@ -344,6 +344,7 @@ class MainFrame(wx.Frame, Search.SearchTab, Scheduling.SchedulingTab):
 		self.refresh_list_unreleased_ae()
 		self.refresh_list_unreleased_de()
 		self.refresh_list_exceptions_de()
+		self.refresh_list_pending_ecms_de()
 		self.refresh_list_sent_to_mmg()
 
 
@@ -612,6 +613,27 @@ class MainFrame(wx.Frame, Search.SearchTab, Scheduling.SchedulingTab):
 
 		for index, column_name in enumerate(column_names):
 			list_ctrl.InsertColumn(index, column_name)
+
+
+		#design pending ecms
+		list_ctrl = ctrl(self, 'list:pending_ecms_de')
+
+		#list_ctrl.printer_paper_type = wx.PAPER_11X17
+		list_ctrl.printer_header = 'Pending ECMs'
+		list_ctrl.printer_font_size = 8
+		
+		self.Bind(wx.EVT_LIST_ITEM_ACTIVATED , self.on_activated_order, id=xrc.XRCID('list:pending_ecms_de'))
+		self.Bind(wx.EVT_BUTTON, self.refresh_list_pending_ecms_de, id=xrc.XRCID('button:refresh_pending_ecms_de'))
+		self.Bind(wx.EVT_BUTTON, list_ctrl.filter_list, id=xrc.XRCID('button:filter_pending_ecms_de')) 
+		self.Bind(wx.EVT_BUTTON, list_ctrl.export_list, id=xrc.XRCID('button:export_pending_ecms_de')) 
+		self.Bind(wx.EVT_BUTTON, list_ctrl.print_list, id=xrc.XRCID('button:print_pending_ecms_de')) 
+		
+		column_names = ['Id', 'Sales Order', 'Item', 'Production Order', 'Material', 'Customer', 
+						'Actual Release', 'Comments']
+
+		for index, column_name in enumerate(column_names):
+			list_ctrl.InsertColumn(index, column_name)
+
 
 		#recently sent to mmg
 		list_ctrl = ctrl(self, 'list:sent_to_mmg')
@@ -1120,6 +1142,104 @@ class MainFrame(wx.Frame, Search.SearchTab, Scheduling.SchedulingTab):
 		list_ctrl.SetColumnWidth(0, 0)
 		
 		list_ctrl.Thaw()
+
+
+	def refresh_list_pending_ecms_de(self, event=None):
+		list_ctrl = ctrl(self, 'list:pending_ecms_de')
+		list_ctrl.Freeze()
+		list_ctrl.DeleteAllItems()
+		list_ctrl.clean_headers()
+
+		records = db.query('''
+			SELECT
+				id,
+
+				CASE
+					WHEN bpcs_sales_order IS NULL THEN sales_order
+					WHEN sales_order IS NULL THEN bpcs_sales_order
+					ELSE sales_order + '/' + bpcs_sales_order
+				END AS sales_order,
+
+				CASE
+					WHEN bpcs_line_up IS NULL THEN item
+					WHEN item IS NULL THEN bpcs_line_up
+					ELSE item + '/' + bpcs_line_up
+				END AS item,
+
+				CASE
+					WHEN bpcs_item IS NULL THEN production_order
+					WHEN production_order IS NULL THEN bpcs_item
+					ELSE production_order + '/' + bpcs_item
+				END AS production_order,
+
+				CASE
+					WHEN bpcs_family IS NULL THEN material
+					WHEN material IS NULL THEN bpcs_family
+					ELSE material + '/' + bpcs_family
+				END AS material,
+
+				sold_to_name,
+
+				date_actual_de_release,
+				comments
+
+			FROM
+				orders.view_systems
+			WHERE
+				pending_ecms = 1 AND
+				status <> 'Canceled'
+			ORDER BY
+				date_actual_de_release ASC
+			''')
+		
+		#insert records into list
+		for index, record in enumerate(records):
+			#format all fields as strings
+			formatted_record = []
+			for field in record:
+				if field == None:
+					field = ''
+					
+				elif isinstance(field, dt.datetime):
+					field = field.strftime('%m/%d/%Y')
+					
+				else:
+					pass
+					
+				formatted_record.append(field)
+
+			id, sales_order, item, production_order, material, sold_to_name, \
+			date_actual_de_release, comments = formatted_record
+			
+			comments = comments.replace('\n', ' / ')
+
+			list_ctrl.InsertStringItem(sys.maxint, '#')
+			list_ctrl.SetStringItem(index, 0, '{}'.format(id))
+			list_ctrl.SetStringItem(index, 1, '{}'.format(sales_order))
+			list_ctrl.SetStringItem(index, 2, '{}'.format(item))
+			list_ctrl.SetStringItem(index, 3, '{}'.format(production_order))
+			list_ctrl.SetStringItem(index, 4, '{}'.format(material))
+			list_ctrl.SetStringItem(index, 5, '{}'.format(sold_to_name))
+
+			list_ctrl.SetStringItem(index, 6, '{}'.format(date_actual_de_release))
+			list_ctrl.SetStringItem(index, 7, '{}'.format(comments))
+
+
+		#auto fit the column widths
+		for index in range(list_ctrl.GetColumnCount()):
+			list_ctrl.SetColumnWidth(index, wx.LIST_AUTOSIZE_USEHEADER)
+			
+			#cap column width at max 400
+			if list_ctrl.GetColumnWidth(index) > 400:
+				list_ctrl.SetColumnWidth(index, 400)
+		
+		#hide id column
+		list_ctrl.SetColumnWidth(0, 0)
+		
+		list_ctrl.Thaw()
+
+
+
 
 	def refresh_list_sent_to_mmg(self, event=None):
 		list_ctrl = ctrl(self, 'list:sent_to_mmg')
