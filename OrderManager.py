@@ -442,7 +442,7 @@ class MainFrame(wx.Frame, Search.SearchTab, Scheduling.SchedulingTab):
 				ontime_by_planned += 1
 				print e
 			
-			est_de_hours += sum(db.query("SELECT mean_hours FROM family_hour_estimates WHERE family='{}'".format(material)))
+			est_de_hours += sum(db.query("SELECT mean_hours FROM orders.material_eto_hour_estimates WHERE material='{}'".format(material)))
 			
 			this_act_de_hours = sum(db.query("SELECT hours FROM orders.time_logs WHERE order_id={}".format(id)))
 			if this_act_de_hours == 0:
@@ -505,7 +505,7 @@ class MainFrame(wx.Frame, Search.SearchTab, Scheduling.SchedulingTab):
 				for entry in items_rel_late:
 					report.AppendText("     {}\n".format(entry))
 		
-		report.AppendText("\n\nElvis, remember this is still using dbo.family_hour_estimates and dbo.std_family_hour_estimates...")
+		report.AppendText("\n\nElvis, remember this is still using dbo.std_family_hour_estimates...")
 
 
 
