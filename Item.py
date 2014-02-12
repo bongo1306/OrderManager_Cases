@@ -781,6 +781,31 @@ class ItemFrame(wx.Frame):
 			ctrl(self, 'button:next_item').Disable()
 
 
+	def on_click_toggle_status(self, event):
+		record = db.query('''
+			SELECT
+				status
+			FROM
+				orders.root
+			WHERE
+				orders.root.id={}
+			'''.format(self.id))
+		
+		current_status = record[0]
+		
+		if current_status == 'Valid':
+			new_status = 'Canceled'
+		else:
+			new_status = 'Valid'
+			
+		db.update_order('orders.root', self.id, 'status', new_status)
+			
+		self.Freeze()
+		self.reset_all()
+		self.populate_all()
+		self.Thaw()
+
+
 	def on_click_specify_quote_number(self, event):
 		record = db.query('''
 			SELECT
@@ -897,6 +922,9 @@ class ItemFrame(wx.Frame):
 		
 		ctrl(self, 'label:quote_label').Bind(wx.EVT_LEFT_DOWN, self.on_click_specify_quote_number)
 		ctrl(self, 'label:quote').Bind(wx.EVT_LEFT_DOWN, self.on_click_specify_quote_number)
+		
+		ctrl(self, 'label:status_label').Bind(wx.EVT_LEFT_DOWN, self.on_click_toggle_status)
+		ctrl(self, 'label:status').Bind(wx.EVT_LEFT_DOWN, self.on_click_toggle_status)
 
 
 	def reset_details_panel(self):
