@@ -16,10 +16,177 @@ import Database as db
 import Item
 
 
+class DesignSchedulerFrame(wx.Frame):
+	def __init__(self, parent):
+		#load frame XRC description
+		pre = wx.PreFrame()
+		res = xrc.XmlResource.Get() 
+		res.LoadOnFrame(pre, parent, "frame:design_scheduler") 
+		self.PostCreate(pre)
+		self.SetIcon(wx.Icon(gn.resource_path('OrderManager.ico'), wx.BITMAP_TYPE_ICO))
+		
+		#bindings
+		self.Bind(wx.EVT_CLOSE, self.on_close_frame)
+		self.Bind(wx.EVT_BUTTON, self.on_click_apply, id=xrc.XRCID('button:apply'))
+		
+		self.Bind(wx.EVT_LIST_ITEM_ACTIVATED , self.on_activated_order, id=xrc.XRCID('list:orders'))
+		
+		self.init_lists()
+		self.populate_list()
+		
+		self.SetSize((1200, 700))
+		self.Center()
+
+		self.Show()
+
+
+	def on_activated_order(self, event):
+		selected_item = event.GetEventObject()
+		table_id = selected_item.GetItem(selected_item.GetFirstSelected(), 0).GetText()
+
+		if table_id != '':
+			Item.ItemFrame(self, int(table_id))
+
+
+	def init_lists(self):
+		#a
+		list_ctrl = ctrl(self, 'list:orders')
+		
+		column_names = ['Id', 'Sales Order', 'Item', 'Production Order', 'Material', 'Customer', 
+						'When Got ProdOrd', 'Requested Release', 'Old Planned Release', 'New Planned Release', 'Date Locked', 'Old Suggested Start']
+
+		for index, column_name in enumerate(column_names):
+			list_ctrl.InsertColumn(index, column_name)
+
+
+	def populate_list(self, event=None):
+		list_ctrl = ctrl(self, 'list:orders')
+		list_ctrl.Freeze()
+		list_ctrl.DeleteAllItems()
+		list_ctrl.clean_headers()
+
+		records = db.query('''
+			SELECT
+				id,
+				sales_order,
+				item,
+				production_order,
+				material,
+				sold_to_name,
+
+				date_requested_de_release,
+				date_planned_de_release,
+				date_planned_de_release_locked,
+				date_suggested_de_start
+			FROM
+				orders.view_systems
+			WHERE
+				date_actual_de_release IS NULL AND
+				production_order IS NOT NULL AND
+				date_requested_de_release IS NOT NULL AND
+				status <> 'Canceled'
+			ORDER BY
+				date_planned_de_release, date_requested_de_release, sales_order, item ASC
+			''')
+		
+
+		#insert records into list
+		for index, record in enumerate(records):
+			#format all fields as strings
+			formatted_record = []
+			for field in record:
+				if field == None:
+					field = ''
+					
+				elif isinstance(field, dt.datetime):
+					field = field.strftime('%m/%d/%Y')
+					
+				else:
+					pass
+					
+				formatted_record.append(field)
+
+			id, sales_order, item, production_order, material, sold_to_name, \
+			date_requested_de_release, old_date_planned_de_release, date_planned_de_release_locked, date_suggested_de_start = formatted_record
+			
+			when_got_prodord = db.query('''
+				SELECT TOP 1
+					when_changed
+				FROM
+					orders.changes
+				WHERE
+					field = 'production_order' AND
+					table_id = {}
+				ORDER BY
+					id DESC
+				'''.format(id))
+			
+			try:
+				when_got_prodord = workdays.workday(when_got_prodord[0].date(), -1)
+			except:
+				when_got_prodord = None
+	
+			
+			new_date_planned_de_release = '???'
+	
+			
+			#convert x to string format
+			try:
+				when_got_prodord = when_got_prodord.strftime('%m/%d/%Y')
+			except:
+				when_got_prodord = ''
+				
+			if date_planned_de_release_locked == False:
+				date_planned_de_release_locked = ''
+
+			list_ctrl.InsertStringItem(sys.maxint, '#')
+			list_ctrl.SetStringItem(index, 0, '{}'.format(id))
+			list_ctrl.SetStringItem(index, 1, '{}'.format(sales_order))
+			list_ctrl.SetStringItem(index, 2, '{}'.format(item))
+			list_ctrl.SetStringItem(index, 3, '{}'.format(production_order))
+			list_ctrl.SetStringItem(index, 4, '{}'.format(material))
+			list_ctrl.SetStringItem(index, 5, '{}'.format(sold_to_name))
+			list_ctrl.SetStringItem(index, 6, '{}'.format(when_got_prodord))
+
+			list_ctrl.SetStringItem(index, 7, '{}'.format(date_requested_de_release))
+			list_ctrl.SetStringItem(index, 8, '{}'.format(old_date_planned_de_release))
+			list_ctrl.SetStringItem(index, 9, '{}'.format(new_date_planned_de_release))
+			list_ctrl.SetStringItem(index, 10, '{}'.format(date_planned_de_release_locked))
+			list_ctrl.SetStringItem(index, 11, '{}'.format(date_suggested_de_start))
+
+
+		#auto fit the column widths
+		for index in range(list_ctrl.GetColumnCount()):
+			list_ctrl.SetColumnWidth(index, wx.LIST_AUTOSIZE_USEHEADER)
+			
+			#cap column width at max 400
+			if list_ctrl.GetColumnWidth(index) > 400:
+				list_ctrl.SetColumnWidth(index, 400)
+		
+		#hide id column
+		list_ctrl.SetColumnWidth(0, 0)
+		
+		list_ctrl.Thaw()
+
+
+
+	def on_click_apply(self, event):
+		print 'apply!!!!'
+
+
+	def on_close_frame(self, event):
+		print 'called on_close_frame'
+		self.Destroy()
+
+
+
 class SchedulingTab(object):
 	def init_scheduling_tab(self):
 		#Bindings
-		self.Bind(wx.EVT_CHOICE, self.on_choice_table, id=xrc.XRCID('choice:which_table'))
+		###self.Bind(wx.EVT_CHOICE, self.on_choice_table, id=xrc.XRCID('choice:which_table'))
+		
+		
+		self.Bind(wx.EVT_BUTTON, self.on_click_design_scheduler, id=xrc.XRCID('button:open_scheduler'))
 		
 		self.Bind(wx.EVT_BUTTON, self.on_click_proto_request_dates, id=xrc.XRCID('button:proto_request_dates'))
 		self.Bind(wx.EVT_BUTTON, self.on_click_calc_and_set_requested_de_release, id=xrc.XRCID('button:calc_and_set_requested_de_release'))
@@ -33,6 +200,10 @@ class SchedulingTab(object):
 			
 		else:
 			return 0
+
+
+	def on_click_design_scheduler(self, event):
+		DesignSchedulerFrame(self)
 
 
 	def on_click_visualize_forecast(self, event):
