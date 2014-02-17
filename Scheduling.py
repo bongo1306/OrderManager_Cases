@@ -28,8 +28,11 @@ class DesignSchedulerFrame(wx.Frame):
 		#bindings
 		self.Bind(wx.EVT_CLOSE, self.on_close_frame)
 		self.Bind(wx.EVT_BUTTON, self.on_click_apply, id=xrc.XRCID('button:apply'))
-		
+
+
+
 		self.Bind(wx.EVT_LIST_ITEM_ACTIVATED , self.on_activated_order, id=xrc.XRCID('list:orders'))
+		
 		
 		self.init_lists()
 		self.populate_list()
@@ -52,14 +55,93 @@ class DesignSchedulerFrame(wx.Frame):
 		#a
 		list_ctrl = ctrl(self, 'list:orders')
 		
-		column_names = ['Id', 'Sales Order', 'Item', 'Production Order', 'Material', 'Customer', 
-						'When Got ProdOrd', 'Requested Release', 'Old Planned Release', 'New Planned Release', 'Date Locked', 'Old Suggested Start']
+		column_names = ['Id', 'Sales Order', 'Item', 'Production Order', 'Material', 'Customer', '|',
+						'When Got ProdOrd', 'Requested Release', '|', 'Date Locked', 'Old Planned Release', 'New Planned Release', 'Exception', '|', 'Old Suggested Start']
 
 		for index, column_name in enumerate(column_names):
 			list_ctrl.InsertColumn(index, column_name)
 
 
+	def calculate_schedule(self, event=None):
+		records = db.query('''
+			SELECT
+				id,
+				material,
+				date_created_on,
+				date_requested_de_release
+			FROM
+				orders.view_systems
+			WHERE
+				date_actual_de_release IS NULL AND
+				production_order IS NOT NULL AND
+				date_requested_de_release IS NOT NULL AND
+				date_planned_de_release_locked <> 1 AND
+				status <> 'Canceled'
+			ORDER BY
+				date_requested_de_release, sales_order, item ASC
+			''')
+		
+		self.schedule_data = {}
+		
+		for record in records:
+			id, material, date_created_on, date_requested_de_release = record
+			
+			when_got_prodord = db.query('''
+				SELECT TOP 1
+					when_changed
+				FROM
+					orders.changes
+				WHERE
+					field = 'production_order' AND
+					table_id = {}
+				ORDER BY
+					id DESC
+				'''.format(id))
+			
+			if when_got_prodord:
+				#since SAP export data is only updated every midnight, let's assume
+				# that the actual change occured one working day before
+				when_got_prodord = workdays.workday(when_got_prodord[0].date(), -1)
+				
+				if workdays.networkdays(when_got_prodord, date_requested_de_release.date()) >= 8:
+					date_planned_de_release = date_requested_de_release
+					
+				else:
+					#they did not give us 8 days between when it got a production order and when they want it released
+					# so let's force that
+					date_planned_de_release = workdays.workday(when_got_prodord, 8)
+					
+					#convert this date object to datetime
+					date_planned_de_release = dt.datetime.combine(date_planned_de_release, dt.time())
+
+			else:
+				#we don't know when the order got the production order number, so give
+				# the PC schedulers the benifit of the doubt
+				if date_requested_de_release < date_created_on:
+					date_planned_de_release = date_created_on
+				
+				else:
+					date_planned_de_release = date_requested_de_release
+					
+				when_got_prodord = None
+
+			
+			#put code here to prevent planned date landing on a weekend
+			self.schedule_data.update({id: (when_got_prodord, date_planned_de_release)})
+
+
+	def on_click_apply(self, event=None):
+		for id in self.schedule_data:
+			when_got_prodord, new_date_planned_de_release = self.schedule_data[id]
+			
+			db.update_order('orders.target_dates', id, 'planned_de_release', new_date_planned_de_release, '{} (Auto)'.format(gn.user))
+
+		self.Close()
+
+
 	def populate_list(self, event=None):
+		self.calculate_schedule()
+		
 		list_ctrl = ctrl(self, 'list:orders')
 		list_ctrl.Freeze()
 		list_ctrl.DeleteAllItems()
@@ -89,16 +171,43 @@ class DesignSchedulerFrame(wx.Frame):
 				date_planned_de_release, date_requested_de_release, sales_order, item ASC
 			''')
 		
-
+	
 		#insert records into list
 		for index, record in enumerate(records):
-			#format all fields as strings
+			id, sales_order, item, production_order, material, sold_to_name, \
+			date_requested_de_release, old_date_planned_de_release, date_planned_de_release_locked, date_suggested_de_start = record
+			
+			try:
+				when_got_prodord, new_date_planned_de_release = self.schedule_data[id]
+
+			except:
+				when_got_prodord = '???'
+				new_date_planned_de_release = '???'
+			
+			try:
+				planned_exception = (new_date_planned_de_release - date_requested_de_release).days
+			except:
+				try:
+					planned_exception = (old_date_planned_de_release - date_requested_de_release).days
+				except:
+					planned_exception = '???'
+			
+
+			if planned_exception < 0:
+				planned_exception = 0
+
+
+
+			#repack, format to string, then unpack
+			record = (id, sales_order, item, production_order, material, sold_to_name, \
+				when_got_prodord, date_requested_de_release, old_date_planned_de_release, new_date_planned_de_release, planned_exception, date_planned_de_release_locked, date_suggested_de_start)
+
 			formatted_record = []
 			for field in record:
 				if field == None:
 					field = ''
 					
-				elif isinstance(field, dt.datetime):
+				elif isinstance(field, dt.datetime) or isinstance(field, dt.date):
 					field = field.strftime('%m/%d/%Y')
 					
 				else:
@@ -107,35 +216,10 @@ class DesignSchedulerFrame(wx.Frame):
 				formatted_record.append(field)
 
 			id, sales_order, item, production_order, material, sold_to_name, \
-			date_requested_de_release, old_date_planned_de_release, date_planned_de_release_locked, date_suggested_de_start = formatted_record
+			when_got_prodord, date_requested_de_release, old_date_planned_de_release, new_date_planned_de_release, planned_exception, date_planned_de_release_locked, date_suggested_de_start = formatted_record
 			
-			when_got_prodord = db.query('''
-				SELECT TOP 1
-					when_changed
-				FROM
-					orders.changes
-				WHERE
-					field = 'production_order' AND
-					table_id = {}
-				ORDER BY
-					id DESC
-				'''.format(id))
-			
-			try:
-				when_got_prodord = workdays.workday(when_got_prodord[0].date(), -1)
-			except:
-				when_got_prodord = None
-	
-			
-			new_date_planned_de_release = '???'
-	
-			
-			#convert x to string format
-			try:
-				when_got_prodord = when_got_prodord.strftime('%m/%d/%Y')
-			except:
-				when_got_prodord = ''
-				
+
+
 			if date_planned_de_release_locked == False:
 				date_planned_de_release_locked = ''
 
@@ -146,13 +230,19 @@ class DesignSchedulerFrame(wx.Frame):
 			list_ctrl.SetStringItem(index, 3, '{}'.format(production_order))
 			list_ctrl.SetStringItem(index, 4, '{}'.format(material))
 			list_ctrl.SetStringItem(index, 5, '{}'.format(sold_to_name))
-			list_ctrl.SetStringItem(index, 6, '{}'.format(when_got_prodord))
-
-			list_ctrl.SetStringItem(index, 7, '{}'.format(date_requested_de_release))
-			list_ctrl.SetStringItem(index, 8, '{}'.format(old_date_planned_de_release))
-			list_ctrl.SetStringItem(index, 9, '{}'.format(new_date_planned_de_release))
+			
+			list_ctrl.SetStringItem(index, 6, '{}'.format('|'))
+			list_ctrl.SetStringItem(index, 7, '{}'.format(when_got_prodord))
+			list_ctrl.SetStringItem(index, 8, '{}'.format(date_requested_de_release))
+			
+			list_ctrl.SetStringItem(index, 9, '{}'.format('|'))
 			list_ctrl.SetStringItem(index, 10, '{}'.format(date_planned_de_release_locked))
-			list_ctrl.SetStringItem(index, 11, '{}'.format(date_suggested_de_start))
+			list_ctrl.SetStringItem(index, 11, '{}'.format(old_date_planned_de_release))
+			list_ctrl.SetStringItem(index, 12, '{}'.format(new_date_planned_de_release))
+			list_ctrl.SetStringItem(index, 13, '{}'.format(planned_exception))
+			
+			list_ctrl.SetStringItem(index, 14, '{}'.format('|'))
+			list_ctrl.SetStringItem(index, 15, '{}'.format(date_suggested_de_start))
 
 
 		#auto fit the column widths
@@ -168,10 +258,6 @@ class DesignSchedulerFrame(wx.Frame):
 		
 		list_ctrl.Thaw()
 
-
-
-	def on_click_apply(self, event):
-		print 'apply!!!!'
 
 
 	def on_close_frame(self, event):
