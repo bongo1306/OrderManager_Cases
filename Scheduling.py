@@ -423,9 +423,8 @@ class SchedulingTab(object):
 			FROM
 				orders.view_systems
 			WHERE
-				date_actual_de_release IS NULL AND
+				(date_actual_de_release IS NULL OR date_requested_de_release IS NULL) AND
 				date_basic_start IS NOT NULL AND
-				material <> 'SPARTCOLS' AND
 				status <> 'Canceled'
 			''')
 
