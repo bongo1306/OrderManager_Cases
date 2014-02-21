@@ -296,7 +296,7 @@ class SchedulingTab(object):
 		ctrl(self, 'button:visualize_forecast').Disable()
 		
 		#make the excel read only
-		os.chmod(gn.resource_path('VisualizeEtoForecast.xlsm'), stat.S_IREAD)
+		#os.chmod(gn.resource_path('VisualizeEtoForecast.xlsm'), stat.S_IREAD)
 
 		today = dt.date.today()
 		first_day_last_week = today - dt.timedelta(days=today.weekday()-2) - dt.timedelta(days=3) - dt.timedelta(weeks=1)
