@@ -929,9 +929,10 @@ class ItemFrame(wx.Frame):
 
 
 	def reset_details_panel(self):
-		pass
-		#ctrl(self, 'label:quote').SetLabel('...')
-		#ctrl(self, 'label:sales_order').SetLabel('...')
+		#return status colors to default
+		ctrl(self, 'label:status').SetBackgroundColour(wx.NullColour)
+		ctrl(self, 'label:status').SetForegroundColour(wx.NullColour)
+
 
 	def populate_details_panel(self):
 		record = db.query('''
@@ -997,6 +998,11 @@ class ItemFrame(wx.Frame):
 		sold_to_name, sold_to_number, ship_to_name, ship_to_number, country, state, city, zip_code, address, \
 		bpcs_sales_order, bpcs_line_up, bpcs_item, bpcs_family, comments = formatted_record
 		
+		#make a canceled order stand out
+		if status == 'Canceled':
+			ctrl(self, 'label:status').SetBackgroundColour((255, 0, 0))
+			ctrl(self, 'label:status').SetForegroundColour((255, 255, 255))
+
 		ctrl(self, 'label:status').SetLabel(status)
 		ctrl(self, 'label:quote').SetLabel(filemaker_quote)
 		ctrl(self, 'label:sales_order').SetLabel(sales_order)
