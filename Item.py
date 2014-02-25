@@ -66,6 +66,7 @@ class ItemFrame(wx.Frame):
 			'DSP': ('welding', 'base_assembly', 'tube_fab', 'brazing', 'box_wire', 'hookup', 'testing', 'finishing'), 
 			'DSS': ('welding', 'base_assembly', 'tube_fab_header', 'tube_fab', 'brazing', 'box_wire', 'hookup', 'testing', 'finishing'), 
 			'DSSIIX': ('welding', 'base_assembly', 'tube_fab_header', 'tube_fab', 'brazing', 'box_wire', 'hookup', 'testing', 'finishing'), 
+			'DXVS': ('welding', 'painting', 'base_assembly', 'tube_fab_header', 'tube_fab', 'brazing', 'box_wire', 'hookup', 'testing', 'finishing'), 
 			'FAH': ('welding', 'painting', 'base_assembly', 'tube_fab_header', 'tube_fab', 'brazing', 'box_wire', 'hookup', 'testing', 'finishing'), 
 			'FAV': ('welding', 'painting', 'base_assembly', 'tube_fab_header', 'tube_fab', 'brazing', 'box_wire', 'hookup', 'testing', 'finishing'), 
 			'FAX': ('welding', 'painting', 'base_assembly', 'tube_fab_header', 'tube_fab', 'brazing', 'box_wire', 'hookup', 'testing', 'finishing'), 
