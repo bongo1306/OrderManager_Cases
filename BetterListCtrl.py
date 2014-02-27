@@ -2,6 +2,8 @@
 # -*- coding: utf8 -*-
 
 #Change log:
+#v0.8 - 2/27/14
+#	*Added Column Statistics to context menu
 #v0.7 - 1/8/14
 #	*Copying rows now uses \r\n for line breaks to be backwards compatible with other software
 #v0.6 - 1/2/14
@@ -27,6 +29,7 @@ import sys
 import os
 import csv
 import dateutil.parser as date_parser
+from collections import Counter
 
 import wx.html
 from wx.html import HtmlEasyPrinting
@@ -53,7 +56,8 @@ class BetterListCtrl(wx.ListCtrl):
 		self.ignore_delete_all_items_event = False
 		
 		self.right_clicked_cell_value = ''
-		
+		self.right_clicked_cell_column_index = 0
+
 		#override these settings if you want
 		self.printer_header = ''
 		self.printer_font_size = 9
@@ -233,17 +237,20 @@ class BetterListCtrl(wx.ListCtrl):
 			self.entry2 = wx.NewId()
 			self.entry3 = wx.NewId()
 			self.entry4 = wx.NewId()
+			self.entry5 = wx.NewId()
 			self.Bind(wx.EVT_MENU, self.on_popup, id=self.entry1)
 			self.Bind(wx.EVT_MENU, self.on_popup, id=self.entry2)
 			self.Bind(wx.EVT_MENU, self.on_popup, id=self.entry3)
 			self.Bind(wx.EVT_MENU, self.on_popup, id=self.entry4)
+			self.Bind(wx.EVT_MENU, self.on_popup, id=self.entry5)
 
 		#build the menu
 		menu = wx.Menu()
 		menu.Append(self.entry1, u'Copy "{}"'.format(self.right_clicked_cell_value))
 		menu.Append(self.entry2, 'Copy Selected Rows')
-		menu.Append(self.entry3, 'Export List')
-		menu.Append(self.entry4, 'Print List')
+		menu.Append(self.entry3, 'Column Statistics')
+		menu.Append(self.entry4, 'Export List')
+		menu.Append(self.entry5, 'Print List')
 
 		#show the popup menu
 		self.PopupMenu(menu)
@@ -261,6 +268,9 @@ class BetterListCtrl(wx.ListCtrl):
 			
 		elif 'Copy Selected Rows' in menuItem.GetLabel():
 			self.copy_selected_rows()
+
+		elif 'Column Statistics' in menuItem.GetLabel():
+			self.column_statistics()
 
 		elif 'Export List' in menuItem.GetLabel():
 			self.export_list()
@@ -385,7 +395,11 @@ class BetterListCtrl(wx.ListCtrl):
 			printer.GetPageSetupData().SetMarginBottomRight((self.printer_paper_margins[2], self.printer_paper_margins[3]))
 			
 		printer.PrintText(html)
-		
+
+
+	def column_statistics(self, event=None):
+		ColumnStatisticsFrame(self)
+
 
 	def calculate_right_clicked_cell_value(self, event):
 		spt = wx.GetMousePosition()
@@ -417,6 +431,7 @@ class BetterListCtrl(wx.ListCtrl):
 			last_col = last_col + col_width
 
 		self.right_clicked_cell_value = '{}'.format(self.GetItem(event.GetIndex(), col_selected).GetText())
+		self.right_clicked_cell_column_index = col_selected
 
 
 	def sort_by_column(self, event):
@@ -615,3 +630,196 @@ class QuickFilterFrame(wx.Frame):
 
 	def on_click_clear(self, event):
 		self.Close()
+
+
+class ColumnStatisticsFrame(wx.Frame):
+	def __init__(self, parent):
+		wx.Frame.__init__ (self, parent=None, id = wx.ID_ANY, title = u"Column Statistics", pos = wx.DefaultPosition, size = wx.Size(300, 300), style = wx.DEFAULT_FRAME_STYLE|wx.TAB_TRAVERSAL)
+		
+		self.parent = parent
+		
+		#build gui frame
+		self.SetSizeHintsSz(wx.DefaultSize, wx.DefaultSize)
+		self.SetFont(wx.Font(10, 70, 90, 90, False, wx.EmptyString))
+		
+		sizer1 = wx.BoxSizer(wx.VERTICAL)
+		
+		sizer2 = wx.BoxSizer(wx.VERTICAL)
+		
+		self.panel1 = wx.Panel(self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL)
+		sizer3 = wx.BoxSizer(wx.VERTICAL)
+		
+		sizer4 = wx.FlexGridSizer(0, 2, 0, 0)
+		sizer4.AddGrowableCol(1)
+		sizer4.SetFlexibleDirection(wx.BOTH)
+		sizer4.SetNonFlexibleGrowMode(wx.FLEX_GROWMODE_SPECIFIED)
+		
+		self.label1 = wx.StaticText(self.panel1, wx.ID_ANY, u"Column analyzed:", wx.DefaultPosition, wx.DefaultSize, 0)
+		self.label1.Wrap(-1)
+		sizer4.Add(self.label1, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT|wx.BOTTOM|wx.LEFT, 5)
+		
+		self.text_column = wx.TextCtrl(self.panel1, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, wx.TE_READONLY)
+		sizer4.Add(self.text_column, 0, wx.EXPAND|wx.ALIGN_CENTER_VERTICAL|wx.BOTTOM|wx.RIGHT|wx.LEFT, 5)
+		
+		self.label2 = wx.StaticText(self.panel1, wx.ID_ANY, u"Count:", wx.DefaultPosition, wx.DefaultSize, 0)
+		self.label2.Wrap(-1)
+		sizer4.Add(self.label2, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT|wx.BOTTOM|wx.LEFT, 5)
+		
+		self.text_count = wx.TextCtrl(self.panel1, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, wx.TE_READONLY)
+		sizer4.Add(self.text_count, 0, wx.ALIGN_CENTER_VERTICAL|wx.BOTTOM|wx.RIGHT|wx.LEFT|wx.EXPAND, 5)
+		
+		self.label3 = wx.StaticText(self.panel1, wx.ID_ANY, u"Sum:", wx.DefaultPosition, wx.DefaultSize, 0)
+		self.label3.Wrap(-1)
+		sizer4.Add(self.label3, 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL|wx.BOTTOM|wx.LEFT, 5)
+		
+		self.text_sum = wx.TextCtrl(self.panel1, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, wx.TE_READONLY)
+		sizer4.Add(self.text_sum, 0, wx.ALIGN_CENTER_VERTICAL|wx.EXPAND|wx.BOTTOM|wx.RIGHT|wx.LEFT, 5)
+		
+		self.label4 = wx.StaticText(self.panel1, wx.ID_ANY, u"Mean:", wx.DefaultPosition, wx.DefaultSize, 0)
+		self.label4.Wrap(-1)
+		sizer4.Add(self.label4, 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL|wx.BOTTOM|wx.LEFT, 5)
+		
+		self.text_mean = wx.TextCtrl(self.panel1, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, wx.TE_READONLY)
+		sizer4.Add(self.text_mean, 0, wx.ALIGN_CENTER_VERTICAL|wx.BOTTOM|wx.RIGHT|wx.LEFT|wx.EXPAND, 5)
+		
+		self.label5 = wx.StaticText(self.panel1, wx.ID_ANY, u"Median:", wx.DefaultPosition, wx.DefaultSize, 0)
+		self.label5.Wrap(-1)
+		sizer4.Add(self.label5, 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL|wx.BOTTOM|wx.LEFT, 5)
+		
+		self.text_median = wx.TextCtrl(self.panel1, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, wx.TE_READONLY)
+		sizer4.Add(self.text_median, 0, wx.ALIGN_CENTER_VERTICAL|wx.EXPAND|wx.BOTTOM|wx.RIGHT|wx.LEFT, 5)
+		
+		self.label6 = wx.StaticText(self.panel1, wx.ID_ANY, u"Mode:", wx.DefaultPosition, wx.DefaultSize, 0)
+		self.label6.Wrap(-1)
+		sizer4.Add(self.label6, 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL|wx.BOTTOM|wx.LEFT, 5)
+		
+		self.text_mode = wx.TextCtrl(self.panel1, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, wx.TE_READONLY)
+		sizer4.Add(self.text_mode, 0, wx.ALIGN_CENTER_VERTICAL|wx.BOTTOM|wx.RIGHT|wx.LEFT|wx.EXPAND, 5)
+		
+		self.label7 = wx.StaticText(self.panel1, wx.ID_ANY, u"Range:", wx.DefaultPosition, wx.DefaultSize, 0)
+		self.label7.Wrap(-1)
+		sizer4.Add(self.label7, 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL|wx.BOTTOM|wx.LEFT, 5)
+		
+		self.text_range = wx.TextCtrl(self.panel1, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, wx.TE_READONLY)
+		sizer4.Add(self.text_range, 0, wx.ALIGN_CENTER_VERTICAL|wx.BOTTOM|wx.RIGHT|wx.LEFT|wx.EXPAND, 5)
+		
+		
+		sizer3.Add(sizer4, 0, wx.EXPAND|wx.ALL, 5)
+		
+		self.line = wx.StaticLine(self.panel1, wx.ID_ANY, wx.DefaultPosition, wx.Size(300,-1), wx.LI_HORIZONTAL)
+		sizer3.Add(self.line, 0, wx.EXPAND|wx.RIGHT|wx.LEFT, 5)
+		
+		self.button_ok = wx.Button(self.panel1, wx.ID_ANY, u"OK", wx.DefaultPosition, wx.DefaultSize, 0)
+		self.button_ok.SetDefault() 
+		sizer3.Add(self.button_ok, 0, wx.ALL|wx.ALIGN_CENTER_HORIZONTAL, 5)
+		
+		self.panel1.SetSizer(sizer3)
+		self.panel1.Layout()
+		sizer3.Fit(self.panel1)
+		sizer2.Add(self.panel1, 1, wx.EXPAND, 5)
+		
+		sizer1.Add(sizer2, 1, wx.EXPAND, 5)
+		
+		self.SetSizer(sizer1)
+		self.Layout()
+
+
+		#bindings
+		self.Bind(wx.EVT_CLOSE, self.on_close_frame)
+		self.button_ok.Bind(wx.EVT_BUTTON, self.on_click_close)
+		
+		self.populate_fields()
+
+		self.Centre(wx.BOTH)
+		self.Show()
+
+
+	def populate_fields(self):
+		col_index = self.parent.right_clicked_cell_column_index
+		
+		try:
+			self.text_column.SetValue('{}'.format(self.parent.GetColumn(col_index).GetText().replace(u'↓', u'').replace(u'↑', u'')))
+		except:
+			pass
+
+		#how many rows are selected?
+		count_of_rows_selected = 0
+		for row in range(self.parent.GetItemCount()):
+			if self.parent.IsSelected(row):
+				count_of_rows_selected += 1
+
+		col_values = []
+		
+		#determine if we should count the whole column or just the rows selected
+		if count_of_rows_selected > 1:
+			#only consider selected rows
+			for row in range(self.parent.GetItemCount()):
+				if self.parent.IsSelected(row):
+					col_values.append(u'{}'.format(self.parent.GetItem(row, col_index).GetText()))
+
+		else:
+			#consider all rows
+			for row in range(self.parent.GetItemCount()):
+				col_values.append(u'{}'.format(self.parent.GetItem(row, col_index).GetText()))
+
+		#in preperation of converting the strings to a number, remove any ornamental characters
+		col_values = [value.replace(u'%', u'').replace(u'$', u'').replace(u',', u'') for value in col_values]
+
+		#build a list of only numeric column values
+		numeric_col_values = []
+		
+		for value in col_values:
+			try:
+				numeric_col_values.append(float(value))
+			except:
+				pass
+
+		try: self.text_count.SetValue('{}'.format(len(numeric_col_values)))
+		except: pass
+
+		try: self.text_sum.SetValue('{}'.format(sum(numeric_col_values)))
+		except: pass
+
+		try: self.text_mean.SetValue('{0:.3f}'.format(sum(numeric_col_values)/float(len(numeric_col_values))))
+		except: pass
+		
+		try: self.text_median.SetValue('{}'.format(self.median(numeric_col_values)))
+		except: pass		
+
+		try:
+			mode_pack = Counter(numeric_col_values).most_common(1)
+			
+			if mode_pack[0][1] > 1:
+				self.text_mode.SetValue('{}'.format(mode_pack[0][0]))
+		except: pass		
+
+		try:
+			numeric_col_values.sort()
+			
+			range_value = numeric_col_values[-1] - numeric_col_values[0]
+			
+			self.text_range.SetValue('{}'.format(range_value))
+		except:
+			pass		
+
+
+	def median(self, values_list):
+		values_list.sort()
+
+		if not len(values_list) % 2:
+			return (values_list[len(values_list) / 2] + values_list[len(values_list) / 2 - 1]) / 2.0
+		else:
+			return values_list[len(values_list) / 2]
+		
+		return None
+
+
+	def on_click_close(self, event):
+		self.Close()
+
+
+	def on_close_frame(self, event):
+		print 'called on_close_frame'
+		self.Destroy()
+
+
