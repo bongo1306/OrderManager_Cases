@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf8 -*-
 
+import sys
 import wx
 from wx import xrc
 ctrl = xrc.XRCCTRL
@@ -15,9 +16,14 @@ class ReportsTab(object):
 	def init_reports_tab(self):
 		#Bindings
 		self.Bind(wx.EVT_BUTTON, self.on_click_calc_de_release_stats, id=xrc.XRCID('button:calc_de_release_stats'))
-		
-		
-		#default "DE Release Stats" dates to cover last week
+		self.Bind(wx.EVT_BUTTON, self.on_click_calc_de_release_vs_basic_finish, id=xrc.XRCID('button:calc_de_release_vs_basic_finish'))
+
+		self.init_de_release_stats()
+		self.init_de_release_vs_basic_finish()
+
+	
+	def init_de_release_stats(self):
+		#default dates to cover last week
 		today = dt.date.today()
 		first_day_last_week = today - dt.timedelta(days=today.weekday()-2) - dt.timedelta(days=3) - dt.timedelta(weeks=1)
 		last_day_last_week = first_day_last_week + dt.timedelta(days=6)
@@ -156,3 +162,101 @@ class ReportsTab(object):
 		report.AppendText("\n\nElvis, remember this is still using dbo.std_family_hour_estimates...")
 		
 		report.ShowPosition(0)
+
+
+
+	def init_de_release_vs_basic_finish(self):
+		#default to this year
+		ctrl(self, 'text:de_release_vs_basic_finish_year').SetValue('{}'.format(dt.date.today().year))
+		
+		#set up list headers
+		list_ctrl = ctrl(self, 'list:de_release_vs_basic_finsh')
+
+		list_ctrl.printer_header = 'DE Release vs Basic Finish'
+		list_ctrl.printer_font_size = 8
+		
+		column_names = ['Week', 'Start Date', 'End Date', 'Basic Finish Std Hours', 'DE Released Std Hours', 'Percent Std Hours']
+
+		for index, column_name in enumerate(column_names):
+			list_ctrl.InsertColumn(index, column_name)
+
+
+	def on_click_calc_de_release_vs_basic_finish(self, event):
+		#determine the starting date of the first week of the year
+		year_date = dt.datetime.strptime('{}-1-1'.format(ctrl(self, 'text:de_release_vs_basic_finish_year').GetValue()), '%Y-%m-%d').date()
+		base_start_date = year_date - dt.timedelta(days=year_date.weekday()-2) - dt.timedelta(days=3)
+
+		list_ctrl = ctrl(self, 'list:de_release_vs_basic_finsh')
+		list_ctrl.DeleteAllItems()
+		list_ctrl.Freeze()
+		list_ctrl.clean_headers()
+
+		index = -1
+		for week in range(1, 54):
+			index += 1
+			
+			start_date = base_start_date + dt.timedelta(weeks=week-1)
+			end_date = start_date + dt.timedelta(days=6)
+
+			records = db.query('''
+				SELECT
+					hours_standard
+				FROM
+					orders.view_systems
+				WHERE
+					status <> 'Canceled' AND
+					date_basic_finish >= '{}' AND
+					date_basic_finish <= '{}'
+			'''.format(start_date, end_date))
+
+			try:
+				basic_finish_std_hours = sum(records)
+			except:
+				basic_finish_std_hours = 0
+
+
+			records = db.query('''
+				SELECT
+					hours_standard
+				FROM
+					orders.view_systems
+				WHERE
+					status <> 'Canceled' AND
+					date_actual_de_release IS NOT NULL AND
+					date_basic_finish >= '{}' AND
+					date_basic_finish <= '{}'
+			'''.format(start_date, end_date))
+
+			try:
+				de_release_std_hours = sum(records)
+			except:
+				de_release_std_hours = 0
+
+
+			try:
+				percent = float(de_release_std_hours/basic_finish_std_hours)*100.
+			except:
+				percent = 0.0
+
+			list_ctrl.InsertStringItem(sys.maxint, '#')
+			list_ctrl.SetStringItem(index, 0, '{}'.format(week))
+			list_ctrl.SetStringItem(index, 1, '{}'.format(start_date.strftime('%m/%d/%Y')))
+			list_ctrl.SetStringItem(index, 2, '{}'.format(end_date.strftime('%m/%d/%Y')))
+			list_ctrl.SetStringItem(index, 3, '{:.1f}'.format(basic_finish_std_hours))
+			list_ctrl.SetStringItem(index, 4, '{:.1f}'.format(de_release_std_hours))
+			list_ctrl.SetStringItem(index, 5, '{:.0f}%'.format(percent))
+
+			#color the row if it's not a 100%
+			if percent < 99 and basic_finish_std_hours > 0:
+				list_ctrl.SetItemBackgroundColour(index, '#FFE6E6')
+
+
+			#color the row if it's the current week
+			if dt.date.today() >= start_date and dt.date.today() <= end_date:
+				list_ctrl.SetItemBackgroundColour(index, '#FFF082')
+
+		#auto fit the column widths
+		for index in range(list_ctrl.GetColumnCount()):
+			list_ctrl.SetColumnWidth(index, wx.LIST_AUTOSIZE_USEHEADER)
+
+		list_ctrl.Thaw()
