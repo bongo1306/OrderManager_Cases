@@ -2,6 +2,8 @@
 # -*- coding: utf8 -*-
 
 #Change log:
+#v0.9 - 3/5/14
+#	*Column Statistics now at least count rows for columns with non numeric values
 #v0.8 - 2/27/14
 #	*Added Column Statistics to context menu
 #v0.7 - 1/8/14
@@ -800,7 +802,14 @@ class ColumnStatisticsFrame(wx.Frame):
 			
 			self.text_range.SetValue('{}'.format(range_value))
 		except:
-			pass		
+			pass
+		
+		#if there were no numeric values, just count how many entries there were
+		if len(numeric_col_values) == 0:
+			try: self.text_count.SetValue('{}'.format(len(col_values)))
+			except: pass
+			
+			self.text_sum.SetValue('')
 
 
 	def median(self, values_list):
