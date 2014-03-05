@@ -17,9 +17,11 @@ class ReportsTab(object):
 		#Bindings
 		self.Bind(wx.EVT_BUTTON, self.on_click_calc_de_release_stats, id=xrc.XRCID('button:calc_de_release_stats'))
 		self.Bind(wx.EVT_BUTTON, self.on_click_calc_de_release_vs_basic_finish, id=xrc.XRCID('button:calc_de_release_vs_basic_finish'))
+		self.Bind(wx.EVT_BUTTON, self.on_click_calc_de_eng_errors_vs_actual_finish, id=xrc.XRCID('button:calc_de_eng_errors_vs_actual_finish'))
 
 		self.init_de_release_stats()
 		self.init_de_release_vs_basic_finish()
+		self.init_de_eng_errors_vs_actual_finish()
 
 	
 	def init_de_release_stats(self):
@@ -181,6 +183,22 @@ class ReportsTab(object):
 			list_ctrl.InsertColumn(index, column_name)
 
 
+	def init_de_eng_errors_vs_actual_finish(self):
+		#default to this year
+		ctrl(self, 'text:de_eng_errors_vs_actual_finish_year').SetValue('{}'.format(dt.date.today().year))
+		
+		#set up list headers
+		list_ctrl = ctrl(self, 'list:de_eng_errors_vs_actual_finish')
+
+		list_ctrl.printer_header = 'Engineering Errors vs Actual Finish'
+		list_ctrl.printer_font_size = 8
+		
+		column_names = ['Week', 'Start Date', 'End Date', 'Actual Finish Std Hours', 'Eng Errors', 'Errors per 1000 Std Hours']
+
+		for index, column_name in enumerate(column_names):
+			list_ctrl.InsertColumn(index, column_name)
+
+
 	def on_click_calc_de_release_vs_basic_finish(self, event):
 		#determine the starting date of the first week of the year
 		year_date = dt.datetime.strptime('{}-1-1'.format(ctrl(self, 'text:de_release_vs_basic_finish_year').GetValue()), '%Y-%m-%d').date()
@@ -188,7 +206,7 @@ class ReportsTab(object):
 
 		list_ctrl = ctrl(self, 'list:de_release_vs_basic_finsh')
 		list_ctrl.DeleteAllItems()
-		list_ctrl.Freeze()
+		#list_ctrl.Freeze()
 		list_ctrl.clean_headers()
 
 		index = -1
@@ -254,9 +272,96 @@ class ReportsTab(object):
 			#color the row if it's the current week
 			if dt.date.today() >= start_date and dt.date.today() <= end_date:
 				list_ctrl.SetItemBackgroundColour(index, '#FFF082')
+				
+			wx.Yield()
 
 		#auto fit the column widths
 		for index in range(list_ctrl.GetColumnCount()):
 			list_ctrl.SetColumnWidth(index, wx.LIST_AUTOSIZE_USEHEADER)
 
-		list_ctrl.Thaw()
+		#list_ctrl.Thaw()
+
+
+	def on_click_calc_de_eng_errors_vs_actual_finish(self, event):
+		#determine the starting date of the first week of the year
+		year_date = dt.datetime.strptime('{}-1-1'.format(ctrl(self, 'text:de_eng_errors_vs_actual_finish_year').GetValue()), '%Y-%m-%d').date()
+		base_start_date = year_date - dt.timedelta(days=year_date.weekday()-2) - dt.timedelta(days=3)
+
+		list_ctrl = ctrl(self, 'list:de_eng_errors_vs_actual_finish')
+		list_ctrl.DeleteAllItems()
+		#list_ctrl.Freeze()
+		list_ctrl.clean_headers()
+
+		index = -1
+		for week in range(1, 54):
+			index += 1
+			
+			start_date = base_start_date + dt.timedelta(weeks=week-1)
+			end_date = start_date + dt.timedelta(days=6)
+
+			records = db.query('''
+				SELECT
+					hours_standard
+				FROM
+					orders.view_systems
+				WHERE
+					date_actual_finish >= '{}' AND
+					date_actual_finish <= '{}'
+			'''.format(start_date, end_date))
+			
+			try:
+				actual_finish_std_hours = sum(records)
+			except:
+				actual_finish_std_hours = 0
+
+
+			records = db.query('''
+				SELECT
+					ecrs.id
+				FROM
+					dbo.ecrs
+				INNER JOIN orders.view_systems ON
+					(
+					CHARINDEX(view_systems.production_order, ecrs.item) > 0 OR 
+					CHARINDEX(view_systems.bpcs_item, ecrs.item) > 0
+					)
+				WHERE
+					ecrs.reason = 'Engineering Error' AND
+					view_systems.date_actual_finish >= '{}' AND
+					view_systems.date_actual_finish <= '{}'
+			'''.format(start_date, end_date))
+			
+			try:
+				engineering_errors = len(records)
+			except:
+				engineering_errors = 0
+
+			try:
+				engineering_error_rate = engineering_errors / (float(actual_finish_std_hours)/1000.)
+			except:
+				engineering_error_rate = 0
+
+			list_ctrl.InsertStringItem(sys.maxint, '#')
+			list_ctrl.SetStringItem(index, 0, '{}'.format(week))
+			list_ctrl.SetStringItem(index, 1, '{}'.format(start_date.strftime('%m/%d/%Y')))
+			list_ctrl.SetStringItem(index, 2, '{}'.format(end_date.strftime('%m/%d/%Y')))
+			list_ctrl.SetStringItem(index, 3, '{:.1f}'.format(actual_finish_std_hours))
+			list_ctrl.SetStringItem(index, 4, '{}'.format(engineering_errors))
+			list_ctrl.SetStringItem(index, 5, '{:.1f}'.format(engineering_error_rate))
+
+			#color the row if it's not a 100%
+			#if percent < 99 and basic_finish_std_hours > 0:
+			#	list_ctrl.SetItemBackgroundColour(index, '#FFE6E6')
+
+
+			#color the row if it's the current week
+			if dt.date.today() >= start_date and dt.date.today() <= end_date:
+				list_ctrl.SetItemBackgroundColour(index, '#FFF082')
+			
+			wx.Yield()
+
+		#auto fit the column widths
+		for index in range(list_ctrl.GetColumnCount()):
+			list_ctrl.SetColumnWidth(index, wx.LIST_AUTOSIZE_USEHEADER)
+
+		#list_ctrl.Thaw()
