@@ -55,6 +55,7 @@ class ReportsTab(object):
 			FROM
 				orders.view_systems
 			WHERE
+				material <> 'SPARTCOLS' AND
 				date_actual_de_release >= '{}' AND
 				date_actual_de_release <= '{} 23:59:59'
 			ORDER BY
@@ -128,7 +129,7 @@ class ReportsTab(object):
 				print 'checking if date_planned_de_release > end_date for {}'.format(production_order), e
 				
 
-		report.AppendText("{} items were released by DE between {} and {},\n\n".format(len(rel_items_data), start_date.strftime('%m/%d/%Y'), end_date.strftime('%m/%d/%Y')))
+		report.AppendText("{} items were released by DE between {} and {}, (excluding SPARTCOLS)\n\n".format(len(rel_items_data), start_date.strftime('%m/%d/%Y'), end_date.strftime('%m/%d/%Y')))
 		
 		if rel_items_data:
 			report.AppendText("     {} items or {:.0f}% were released on time based on date_requested_de_release\n".format(ontime_by_request, ontime_by_request/float(len(rel_items_data))*100))
