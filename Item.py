@@ -1087,7 +1087,7 @@ class ItemFrame(wx.Frame):
 		ctrl(self, 'choice:orders.responsibilities.structural_cad_designer').Bind(wx.EVT_LEFT_DOWN, self.on_click_auto_sign_up)
 
 
-		statuses = ['', 'Previewed', 'In Process', 'Reviewing', 'Complete', 'Hold', 'Cancel']
+		statuses = ['', 'Previewed', 'In Process', 'Reviewing', 'Complete', 'Hold']
 		ctrl(self, 'choice:orders.responsibilities.applications_status').AppendItems(statuses)
 		ctrl(self, 'choice:orders.responsibilities.design_status').AppendItems(statuses)
 		ctrl(self, 'choice:orders.responsibilities.mechanical_status').AppendItems(statuses)
