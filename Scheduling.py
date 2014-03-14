@@ -438,7 +438,7 @@ class SchedulingTab(object):
 		wx.MessageBox("{} requested_de_release fields have been calculated and set.".format(len(records)), 'Notice', wx.OK | wx.ICON_INFORMATION)
 
 
-	def on_click_proto_request_dates(self, event):
+	def on_click_proto_request_datesOLD(self, event):
 		records = db.query('''
 			SELECT
 				id,
@@ -535,6 +535,69 @@ class SchedulingTab(object):
 			output += '{}	'.format(basic_start)
 			output += '{}	'.format(ricky_request)
 			output += '{}\n'.format(calc_request)
+			
+			
+		ctrl(self, 'text:proto_request_dates').SetValue(output)
+
+
+	def on_click_proto_request_dates(self, event):
+		records = db.query('''
+			SELECT
+				id,
+				material,
+				date_created_on,
+				date_requested_de_release
+			FROM
+				orders.view_systems
+			WHERE
+				date_created_on > '1/13/2014' AND
+				production_order IS NOT NULL AND
+				material <> 'SPARTCOLS' AND
+				status <> 'Canceled'
+			ORDER BY
+				date_basic_start ASC
+			''')
+		
+		output = '	'.join(['Sales Order', 'Item', 'Production Order', 'When Got ProdOrd', 'Material', 'Basic Start', 'Ricky Request', 'Calculated Request'])
+		output += '\n'
+		
+		for index, record in enumerate(records):
+			id, material, date_created_on, date_requested_de_release = record
+			
+			when_got_prodord = db.query('''
+				SELECT TOP 1
+					when_changed
+				FROM
+					orders.changes
+				WHERE
+					field = 'production_order' AND
+					table_id = {}
+				ORDER BY
+					id DESC
+				'''.format(id))
+			
+			if when_got_prodord:
+				#since SAP export data is only updated every midnight, let's assume
+				# that the actual change occured one working day before
+				when_got_prodord = workdays.workday(when_got_prodord[0].date(), -1)
+				
+				work_day_diff = workdays.networkdays(date_created_on.date(), when_got_prodord)-1
+				
+			else:
+				when_got_prodord = ''
+				work_day_diff = 0
+
+			try: date_created_on = date_created_on.strftime('%m/%d/%Y')
+			except: pass
+
+			try: when_got_prodord = when_got_prodord.strftime('%m/%d/%Y')
+			except: pass
+
+			output += '{}	'.format(id)
+			output += '{}	'.format(material)
+			output += '{}	'.format(date_created_on)
+			output += '{}	'.format(when_got_prodord)
+			output += '{}\n'.format(work_day_diff)
 			
 			
 		ctrl(self, 'text:proto_request_dates').SetValue(output)
