@@ -729,6 +729,11 @@ class MainFrame(wx.Frame, Search.SearchTab, Scheduling.SchedulingTab, Reports.Re
 			list_ctrl.SetStringItem(index, 19, '{}'.format(electrical_cad_designer))
 			list_ctrl.SetStringItem(index, 20, '{}'.format(structural_cad_designer))
 
+			#color red if no design lead but other people signed up
+			if design_status == '' and ''.join((mechanical_status, electrical_status, structural_status)) != '':
+				list_ctrl.SetItemBackgroundColour(index, '#FF5555')
+
+
 		#auto fit the column widths
 		for index in range(list_ctrl.GetColumnCount()):
 			list_ctrl.SetColumnWidth(index, wx.LIST_AUTOSIZE_USEHEADER)
