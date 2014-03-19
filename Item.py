@@ -284,6 +284,7 @@ class ItemFrame(wx.Frame):
 		self.populate_tabulated_data_tab()
 
 		ctrl(self, 'panel:main').Layout()
+		ctrl(self, 'panel:responsibilities').Layout()
 
 
 	def reset_target_dates_tab(self):
@@ -1089,7 +1090,9 @@ class ItemFrame(wx.Frame):
 
 		statuses = ['', 'Previewed', 'In Process', 'Reviewing', 'Complete', 'Hold']
 		ctrl(self, 'choice:orders.responsibilities.applications_status').AppendItems(statuses)
-		ctrl(self, 'choice:orders.responsibilities.design_status').AppendItems(statuses)
+		#ctrl(self, 'choice:orders.responsibilities.design_status').AppendItems(statuses)
+		
+		statuses = ['', 'In Process', 'Reviewing', 'Complete', 'Hold', 'N/A']
 		ctrl(self, 'choice:orders.responsibilities.mechanical_status').AppendItems(statuses)
 		ctrl(self, 'choice:orders.responsibilities.electrical_status').AppendItems(statuses)
 		ctrl(self, 'choice:orders.responsibilities.structural_status').AppendItems(statuses)
@@ -1106,7 +1109,8 @@ class ItemFrame(wx.Frame):
 		ctrl(self, 'choice:orders.responsibilities.structural_cad_designer').SetStringSelection('')
 
 		ctrl(self, 'choice:orders.responsibilities.applications_status').SetStringSelection('')
-		ctrl(self, 'choice:orders.responsibilities.design_status').SetStringSelection('')
+		#ctrl(self, 'choice:orders.responsibilities.design_status').SetStringSelection('')
+		ctrl(self, 'label:design_status').SetLabel('...')
 		ctrl(self, 'choice:orders.responsibilities.mechanical_status').SetStringSelection('')
 		ctrl(self, 'choice:orders.responsibilities.electrical_status').SetStringSelection('')
 		ctrl(self, 'choice:orders.responsibilities.structural_status').SetStringSelection('')
@@ -1178,12 +1182,10 @@ class ItemFrame(wx.Frame):
 			choice_ctrl.SetStringSelection(design_engineer)
 
 			#---
-			choice_ctrl = ctrl(self, 'choice:orders.responsibilities.design_status')
-			
-			if design_status not in choice_ctrl.GetStrings():
-				choice_ctrl.Insert(design_status, 1)
+			if design_status == '':
+				design_status = '...'
+			ctrl(self, 'label:design_status').SetLabel('{}'.format(design_status))
 
-			choice_ctrl.SetStringSelection(design_status)
 
 			#---
 			choice_ctrl = ctrl(self, 'choice:orders.responsibilities.mechanical_engineer')
