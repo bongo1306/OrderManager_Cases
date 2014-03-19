@@ -1041,11 +1041,53 @@ class ItemFrame(wx.Frame):
 		if choice_ctrl.GetStringSelection() == '':
 			#choice_ctrl.SetStringSelection(gn.user)
 			wx.CallAfter(choice_ctrl.SetStringSelection, gn.user)
+			wx.CallAfter(self.on_choice_determine_design_status)
 		
 		else:
 			event.Skip()
 			
 		choice_ctrl.SetFocus()
+
+
+	def on_choice_determine_design_status(self, event=None):
+		design_engineer = ctrl(self, 'choice:orders.responsibilities.design_engineer').GetStringSelection()
+		mechanical_status = ctrl(self, 'choice:orders.responsibilities.mechanical_status').GetStringSelection()
+		electrical_status = ctrl(self, 'choice:orders.responsibilities.electrical_status').GetStringSelection()
+		structural_status = ctrl(self, 'choice:orders.responsibilities.structural_status').GetStringSelection()
+
+		#determine what the Design Status should be
+		design_status = ''
+
+		if design_engineer <> '':
+			mech_status, elec_status, stru_status = mechanical_status, electrical_status, structural_status
+			if mechanical_status == 'N/A': mech_status = ''
+			if electrical_status == 'N/A': elec_status = ''
+			if structural_status == 'N/A': stru_status = ''
+			if mech_status == '' and elec_status == '' and stru_status == '':
+				design_status = 'Previewed'
+
+			if 'Reviewing' in (mechanical_status, electrical_status, structural_status):
+				design_status = 'Reviewing'
+			
+			if 'In Process' in (mechanical_status, electrical_status, structural_status):
+				design_status = 'In Process'
+
+			mech_status, elec_status, stru_status = mechanical_status, electrical_status, structural_status
+			if mechanical_status == 'N/A': mech_status = 'Complete'
+			if electrical_status == 'N/A': elec_status = 'Complete'
+			if structural_status == 'N/A': stru_status = 'Complete'
+			if mech_status == 'Complete' and elec_status == 'Complete' and stru_status == 'Complete':
+				design_status = 'Complete'
+
+		db.update_order('orders.responsibilities', self.id, 'design_status', design_status)
+
+		if design_status == '':
+			design_status = '...'
+		ctrl(self, 'label:design_status').SetLabel('{}'.format(design_status))
+		ctrl(self, 'panel:responsibilities').Layout()
+
+		if event:
+			event.Skip()
 
 
 	def init_responsibilities_tab(self):
@@ -1088,10 +1130,16 @@ class ItemFrame(wx.Frame):
 		ctrl(self, 'choice:orders.responsibilities.structural_cad_designer').Bind(wx.EVT_LEFT_DOWN, self.on_click_auto_sign_up)
 
 
+		#make it calculate the overall Design Status when the other statuses change...
+		ctrl(self, 'choice:orders.responsibilities.design_engineer').Bind(wx.EVT_CHOICE, self.on_choice_determine_design_status)
+		ctrl(self, 'choice:orders.responsibilities.mechanical_status').Bind(wx.EVT_CHOICE, self.on_choice_determine_design_status)
+		ctrl(self, 'choice:orders.responsibilities.electrical_status').Bind(wx.EVT_CHOICE, self.on_choice_determine_design_status)
+		ctrl(self, 'choice:orders.responsibilities.structural_status').Bind(wx.EVT_CHOICE, self.on_choice_determine_design_status)
+
+
 		statuses = ['', 'Previewed', 'In Process', 'Reviewing', 'Complete', 'Hold']
 		ctrl(self, 'choice:orders.responsibilities.applications_status').AppendItems(statuses)
-		#ctrl(self, 'choice:orders.responsibilities.design_status').AppendItems(statuses)
-		
+
 		statuses = ['', 'In Process', 'Reviewing', 'Complete', 'Hold', 'N/A']
 		ctrl(self, 'choice:orders.responsibilities.mechanical_status').AppendItems(statuses)
 		ctrl(self, 'choice:orders.responsibilities.electrical_status').AppendItems(statuses)
@@ -1109,7 +1157,6 @@ class ItemFrame(wx.Frame):
 		ctrl(self, 'choice:orders.responsibilities.structural_cad_designer').SetStringSelection('')
 
 		ctrl(self, 'choice:orders.responsibilities.applications_status').SetStringSelection('')
-		#ctrl(self, 'choice:orders.responsibilities.design_status').SetStringSelection('')
 		ctrl(self, 'label:design_status').SetLabel('...')
 		ctrl(self, 'choice:orders.responsibilities.mechanical_status').SetStringSelection('')
 		ctrl(self, 'choice:orders.responsibilities.electrical_status').SetStringSelection('')
