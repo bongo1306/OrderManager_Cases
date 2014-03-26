@@ -199,21 +199,20 @@ class ItemFrame(wx.Frame):
 		return None
 
 
-	def find_sap_order_folder_path(self, sap_so):
-		starting_path = r"\\kw_engineering\eng_res\Design_Eng\Orders\SAP_ORDERS_COLS"
+	#recursively look for the SAP sales order folder
+	def find_sap_order_folder_path(self, sap_so, starting_path = r"\\kw_engineering\eng_res\Design_Eng\Orders\SAP_ORDERS_COLS"):
+		if os.path.split(starting_path)[-1] == sap_so:
+			return starting_path
 
-		#plow through two directories deep looking for a folder named that sap sales order
 		for x in os.listdir(starting_path):
-			starting_path_x = os.path.join(starting_path, x)
+			if x not in sap_so:
+				continue
 			
+			starting_path_x = os.path.join(starting_path, x)
+
 			if os.path.isdir(starting_path_x):
-				for y in os.listdir(starting_path_x):
-					starting_path_x_y = os.path.join(starting_path_x, y)
-					
-					if os.path.isdir(starting_path_x_y):
-						if y == sap_so:
-							return starting_path_x_y
-		
+				return self.find_sap_order_folder_path(sap_so, starting_path_x)
+
 		return None
 
 
