@@ -27,6 +27,7 @@ import TextCtrlDbLinker
 import CheckboxCtrlDbLinker
 import ChoiceCtrlDbLinker
 import ComboCtrlDbLinker
+import LabelCtrlDbLinker
 
 import General as gn
 import Database as db
