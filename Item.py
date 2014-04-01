@@ -1018,19 +1018,16 @@ class ItemFrame(wx.Frame):
 		ctrl(self, 'label:ship_to').SetLabel('{} ({})'.format(ship_to_name, ship_to_number))
 		ctrl(self, 'label:address').SetLabel(address)
 		ctrl(self, 'label:city_state').SetLabel('{}, {} ({}) {}'.format(city, state, country, zip_code))
-		
-		#format the BPCS Sales Order and Line Up together
-		bpcs_sales_order_and_line_up = '{}-{}'.format(bpcs_sales_order, bpcs_line_up)
-		if bpcs_sales_order_and_line_up == '...-...':
-			bpcs_sales_order_and_line_up = '...'
+
+		ctrl(self, 'label:orders.root.bpcs_item').SetLabel(bpcs_item)
+		ctrl(self, 'label:orders.root.bpcs_sales_order').SetLabel(bpcs_sales_order)
+		ctrl(self, 'label:orders.root.bpcs_line_up').SetLabel(bpcs_line_up)
+		ctrl(self, 'label:orders.root.bpcs_family').SetLabel(bpcs_family)
+
 
 		if comments == '...':
 			comments = ''
 		ctrl(self, 'text:orders.misc.comments').SetValue(comments)
-
-		ctrl(self, 'label:bpcs_item').SetLabel(bpcs_item)
-		ctrl(self, 'label:bpcs_sales_order').SetLabel(bpcs_sales_order_and_line_up)
-		ctrl(self, 'label:bpcs_family').SetLabel(bpcs_family)
 
 
 	def on_click_auto_sign_up(self, event):
