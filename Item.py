@@ -878,6 +878,7 @@ class ItemFrame(wx.Frame):
 
 		ctrl(self, 'label:status_label').Bind(wx.EVT_LEFT_DOWN, self.on_click_toggle_status)
 		ctrl(self, 'label:status').Bind(wx.EVT_LEFT_DOWN, self.on_click_toggle_status)
+		ctrl(self, 'label:status').SetCursor(wx.StockCursor(wx.CURSOR_HAND))
 
 
 	def reset_details_panel(self):
