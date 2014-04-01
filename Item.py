@@ -807,51 +807,6 @@ class ItemFrame(wx.Frame):
 		self.Thaw()
 
 
-	def on_click_specify_quote_number(self, event):
-		record = db.query('''
-			SELECT
-				filemaker_quote
-			FROM
-				orders.root
-			WHERE
-				orders.root.id={}
-			'''.format(self.id))
-		
-		current_quote_number = record[0]
-		
-		if not current_quote_number:
-			current_quote_number = ''
-		
-		dialog =  wx.TextEntryDialog(self, 'Enter the Quote Number for this order:', 'Quote Number Input')
-		dialog.SetValue(current_quote_number)
-		
-		if dialog.ShowModal() == wx.ID_OK:
-			new_quote_number = dialog.GetValue()
-			
-			table = 'orders.root'
-			field = 'filemaker_quote'
-
-			records = db.query('''
-				SELECT
-					id
-				FROM
-					orders.root
-				WHERE
-					sales_order=(SELECT TOP 1 sales_order FROM orders.root WHERE id={})
-				'''.format(self.id))
-			
-			for record in records:
-				table_id = record
-				db.update_order(table, table_id, field, new_quote_number)
-			
-			self.Freeze()
-			self.reset_all()
-			self.populate_all()
-			self.Thaw()
-			
-		dialog.Destroy()
-
-
 	def init_tabulated_data_tab(self):
 		table_panel = ctrl(self, 'panel:tabulated_data')
 		
@@ -920,10 +875,7 @@ class ItemFrame(wx.Frame):
 
 	def init_details_panel(self):
 		ctrl(self, 'text:orders.misc.comments').SetBackgroundColour(ctrl(self, 'panel:main').GetBackgroundColour())
-		
-		ctrl(self, 'label:quote_label').Bind(wx.EVT_LEFT_DOWN, self.on_click_specify_quote_number)
-		ctrl(self, 'label:quote').Bind(wx.EVT_LEFT_DOWN, self.on_click_specify_quote_number)
-		
+
 		ctrl(self, 'label:status_label').Bind(wx.EVT_LEFT_DOWN, self.on_click_toggle_status)
 		ctrl(self, 'label:status').Bind(wx.EVT_LEFT_DOWN, self.on_click_toggle_status)
 
