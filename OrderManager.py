@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf8 -*-
-version = '1.2'
+version = '1.3'
 
 import sys
 import os
