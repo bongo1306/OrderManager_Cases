@@ -973,10 +973,6 @@ class MainFrame(wx.Frame, Search.SearchTab, Scheduling.SchedulingTab, Reports.Re
 		#auto fit the column widths
 		for index in range(list_ctrl.GetColumnCount()):
 			list_ctrl.SetColumnWidth(index, wx.LIST_AUTOSIZE_USEHEADER)
-			
-			#cap column width at max 400
-			if list_ctrl.GetColumnWidth(index) > 400:
-				list_ctrl.SetColumnWidth(index, 400)
 		
 		#hide id column
 		list_ctrl.SetColumnWidth(0, 0)
