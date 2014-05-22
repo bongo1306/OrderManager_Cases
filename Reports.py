@@ -307,7 +307,7 @@ class ReportsTab(object):
 					orders.view_systems
 				WHERE
 					(date_actual_finish >= '{}' AND date_actual_finish <= '{}') OR
-					(date_actual_finish IS NULL AND date_shipped IS NOT NULL AND date_basic_finish >= '{}' AND date_basic_finish <= '{}')
+					(date_actual_finish IS NULL AND date_shipped IS NOT NULL AND date_shipped >= '{}' AND date_shipped <= '{}')
 			'''.format(start_date, end_date, start_date, end_date))
 			
 			try:
@@ -329,7 +329,7 @@ class ReportsTab(object):
 				WHERE
 					ecrs.reason = 'Engineering Error' AND
 					((view_systems.date_actual_finish >= '{}' AND view_systems.date_actual_finish <= '{}') OR
-					(view_systems.date_actual_finish IS NULL AND view_systems.date_shipped IS NOT NULL AND view_systems.date_basic_finish >= '{}' AND view_systems.date_basic_finish <= '{}'))
+					(view_systems.date_actual_finish IS NULL AND view_systems.date_shipped IS NOT NULL AND view_systems.date_shipped >= '{}' AND view_systems.date_shipped <= '{}'))
 			'''.format(start_date, end_date, start_date, end_date))
 			
 			try:
