@@ -29,7 +29,7 @@ class SearchTab(object):
 		
 		#tables or views the user can search in
 		#tables = ('orders.root', 'orders.view_systems', 'orders.view_systems_abridged', 'orders.responsibilities', 'orders.target_dates', 'orders.labor_hours', 'orders.financials', 'orders.misc', 'orders.changes', 'orders.time_logs', 'dbo.orders', 'dbo.mmg_uploads')
-		tables = ('orders.root', 'orders.view_systems', 'orders.view_systems_abridged', 'orders.changes', 'orders.time_logs', 'dbo.orders', 'dbo.mmg_uploads')
+		tables = ('orders.root', 'orders.view_systems', 'orders.view_systems_abridged', 'orders.changes', 'orders.time_logs', '-------------------------', 'dbo.mmg_uploads', 'dbo.orders', 'dbo.ecrs', 'dbo.revisions', '-------------------------', 'tss.fsrs', 'tss.rsrs', '-------------------------', 'dbo.projects', 'dbo.tasks')
 		
 		ctrl(self, 'choice:which_table').AppendItems(tables)
 		ctrl(self, 'choice:which_table').SetStringSelection('orders.view_systems_abridged')
@@ -105,6 +105,10 @@ class SearchTab(object):
 		self.table_search_criteria = TweakedGrid.TweakedGrid(table_panel)
 		
 		table_to_search = ctrl(self, 'choice:which_table').GetStringSelection()
+		
+		#if the table selected is just a choice seperator, stop
+		if '---' in table_to_search:
+			return
 
 		columns = list(db.get_table_column_names(table_to_search, presentable=False))
 		
