@@ -102,28 +102,23 @@ class DesignSchedulerFrame(wx.Frame):
 				#since SAP export data is only updated every midnight, let's assume
 				# that the actual change occured one working day before
 				when_got_prodord = workdays.workday(when_got_prodord[0].date(), -1)
-				
-				if workdays.networkdays(when_got_prodord, date_requested_de_release.date()) >= 8:
-					date_planned_de_release = date_requested_de_release
-					
-				else:
-					#they did not give us 8 days between when it got a production order and when they want it released
-					# so let's force that
-					date_planned_de_release = workdays.workday(when_got_prodord, 8)
-					
-					#convert this date object to datetime
-					date_planned_de_release = dt.datetime.combine(date_planned_de_release, dt.time())
 
 			else:
-				#we don't know when the order got the production order number, so give
-				# the PC schedulers the benifit of the doubt
-				if date_requested_de_release < date_created_on:
-					date_planned_de_release = date_created_on
+				#no record of production_order field change means that the production order number
+				# came in the same day the order came in
+				when_got_prodord = date_created_on.date()
+			
+
+			if workdays.networkdays(when_got_prodord, date_requested_de_release.date()) >= 8:
+				date_planned_de_release = date_requested_de_release
 				
-				else:
-					date_planned_de_release = date_requested_de_release
-					
-				when_got_prodord = None
+			else:
+				#they did not give us 8 days between when it got a production order and when they want it released
+				# so let's force that
+				date_planned_de_release = workdays.workday(when_got_prodord, 8)
+				
+				#convert this date object to datetime
+				date_planned_de_release = dt.datetime.combine(date_planned_de_release, dt.time())
 
 			
 			#put code here to prevent planned date landing on a weekend
