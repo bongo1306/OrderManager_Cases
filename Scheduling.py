@@ -426,7 +426,7 @@ class SchedulingTab(object):
 		for record in records:
 			id, date_basic_start = record
 			
-			calc_requested_de_release = workdays.workday(date_basic_start, -23)
+			calc_requested_de_release = workdays.workday(date_basic_start, -18)
 			
 			db.update_order('orders.target_dates', id, 'requested_de_release', calc_requested_de_release, '{} (Auto)'.format(gn.user))
 			

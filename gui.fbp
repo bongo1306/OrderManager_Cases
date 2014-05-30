@@ -6144,7 +6144,7 @@
                                                                                 <property name="gripper">0</property>
                                                                                 <property name="hidden">0</property>
                                                                                 <property name="id">wxID_ANY</property>
-                                                                                <property name="label">For orders unreleased by DE, subtract 23 working days from &quot;date_basic_start&quot; and set it to &quot;requested_de_release&quot;.</property>
+                                                                                <property name="label">For orders unreleased by DE, subtract 18 working days from &quot;date_basic_start&quot; and set it to &quot;requested_de_release&quot;.</property>
                                                                                 <property name="max_size"></property>
                                                                                 <property name="maximize_button">0</property>
                                                                                 <property name="maximum_size"></property>
