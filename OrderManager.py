@@ -344,6 +344,7 @@ class MainFrame(wx.Frame, Search.SearchTab, Scheduling.SchedulingTab, Reports.Re
 		
 		self.refresh_list_lacking_quote_ae()
 		self.refresh_list_unreleased_de()
+		self.refresh_list_upcoming_de()
 		self.refresh_list_exceptions_de()
 		self.refresh_list_pending_ecms_de()
 		self.refresh_list_sent_to_mmg()
@@ -387,6 +388,37 @@ class MainFrame(wx.Frame, Search.SearchTab, Scheduling.SchedulingTab, Reports.Re
 		column_names = ['Id', 'Sales Order', 'Item', 'Production Order', 'Material', 'Customer', 'Std Hours', 
 						'Requested Release', 'Planned Release',
 						'Applications Lead', 'Applications Status']
+
+		for index, column_name in enumerate(column_names):
+			list_ctrl.InsertColumn(index, column_name)
+
+
+		#design upcoming
+		list_ctrl = ctrl(self, 'list:upcoming_de')
+
+		list_ctrl.printer_paper_type = wx.PAPER_11X17
+		list_ctrl.printer_header = 'DE Upcoming Schedule'
+		list_ctrl.printer_font_size = 8
+		
+		self.Bind(wx.EVT_LIST_ITEM_ACTIVATED , self.on_activated_order, id=xrc.XRCID('list:upcoming_de'))
+		self.Bind(wx.EVT_BUTTON, self.refresh_list_upcoming_de, id=xrc.XRCID('button:refresh_upcoming_de'))
+		self.Bind(wx.EVT_BUTTON, list_ctrl.filter_list, id=xrc.XRCID('button:filter_upcoming_de')) 
+		self.Bind(wx.EVT_BUTTON, list_ctrl.export_list, id=xrc.XRCID('button:export_upcoming_de')) 
+		self.Bind(wx.EVT_BUTTON, list_ctrl.print_list, id=xrc.XRCID('button:print_upcoming_de')) 
+		
+		column_names = ['Id', 'Quote', 'Sales Order', 'Item', 'Material', 'Customer', 'Std Hours', 
+						'Request Delivered', 
+						'Design Lead',
+						'Design Status',
+						'Mechanical Status',
+						'Electrical Status',
+						'Structural Status',
+						'Mechanical Engineer',
+						'Electrical Engineer',
+						'Structural Engineer',
+						'Mechanical CAD Designer', 
+						'Electrical CAD Designer', 
+						'Structural CAD Designer']
 
 		for index, column_name in enumerate(column_names):
 			list_ctrl.InsertColumn(index, column_name)
@@ -567,7 +599,7 @@ class MainFrame(wx.Frame, Search.SearchTab, Scheduling.SchedulingTab, Reports.Re
 			applications_engineer, applications_status = formatted_record
 
 			#only display orders with CMATs that AE cares about
-			if material not in ('CDA', 'CPP', 'CSS', 'CTL', 'CVS', 'DBV', 'DSP', 'DSS', 'DSSIIX', \
+			if material not in ('CDA', 'CPP', 'CSS', 'CTL', 'CVS', 'DBV', 'DSP', 'DSS', 'DSSIIX', 'DXVS', \
 							'FAH', 'FAV', 'FAX', 'HPM', 'HVS', 'MISC', 'NH2', 'NHS', 'NV2', \
 							'NX2', 'OHD', 'OHN', 'OHS', 'OHW', 'ONH', 'ONV', 'PSM', 'RCA', \
 							'RHD', 'SHIP_LOOSE', 'WEE', 'WEH', 'WEM'):
@@ -611,6 +643,145 @@ class MainFrame(wx.Frame, Search.SearchTab, Scheduling.SchedulingTab, Reports.Re
 		
 		#show how many in tab title
 		gn.rename_notebook_page(ctrl(self, 'notebook:sub_applications'), 'Lacking Quote Number', ' Lacking Quote Number ({}) '.format(list_ctrl.GetItemCount()))
+
+
+	def refresh_list_upcoming_de(self, event=None):
+		list_ctrl = ctrl(self, 'list:upcoming_de')
+		list_ctrl.Freeze()
+		list_ctrl.DeleteAllItems()
+		list_ctrl.clean_headers()
+
+		records = db.query('''
+			SELECT
+				id,
+				
+				quote,
+
+				CASE
+					WHEN bpcs_sales_order IS NULL THEN sales_order
+					WHEN sales_order IS NULL THEN bpcs_sales_order
+					ELSE sales_order + '/' + bpcs_sales_order
+				END AS sales_order,
+
+				CASE
+					WHEN bpcs_line_up IS NULL THEN item
+					WHEN item IS NULL THEN bpcs_line_up
+					ELSE item + '/' + bpcs_line_up
+				END AS item,
+
+				CASE
+					WHEN bpcs_family IS NULL THEN material
+					WHEN material IS NULL THEN bpcs_family
+					ELSE material + '/' + bpcs_family
+				END AS material,
+
+				sold_to_name,
+				hours_standard,
+				date_request_delivered,
+
+				design_engineer,
+				design_status,
+				mechanical_status,
+				electrical_status,
+				structural_status,
+				mechanical_engineer,
+				electrical_engineer,
+				structural_engineer,
+				mechanical_cad_designer,
+				electrical_cad_designer,
+				structural_cad_designer
+			FROM
+				orders.view_systems
+			WHERE
+				sales_order IS NOT NULL AND
+				date_actual_de_release IS NULL AND
+				production_order IS NULL AND
+				status <> 'Canceled'
+			ORDER BY
+				date_request_delivered, sales_order, CAST(item AS INT) ASC
+			''')
+		
+
+		#insert records into list
+		index = -1
+		for record in records:
+			#format all fields as strings
+			formatted_record = []
+			for field in record:
+				if field == None:
+					field = ''
+					
+				elif isinstance(field, dt.datetime):
+					field = field.strftime('%m/%d/%Y')
+					
+				else:
+					pass
+					
+				formatted_record.append(field)
+
+			id, quote, sales_order, item, material, sold_to_name, hours_standard, date_request_delivered, \
+			design_engineer, design_status, mechanical_status, electrical_status, structural_status, \
+			mechanical_engineer, electrical_engineer, structural_engineer, \
+			mechanical_cad_designer, electrical_cad_designer, structural_cad_designer = formatted_record
+
+			#only display orders with CMATs that we care about
+			if material not in ('CDA', 'CPP', 'CSS', 'CTL', 'CVS', 'DBV', 'DSP', 'DSS', 'DSSIIX', 'DXVS', \
+							'FAH', 'FAV', 'FAX', 'HPM', 'HVS', 'MISC', 'NH2', 'NHS', 'NV2', \
+							'NX2', 'OHD', 'OHN', 'OHS', 'OHW', 'ONH', 'ONV', 'PSM', 'RCA', \
+							'RHD', 'SHIP_LOOSE', 'WEE', 'WEH', 'WEM'):
+				continue
+			
+			index += 1
+
+			#remove the decimals from the std hours
+			try:
+				hours_standard = round(hours_standard, 1)
+			except:
+				pass
+
+			list_ctrl.InsertStringItem(sys.maxint, '#')
+			list_ctrl.SetStringItem(index, 0, '{}'.format(id))
+			list_ctrl.SetStringItem(index, 1, '{}'.format(quote))
+			list_ctrl.SetStringItem(index, 2, '{}'.format(sales_order))
+			list_ctrl.SetStringItem(index, 3, '{}'.format(item))
+
+			list_ctrl.SetStringItem(index, 4, '{}'.format(material))
+			list_ctrl.SetStringItem(index, 5, '{}'.format(sold_to_name))
+			list_ctrl.SetStringItem(index, 6, '{}'.format(hours_standard))
+			list_ctrl.SetStringItem(index, 7, '{}'.format(date_request_delivered))
+
+			list_ctrl.SetStringItem(index, 8, '{}'.format(design_engineer))
+			list_ctrl.SetStringItem(index, 9, '{}'.format(design_status))
+			list_ctrl.SetStringItem(index, 10, '{}'.format(mechanical_status))
+			list_ctrl.SetStringItem(index, 11, '{}'.format(electrical_status))
+			list_ctrl.SetStringItem(index, 12, '{}'.format(structural_status))
+			list_ctrl.SetStringItem(index, 13, '{}'.format(mechanical_engineer))
+			list_ctrl.SetStringItem(index, 14, '{}'.format(electrical_engineer))
+			list_ctrl.SetStringItem(index, 15, '{}'.format(structural_engineer))
+			list_ctrl.SetStringItem(index, 16, '{}'.format(mechanical_cad_designer))
+			list_ctrl.SetStringItem(index, 17, '{}'.format(electrical_cad_designer))
+			list_ctrl.SetStringItem(index, 18, '{}'.format(structural_cad_designer))
+
+			#color red if no design lead but other people signed up
+			if design_status == '' and ''.join((mechanical_status, electrical_status, structural_status)) != '':
+				list_ctrl.SetItemBackgroundColour(index, '#FF5555')
+
+
+		#auto fit the column widths
+		for index in range(list_ctrl.GetColumnCount()):
+			list_ctrl.SetColumnWidth(index, wx.LIST_AUTOSIZE_USEHEADER)
+			
+			#cap column width at max 400
+			if list_ctrl.GetColumnWidth(index) > 400:
+				list_ctrl.SetColumnWidth(index, 400)
+		
+		#hide id column
+		list_ctrl.SetColumnWidth(0, 0)
+		
+		list_ctrl.Thaw()
+
+		#show how many in tab title
+		gn.rename_notebook_page(ctrl(self, 'notebook:sub_design'), ' Upcoming', '  Upcoming ({}) '.format(list_ctrl.GetItemCount()))
 
 
 	
