@@ -85,6 +85,8 @@ class ReportsTab(object):
 				if date_actual_de_release <= date_requested_de_release:
 					ontime_by_request += 1
 			except Exception as e:
+				#thinking positively, just assume on time if item was never scheduled to begin with.
+				ontime_by_request += 1
 				print e
 				
 			try:
