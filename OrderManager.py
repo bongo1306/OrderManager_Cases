@@ -347,6 +347,7 @@ class MainFrame(wx.Frame, Search.SearchTab, Scheduling.SchedulingTab, Reports.Re
 		self.refresh_list_upcoming_de()
 		self.refresh_list_exceptions_de()
 		self.refresh_list_pending_ecms_de()
+		self.refresh_list_warnings_de()
 		self.refresh_list_sent_to_mmg()
 
 
@@ -503,6 +504,29 @@ class MainFrame(wx.Frame, Search.SearchTab, Scheduling.SchedulingTab, Reports.Re
 
 		for index, column_name in enumerate(column_names):
 			list_ctrl.InsertColumn(index, column_name)
+
+
+		#design warnings
+		list_ctrl = ctrl(self, 'list:warnings_de')
+
+		list_ctrl.printer_paper_type = wx.PAPER_11X17
+		list_ctrl.printer_header = 'DE Warnings'
+		list_ctrl.printer_font_size = 8
+		
+		self.Bind(wx.EVT_LIST_ITEM_ACTIVATED , self.on_activated_order, id=xrc.XRCID('list:warnings_de'))
+		self.Bind(wx.EVT_BUTTON, self.refresh_list_warnings_de, id=xrc.XRCID('button:refresh_warnings_de'))
+		self.Bind(wx.EVT_BUTTON, list_ctrl.filter_list, id=xrc.XRCID('button:filter_warnings_de')) 
+		self.Bind(wx.EVT_BUTTON, list_ctrl.export_list, id=xrc.XRCID('button:export_warnings_de')) 
+		self.Bind(wx.EVT_BUTTON, list_ctrl.print_list, id=xrc.XRCID('button:print_warnings_de')) 
+		
+		column_names = ['Id', 'Warning', 'Sales Order', 'Item', 'Production Order', 'Material', 'Customer', 
+						'Design Lead',
+						'Actual Release',
+						'Comments']
+
+		for index, column_name in enumerate(column_names):
+			list_ctrl.InsertColumn(index, column_name)
+
 
 
 		#recently sent to mmg
@@ -1152,6 +1176,96 @@ class MainFrame(wx.Frame, Search.SearchTab, Scheduling.SchedulingTab, Reports.Re
 
 		#show how many in tab title
 		gn.rename_notebook_page(ctrl(self, 'notebook:sub_design'), 'Pending ECMs', ' Pending ECMs ({}) '.format(list_ctrl.GetItemCount()))
+
+
+	def refresh_list_warnings_de(self, event=None):
+		list_ctrl = ctrl(self, 'list:warnings_de')
+		list_ctrl.Freeze()
+		list_ctrl.DeleteAllItems()
+		list_ctrl.clean_headers()
+
+		records = db.query('''
+			SELECT
+				id,
+				sales_order,
+				item,
+				production_order,
+				material,
+				sold_to_name,
+				design_engineer,
+				date_actual_de_release,
+				comments
+			FROM
+				orders.view_systems
+			WHERE
+				status <> 'Canceled' AND
+				date_shipped IS NULL AND
+				date_actual_de_release IS NOT NULL AND
+				production_order NOT IN (SELECT production_order FROM dbo.mmg_uploads)
+			ORDER BY
+				id
+			''')
+		
+
+		#insert records into list
+		index = -1
+		for record in records:
+			#format all fields as strings
+			formatted_record = []
+			for field in record:
+				if field == None:
+					field = ''
+					
+				elif isinstance(field, dt.datetime):
+					field = field.strftime('%m/%d/%Y')
+					
+				else:
+					pass
+					
+				formatted_record.append(field)
+
+			id, sales_order, item, production_order, material, sold_to_name, \
+			design_engineer, date_actual_de_release, comments = formatted_record
+
+			#only display orders with CMATs that we care about
+			if material not in ('CDA', 'CPP', 'CSS', 'CTL', 'CVS', 'DBV', 'DSP', 'DSS', 'DSSIIX', 'DXVS', \
+							'FAH', 'FAV', 'FAX', 'HPM', 'HVS', 'MISC', 'NH2', 'NHS', 'NV2', \
+							'NX2', 'OHD', 'OHN', 'OHS', 'OHW', 'ONH', 'ONV', 'PSM', 'RCA', \
+							'RHD', 'SHIP_LOOSE', 'WEE', 'WEH', 'WEM'):
+				continue
+			
+			index += 1
+
+			list_ctrl.InsertStringItem(sys.maxint, '#')
+			list_ctrl.SetStringItem(index, 0, '{}'.format(id))
+			list_ctrl.SetStringItem(index, 1, '{}'.format('No record of this released Production Order sent to MMG.'))
+			list_ctrl.SetStringItem(index, 2, '{}'.format(sales_order))
+			list_ctrl.SetStringItem(index, 3, '{}'.format(item))
+			list_ctrl.SetStringItem(index, 4, '{}'.format(production_order))
+			list_ctrl.SetStringItem(index, 5, '{}'.format(material))
+			list_ctrl.SetStringItem(index, 6, '{}'.format(sold_to_name))
+			list_ctrl.SetStringItem(index, 7, '{}'.format(design_engineer))
+			list_ctrl.SetStringItem(index, 8, '{}'.format(date_actual_de_release))
+			list_ctrl.SetStringItem(index, 9, '{}'.format(comments))
+
+
+		#auto fit the column widths
+		for index in range(list_ctrl.GetColumnCount()):
+			list_ctrl.SetColumnWidth(index, wx.LIST_AUTOSIZE_USEHEADER)
+			
+			#cap column width at max 400
+			#if list_ctrl.GetColumnWidth(index) > 400:
+			#	list_ctrl.SetColumnWidth(index, 400)
+		
+		#hide id column
+		list_ctrl.SetColumnWidth(0, 0)
+		
+		list_ctrl.Thaw()
+
+		#show how many in tab title
+		gn.rename_notebook_page(ctrl(self, 'notebook:sub_design'), ' Warnings', '  Warnings ({}) '.format(list_ctrl.GetItemCount()))
+
+
 
 
 	def refresh_list_sent_to_mmg(self, event=None):
