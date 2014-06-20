@@ -902,6 +902,13 @@ class MainFrame(wx.Frame, Search.SearchTab, Scheduling.SchedulingTab, Reports.Re
 				hours_standard = round(hours_standard, 1)
 			except:
 				pass
+			
+			#convert some fields to title case
+			try: sold_to_name = sold_to_name.title()
+			except: pass
+
+			try: city = city.title()
+			except: pass
 
 			list_ctrl.InsertStringItem(sys.maxint, '#')
 			list_ctrl.SetStringItem(index, 0, '{}'.format(id))
