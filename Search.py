@@ -95,6 +95,30 @@ class SearchTab(object):
 				wx.MessageBox('Order was not found in the new database.', 'Order Not Found', wx.OK | wx.ICON_ERROR)
 
 
+		if table_name == 'dbo.mmg_uploads':
+			sap_prod_ord = selected_item.GetItem(selected_item.GetFirstSelected(), 0).GetText()
+
+			table_id = db.query("SELECT TOP 1 id FROM orders.root WHERE production_order = '{}'".format(sap_prod_ord))
+
+			if table_id:
+				Item.ItemFrame(self, int(table_id[0]))
+				
+			else:
+				wx.MessageBox('Production Order was not found in the database.', 'Order Not Found', wx.OK | wx.ICON_ERROR)
+
+		if table_name == 'dbo.mmg_processed':
+			sap_prod_ord = selected_item.GetItem(selected_item.GetFirstSelected(), 1).GetText()
+
+			table_id = db.query("SELECT TOP 1 id FROM orders.root WHERE production_order = '{}'".format(sap_prod_ord))
+
+			if table_id:
+				Item.ItemFrame(self, int(table_id[0]))
+				
+			else:
+				wx.MessageBox('Production Order was not found in the database.', 'Order Not Found', wx.OK | wx.ICON_ERROR)
+
+
+
 	def on_choice_table(self, event=None):
 		table_panel = ctrl(self, 'panel:search_criteria')
 		
