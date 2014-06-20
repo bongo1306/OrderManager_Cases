@@ -439,7 +439,7 @@ class MainFrame(wx.Frame, Search.SearchTab, Scheduling.SchedulingTab, Reports.Re
 		self.Bind(wx.EVT_BUTTON, list_ctrl.print_list, id=xrc.XRCID('button:print_unreleased_de')) 
 		
 		column_names = ['Id', 'Sales Order', 'Item', 'Production Order', 'Material', 'Customer', 'Std Hours', 
-						'Requested Release', 'Planned Release', 'Suggested Start', 
+						'Requested Release', 'Planned Release', 'Basic Start', 'Basic Finish', 
 						'Design Lead',
 						'Design Status',
 						'Mechanical Status',
@@ -848,7 +848,9 @@ class MainFrame(wx.Frame, Search.SearchTab, Scheduling.SchedulingTab, Reports.Re
 
 				date_requested_de_release,
 				date_planned_de_release,
-				date_suggested_de_start,
+				
+				date_basic_start,
+				date_basic_finish,
 
 				design_engineer,
 				design_status,
@@ -889,7 +891,7 @@ class MainFrame(wx.Frame, Search.SearchTab, Scheduling.SchedulingTab, Reports.Re
 				formatted_record.append(field)
 
 			id, sales_order, item, production_order, material, sold_to_name, hours_standard, \
-			date_requested_de_release, date_planned_de_release, date_suggested_de_start, \
+			date_requested_de_release, date_planned_de_release, date_basic_start, date_basic_finish, \
 			design_engineer, design_status, mechanical_status, electrical_status, structural_status, \
 			mechanical_engineer, electrical_engineer, structural_engineer, \
 			mechanical_cad_designer, electrical_cad_designer, structural_cad_designer = formatted_record
@@ -911,19 +913,20 @@ class MainFrame(wx.Frame, Search.SearchTab, Scheduling.SchedulingTab, Reports.Re
 
 			list_ctrl.SetStringItem(index, 7, '{}'.format(date_requested_de_release))
 			list_ctrl.SetStringItem(index, 8, '{}'.format(date_planned_de_release))
-			list_ctrl.SetStringItem(index, 9, '{}'.format(date_suggested_de_start))
+			list_ctrl.SetStringItem(index, 9, '{}'.format(date_basic_start))
+			list_ctrl.SetStringItem(index, 10, '{}'.format(date_basic_finish))
 
-			list_ctrl.SetStringItem(index, 10, '{}'.format(design_engineer))
-			list_ctrl.SetStringItem(index, 11, '{}'.format(design_status))
-			list_ctrl.SetStringItem(index, 12, '{}'.format(mechanical_status))
-			list_ctrl.SetStringItem(index, 13, '{}'.format(electrical_status))
-			list_ctrl.SetStringItem(index, 14, '{}'.format(structural_status))
-			list_ctrl.SetStringItem(index, 15, '{}'.format(mechanical_engineer))
-			list_ctrl.SetStringItem(index, 16, '{}'.format(electrical_engineer))
-			list_ctrl.SetStringItem(index, 17, '{}'.format(structural_engineer))
-			list_ctrl.SetStringItem(index, 18, '{}'.format(mechanical_cad_designer))
-			list_ctrl.SetStringItem(index, 19, '{}'.format(electrical_cad_designer))
-			list_ctrl.SetStringItem(index, 20, '{}'.format(structural_cad_designer))
+			list_ctrl.SetStringItem(index, 11, '{}'.format(design_engineer))
+			list_ctrl.SetStringItem(index, 12, '{}'.format(design_status))
+			list_ctrl.SetStringItem(index, 13, '{}'.format(mechanical_status))
+			list_ctrl.SetStringItem(index, 14, '{}'.format(electrical_status))
+			list_ctrl.SetStringItem(index, 15, '{}'.format(structural_status))
+			list_ctrl.SetStringItem(index, 16, '{}'.format(mechanical_engineer))
+			list_ctrl.SetStringItem(index, 17, '{}'.format(electrical_engineer))
+			list_ctrl.SetStringItem(index, 18, '{}'.format(structural_engineer))
+			list_ctrl.SetStringItem(index, 19, '{}'.format(mechanical_cad_designer))
+			list_ctrl.SetStringItem(index, 20, '{}'.format(electrical_cad_designer))
+			list_ctrl.SetStringItem(index, 21, '{}'.format(structural_cad_designer))
 
 			#color red if no design lead but other people signed up
 			if design_status == '' and ''.join((mechanical_status, electrical_status, structural_status)) != '':
