@@ -2,6 +2,8 @@
 # -*- coding: utf8 -*-
 
 #Change log:
+#v1.0 - 6/25/14
+#	*Lists are now openable in Excel via context menu
 #v0.9 - 3/5/14
 #	*Column Statistics now at least count rows for columns with non numeric values
 #v0.8 - 2/27/14
@@ -32,6 +34,7 @@ import os
 import csv
 import dateutil.parser as date_parser
 from collections import Counter
+from win32com.client import Dispatch
 
 import wx.html
 from wx.html import HtmlEasyPrinting
@@ -240,19 +243,22 @@ class BetterListCtrl(wx.ListCtrl):
 			self.entry3 = wx.NewId()
 			self.entry4 = wx.NewId()
 			self.entry5 = wx.NewId()
+			self.entry6 = wx.NewId()
 			self.Bind(wx.EVT_MENU, self.on_popup, id=self.entry1)
 			self.Bind(wx.EVT_MENU, self.on_popup, id=self.entry2)
 			self.Bind(wx.EVT_MENU, self.on_popup, id=self.entry3)
 			self.Bind(wx.EVT_MENU, self.on_popup, id=self.entry4)
 			self.Bind(wx.EVT_MENU, self.on_popup, id=self.entry5)
+			self.Bind(wx.EVT_MENU, self.on_popup, id=self.entry6)
 
 		#build the menu
 		menu = wx.Menu()
 		menu.Append(self.entry1, u'Copy "{}"'.format(self.right_clicked_cell_value))
 		menu.Append(self.entry2, 'Copy Selected Rows')
 		menu.Append(self.entry3, 'Column Statistics')
-		menu.Append(self.entry4, 'Export List')
-		menu.Append(self.entry5, 'Print List')
+		menu.Append(self.entry4, 'Open List in Excel')
+		menu.Append(self.entry5, 'Export List')
+		menu.Append(self.entry6, 'Print List')
 
 		#show the popup menu
 		self.PopupMenu(menu)
@@ -273,6 +279,9 @@ class BetterListCtrl(wx.ListCtrl):
 
 		elif 'Column Statistics' in menuItem.GetLabel():
 			self.column_statistics()
+
+		elif 'Open List in Excel' in menuItem.GetLabel():
+			self.open_list_in_excel()
 
 		elif 'Export List' in menuItem.GetLabel():
 			self.export_list()
@@ -318,6 +327,47 @@ class BetterListCtrl(wx.ListCtrl):
 			wx.TheClipboard.Flush()
 		else:
 			wx.MessageBox("Unable to open the clipboard", "Error")
+
+
+	def open_list_in_excel(self, event=None):
+		excel = Dispatch('Excel.Application')
+		excel.Visible = True
+		wb = excel.Workbooks.Add()
+		
+		wb.ActiveSheet.Cells(1, 1).Value = 'Transferring data to Excel...'
+		wb.ActiveSheet.Columns(1).AutoFit()
+		
+		grid_values = []
+		
+		#write list headers
+		row_values = []
+		for col in range(self.GetColumnCount()):
+			#wb.ActiveSheet.Cells(1, col+1).Value = u'{}'.format(self.GetColumn(col).GetText())
+			row_values.append(u'{}'.format(self.GetColumn(col).GetText()))
+		
+		grid_values.append(row_values)
+		
+		#write rows
+		for row in range(self.GetItemCount()):
+			row_values = []
+			for col in range(self.GetColumnCount()):
+				row_values.append(u'{}'.format(self.GetItem(row, col).GetText()))
+				
+			grid_values.append(row_values)
+		
+		#specify the excel range that the list data covers
+		excel_range = wb.ActiveSheet.Range(wb.ActiveSheet.Cells(1, 1), wb.ActiveSheet.Cells(len(grid_values), len(row_values)))
+	
+		#populate excel range with list data
+		excel_range.Value = grid_values
+
+		#convert range to excel table
+		wb.ActiveSheet.ListObjects.Add(1, excel_range, None, 1).Name = 'Table1'
+		
+		#change table style to plain whitespace
+		wb.ActiveSheet.ListObjects('Table1').TableStyle = ''
+		
+		excel_range.Columns.AutoFit()
 
 
 	def export_list(self, event=None):
