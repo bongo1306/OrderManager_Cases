@@ -3,6 +3,7 @@
 
 import pyodbc
 import sys
+import os
 import wx
 from wx import xrc
 ctrl = xrc.XRCCTRL
@@ -26,6 +27,7 @@ class SearchTab(object):
 		self.Bind(wx.EVT_BUTTON, self.on_click_open_how_to_search, id=xrc.XRCID('button:how_to_search'))
 		self.Bind(wx.EVT_BUTTON, ctrl(self, 'list:search_results').export_list, id=xrc.XRCID('button:export_results'))
 		self.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self.on_activated_result, id=xrc.XRCID('list:search_results'))
+		self.Bind(wx.EVT_BUTTON, self.on_click_save_query, id=xrc.XRCID('button:save_query'))
 		
 		#tables or views the user can search in
 		#tables = ('orders.root', 'orders.view_systems', 'orders.view_systems_abridged', 'orders.responsibilities', 'orders.target_dates', 'orders.labor_hours', 'orders.financials', 'orders.misc', 'orders.changes', 'orders.time_logs', 'dbo.orders', 'dbo.mmg_uploads')
@@ -34,6 +36,27 @@ class SearchTab(object):
 		ctrl(self, 'choice:which_table').AppendItems(tables)
 		ctrl(self, 'choice:which_table').SetStringSelection('orders.view_systems_abridged')
 		self.on_choice_table()
+
+
+	def on_click_save_query(self, event):
+		#prompt user to choose where to save
+		save_dialog = wx.FileDialog(self, message="Save query as ...", 
+								defaultDir=os.getcwd(), 
+								wildcard="DQY file (*.dqy)|*.dqy", style=wx.SAVE|wx.OVERWRITE_PROMPT|wx.CHANGE_DIR)
+
+		#show the save dialog and get user's input... if not canceled
+		if save_dialog.ShowModal() == wx.ID_OK:
+			save_path = save_dialog.GetPath()
+			save_dialog.Destroy()
+		else:
+			save_dialog.Destroy()
+			return
+			
+		with open(save_path, 'wb') as dqyfile:
+			dqyfile.write('XLODBC\r\n1\r\nDSN=eng04_sql\r\n')
+			dqyfile.write(ctrl(self, 'text:sql_query').GetValue())
+
+		wx.MessageBox('Query saved.', 'Info', wx.OK | wx.ICON_INFORMATION)
 
 
 	def on_click_open_how_to_search(self, event):
