@@ -348,7 +348,7 @@ class MainFrame(wx.Frame, Search.SearchTab, Scheduling.SchedulingTab, Reports.Re
 		self.refresh_list_exceptions_de()
 		self.refresh_list_pending_ecms_de()
 		self.refresh_list_warnings_de()
-		self.refresh_list_sent_to_mmg()
+		#self.refresh_list_sent_to_mmg()
 
 
 		self.Show()
