@@ -1213,7 +1213,7 @@ class MainFrame(wx.Frame, Search.SearchTab, Scheduling.SchedulingTab, Reports.Re
 				status <> 'Canceled' AND
 				date_shipped IS NULL AND
 				date_actual_de_release IS NOT NULL AND
-				production_order NOT IN (SELECT production_order FROM dbo.mmg_uploads)
+				production_order NOT IN (SELECT production_order FROM mmg.change_requests)
 			ORDER BY
 				id
 			''')
@@ -1295,14 +1295,14 @@ class MainFrame(wx.Frame, Search.SearchTab, Scheduling.SchedulingTab, Reports.Re
 				orders.root.material,
 				orders.root.sold_to_name,
 				
-				dbo.mmg_uploads.filename,
-				dbo.mmg_uploads.when_uploaded
+				mmg.change_requests.filename,
+				mmg.change_requests.when_requested
 			FROM
 				orders.root
 			RIGHT JOIN
-				dbo.mmg_uploads ON orders.root.production_order = dbo.mmg_uploads.production_order
+				mmg.change_requests ON orders.root.production_order = mmg.change_requests.production_order
 			ORDER BY
-				dbo.mmg_uploads.when_uploaded DESC
+				mmg.change_requests.when_requested DESC
 			''')
 		
 		#insert records into list
@@ -1322,7 +1322,7 @@ class MainFrame(wx.Frame, Search.SearchTab, Scheduling.SchedulingTab, Reports.Re
 				formatted_record.append(field)
 
 			id, sales_order, item, production_order, material, sold_to_name, \
-			filename, when_uploaded = formatted_record
+			filename, when_requested = formatted_record
 
 			list_ctrl.InsertStringItem(sys.maxint, '#')
 			list_ctrl.SetStringItem(index, 0, '{}'.format(id))
@@ -1333,7 +1333,7 @@ class MainFrame(wx.Frame, Search.SearchTab, Scheduling.SchedulingTab, Reports.Re
 			list_ctrl.SetStringItem(index, 5, '{}'.format(sold_to_name))
 
 			list_ctrl.SetStringItem(index, 6, '{}'.format(filename))
-			list_ctrl.SetStringItem(index, 7, '{}'.format(when_uploaded))
+			list_ctrl.SetStringItem(index, 7, '{}'.format(when_requested))
 
 		#auto fit the column widths
 		for index in range(list_ctrl.GetColumnCount()):

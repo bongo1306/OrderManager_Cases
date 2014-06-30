@@ -128,10 +128,10 @@ class ItemFrame(wx.Frame):
 	def on_kill_focus_check_if_sent_to_mmg(self, event):
 		production_order = db.query("SELECT production_order FROM orders.root WHERE id={}".format(self.id))[0]
 		
-		result = db.query("SELECT TOP 1 production_order FROM dbo.mmg_uploads WHERE production_order='{}'".format(production_order))
+		result = db.query("SELECT TOP 1 production_order FROM mmg.change_requests WHERE production_order='{}'".format(production_order))
 		
 		if not result and event.GetEventObject().GetValue() != '':
-			wx.MessageBox("An entry in dbo.mmg_uploads for this production order was not found.\nThis probably means the BOM for this order still needs to be processed and sent to MMG.\n\nThe MeatGrinder will now open to encourage you to send {} to MMG.".format(production_order), 'Notice', wx.OK | wx.ICON_INFORMATION)
+			wx.MessageBox("An entry in mmg.change_requests for this production order was not found.\nThis probably means the BOM for this order still needs to be processed and sent to MMG.\n\nThe MeatGrinder will now open to encourage you to send {} to MMG.".format(production_order), 'Notice', wx.OK | wx.ICON_INFORMATION)
 			os.startfile(r"\\kw_engineering\sharepoint$\Everyone\Management Software\eng2mmgBOMupload\eng2mmgBOMupload.xlsm")
 		
 		event.Skip()
