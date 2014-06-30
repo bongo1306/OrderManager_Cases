@@ -30,8 +30,30 @@ class SearchTab(object):
 		self.Bind(wx.EVT_BUTTON, self.on_click_save_query, id=xrc.XRCID('button:save_query'))
 		
 		#tables or views the user can search in
-		#tables = ('orders.root', 'orders.view_systems', 'orders.view_systems_abridged', 'orders.responsibilities', 'orders.target_dates', 'orders.labor_hours', 'orders.financials', 'orders.misc', 'orders.changes', 'orders.time_logs', 'dbo.orders', 'dbo.mmg_uploads')
-		tables = ('orders.root', 'orders.view_systems', 'orders.view_systems_abridged', 'orders.changes', 'orders.time_logs', '-------------------------', 'dbo.mmg_uploads', 'dbo.mmg_processed', 'dbo.view_mmg_processed_ecrs', '-------------------------', 'dbo.orders', 'dbo.ecrs', 'dbo.revisions', '-------------------------', 'tss.fsrs', 'tss.rsrs', '-------------------------', 'dbo.projects', 'dbo.tasks')
+		tables = (
+			'orders.root', 
+			'orders.changes', 
+			'orders.time_logs', 
+			'orders.view_systems', 
+			'orders.view_systems_abridged', 
+			'-------------------------', 
+			'mmg.change_requests', 
+			'mmg.processed',
+			'mmg.view_processed_ecrs', 
+			'-------------------------', 
+			'dbo.ecrs', 
+			'dbo.revisions', 
+			'-------------------------', 
+			'tss.fsrs', 
+			'tss.rsrs', 
+			'-------------------------', 
+			'dbo.projects', 
+			'dbo.tasks', 
+			'------------------------- depreciated:', 
+			'dbo.orders', 
+			'dbo.mmg_uploads', 
+			'dbo.mmg_processed', 
+			)
 		
 		ctrl(self, 'choice:which_table').AppendItems(tables)
 		ctrl(self, 'choice:which_table').SetStringSelection('orders.view_systems_abridged')
