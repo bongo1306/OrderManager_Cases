@@ -52,6 +52,7 @@ class ItemFrame(wx.Frame):
 
 		#for convenience, populate today's date when user focuses on a release field
 		ctrl(self, 'text:orders.target_dates.actual_ae_release').Bind(wx.EVT_SET_FOCUS, self.on_focus_insert_date)
+		ctrl(self, 'text:orders.misc.prebom_ae_release').Bind(wx.EVT_SET_FOCUS, self.on_focus_insert_date)
 		ctrl(self, 'text:orders.target_dates.actual_de_release').Bind(wx.EVT_SET_FOCUS, self.on_focus_insert_date)
 		ctrl(self, 'text:orders.target_dates.actual_de_release').Bind(wx.EVT_KILL_FOCUS, self.on_kill_focus_check_if_sent_to_mmg)
 		ctrl(self, 'text:orders.target_dates.actual_mmg_release').Bind(wx.EVT_SET_FOCUS, self.on_focus_insert_date)
@@ -292,6 +293,8 @@ class ItemFrame(wx.Frame):
 		ctrl(self, 'text:orders.target_dates.suggested_ae_start').SetValue('')
 		ctrl(self, 'text:orders.target_dates.actual_ae_release').SetValue('')
 		ctrl(self, 'checkbox:orders.target_dates.planned_ae_release_locked').SetValue(False)
+		ctrl(self, 'text:orders.misc.prebom_ae_release').SetValue('')
+		ctrl(self, 'checkbox:orders.misc.prebom_ae_not_applicable').SetValue(False)
 
 		ctrl(self, 'text:orders.target_dates.requested_de_release').SetValue('')
 		ctrl(self, 'text:orders.target_dates.planned_de_release').SetValue('')
@@ -429,6 +432,8 @@ class ItemFrame(wx.Frame):
 
 		record = db.query('''
 			SELECT
+				prebom_ae_release,
+				prebom_ae_not_applicable,
 				pending_ecms
 			FROM
 				orders.misc
@@ -437,7 +442,24 @@ class ItemFrame(wx.Frame):
 			'''.format(self.id))
 	
 		if record:
-			pending_ecms = record[0]
+			#format all fields as strings
+			formatted_record = []
+			for field in record[0]:
+				if field == None:
+					field = ''
+					
+				elif isinstance(field, dt.datetime):
+					field = field.strftime('%m/%d/%Y')
+					
+				else:
+					pass
+					
+				formatted_record.append(field)
+				
+			prebom_ae_release, prebom_ae_not_applicable, pending_ecms = formatted_record
+
+			ctrl(self, 'text:orders.misc.prebom_ae_release').SetValue(prebom_ae_release)
+			ctrl(self, 'checkbox:orders.misc.prebom_ae_not_applicable').SetValue(prebom_ae_not_applicable)
 			ctrl(self, 'checkbox:orders.misc.pending_ecms').SetValue(pending_ecms)
 
 
