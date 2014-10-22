@@ -343,6 +343,7 @@ class MainFrame(wx.Frame, Search.SearchTab, Scheduling.SchedulingTab, Reports.Re
 		self.init_lists()
 		
 		self.refresh_list_lacking_quote_ae()
+		self.refresh_list_potentially_needing_prebom()
 		self.refresh_list_unreleased_de()
 		self.refresh_list_upcoming_de()
 		self.refresh_list_exceptions_de()
@@ -389,6 +390,22 @@ class MainFrame(wx.Frame, Search.SearchTab, Scheduling.SchedulingTab, Reports.Re
 		column_names = ['Id', 'Sales Order', 'Item', 'Production Order', 'Material', 'Customer', 'Std Hours', 
 						'Requested Release', 'Planned Release',
 						'Applications Lead', 'Applications Status']
+
+		for index, column_name in enumerate(column_names):
+			list_ctrl.InsertColumn(index, column_name)
+
+
+		#applications prebom
+		list_ctrl = ctrl(self, 'list:potentially_needing_prebom')
+
+		list_ctrl.printer_paper_type = wx.PAPER_11X17
+		list_ctrl.printer_header = 'Orders Potentially Needing PreBOM'
+		list_ctrl.printer_font_size = 8
+		
+		self.Bind(wx.EVT_LIST_ITEM_ACTIVATED , self.on_activated_order, id=xrc.XRCID('list:potentially_needing_prebom'))
+		self.Bind(wx.EVT_BUTTON, self.refresh_list_potentially_needing_prebom, id=xrc.XRCID('button:refresh_potentially_needing_prebom'))
+		
+		column_names = ['Id', 'Quote', 'Sales Order', 'Item', 'Production Order', 'Material', 'Customer', 'Std Hours', 'Basic Start', 'Applications Lead']
 
 		for index, column_name in enumerate(column_names):
 			list_ctrl.InsertColumn(index, column_name)
@@ -667,6 +684,103 @@ class MainFrame(wx.Frame, Search.SearchTab, Scheduling.SchedulingTab, Reports.Re
 		
 		#show how many in tab title
 		gn.rename_notebook_page(ctrl(self, 'notebook:sub_applications'), 'Lacking Quote Number', ' Lacking Quote Number ({}) '.format(list_ctrl.GetItemCount()))
+
+
+	def refresh_list_potentially_needing_prebom(self, event=None):
+		list_ctrl = ctrl(self, 'list:potentially_needing_prebom')
+		list_ctrl.Freeze()
+		list_ctrl.DeleteAllItems()
+		list_ctrl.clean_headers()
+
+		records = db.query('''
+			SELECT
+				id,
+				quote,
+				sales_order,
+				item,
+				production_order,
+				material,
+				sold_to_name,
+				hours_standard,
+				date_basic_start,
+				applications_engineer
+			FROM
+				orders.view_systems
+			WHERE
+				date_actual_de_release IS NULL AND
+				production_order IS NOT NULL AND
+				status <> 'Canceled' AND
+				prebom_ae_release IS NULL AND
+				prebom_ae_not_applicable = 0
+			ORDER BY
+				sales_order, item ASC
+			''')
+		
+		#insert records into list
+		index = -1
+		for record in records:
+			#format all fields as strings
+			formatted_record = []
+			for field in record:
+				if field == None:
+					field = ''
+					
+				elif isinstance(field, dt.datetime):
+					field = field.strftime('%m/%d/%Y')
+					
+				else:
+					pass
+					
+				formatted_record.append(field)
+
+			id, quote, sales_order, item, production_order, material, sold_to_name, hours_standard, \
+			date_basic_start, applications_engineer = formatted_record
+
+			'''
+			#only display orders with CMATs that AE cares about
+			if material not in ('CDA', 'CPP', 'CSS', 'CTL', 'CVS', 'DBV', 'DSP', 'DSS', 'DSSIIX', 'DXVS', \
+							'FAH', 'FAV', 'FAX', 'HPM', 'HVS', 'MISC', 'NH2', 'NHS', 'NV2', \
+							'NX2', 'OHD', 'OHN', 'OHS', 'OHW', 'ONH', 'ONV', 'PSM', 'RCA', \
+							'RHD', 'SHIP_LOOSE', 'WEE', 'WEH', 'WEM'):
+				continue
+			'''
+			
+			index += 1
+
+			#remove the decimals from the std hours
+			try:
+				hours_standard = round(hours_standard, 1)
+			except:
+				pass
+
+			list_ctrl.InsertStringItem(sys.maxint, '#')
+			list_ctrl.SetStringItem(index, 0, '{}'.format(id))
+			list_ctrl.SetStringItem(index, 1, '{}'.format(quote))
+			list_ctrl.SetStringItem(index, 2, '{}'.format(sales_order))
+			list_ctrl.SetStringItem(index, 3, '{}'.format(item))
+			list_ctrl.SetStringItem(index, 4, '{}'.format(production_order))
+			list_ctrl.SetStringItem(index, 5, '{}'.format(material))
+			list_ctrl.SetStringItem(index, 6, '{}'.format(sold_to_name))
+			list_ctrl.SetStringItem(index, 7, '{}'.format(hours_standard))
+
+			list_ctrl.SetStringItem(index, 8, '{}'.format(date_basic_start))
+			list_ctrl.SetStringItem(index, 9, '{}'.format(applications_engineer))
+
+		#auto fit the column widths
+		for index in range(list_ctrl.GetColumnCount()):
+			list_ctrl.SetColumnWidth(index, wx.LIST_AUTOSIZE_USEHEADER)
+			
+			#cap column width at max 400
+			if list_ctrl.GetColumnWidth(index) > 400:
+				list_ctrl.SetColumnWidth(index, 400)
+		
+		#hide id column
+		list_ctrl.SetColumnWidth(0, 0)
+		
+		list_ctrl.Thaw()
+		
+		#show how many in tab title
+		gn.rename_notebook_page(ctrl(self, 'notebook:sub_applications'), 'Potentially Needing PreBOM', ' Potentially Needing PreBOM ({}) '.format(list_ctrl.GetItemCount()))
 
 
 	def refresh_list_upcoming_de(self, event=None):
