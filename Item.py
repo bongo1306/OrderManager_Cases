@@ -87,7 +87,7 @@ class ItemFrame(wx.Frame):
 			'RCA': ('welding', 'painting', 'base_assembly', 'tube_fab', 'brazing', 'box_wire', 'hookup', 'testing', 'finishing'), 
 			'RHD': ('welding', 'painting', 'base_assembly', 'tube_fab_header', 'tube_fab', 'brazing', 'box_wire', 'hookup', 'testing', 'finishing'), 
 			'SHIP_LOOSE': ('ship_loose', ), 
-			'SPARTCOLS': ('finishing', ), 
+			'SPARTCOLS': ('welding', 'painting', 'base_assembly', 'brazing', 'box_wire', 'hookup', 'testing', 'finishing', 'ship_loose'), 
 			'WEE': ('welding', 'painting', 'tube_fab', 'brazing', 'box_wire', 'testing', 'finishing', 'assembly'), 
 			'WEH': ('welding', 'painting', 'tube_fab', 'brazing', 'box_wire', 'testing', 'finishing', 'assembly'), 
 			'WEM': ('welding', 'painting', 'tube_fab', 'brazing', 'box_wire', 'testing', 'finishing', 'assembly'), 
