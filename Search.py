@@ -37,6 +37,7 @@ class SearchTab(object):
 			'orders.view_systems', 
 			'orders.view_systems_abridged', 
 			'-------------------------', 
+			'mmg.view_preboms', 
 			'mmg.change_requests', 
 			'mmg.processed',
 			'mmg.view_processed_ecrs', 
@@ -186,6 +187,17 @@ class SearchTab(object):
 
 		if table_name == 'mmg.view_processed_ecrs':
 			sap_prod_ord = selected_item.GetItem(selected_item.GetFirstSelected(), 3).GetText()
+
+			table_id = db.query("SELECT TOP 1 id FROM orders.root WHERE production_order = '{}'".format(sap_prod_ord))
+
+			if table_id:
+				Item.ItemFrame(self, int(table_id[0]))
+				
+			else:
+				wx.MessageBox('Production Order was not found in the database.', 'Order Not Found', wx.OK | wx.ICON_ERROR)
+
+		if table_name == 'mmg.view_preboms':
+			sap_prod_ord = selected_item.GetItem(selected_item.GetFirstSelected(), 4).GetText()
 
 			table_id = db.query("SELECT TOP 1 id FROM orders.root WHERE production_order = '{}'".format(sap_prod_ord))
 
