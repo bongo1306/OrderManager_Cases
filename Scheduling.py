@@ -431,6 +431,10 @@ class SchedulingTab(object):
 				backoff = -33
 			elif material == 'CTL':
 				backoff = -28
+			elif material == 'ELA':
+				backoff = -28
+			elif material == 'WEE':
+				backoff = -28
 			else:
 				backoff = -18
 			
