@@ -58,6 +58,7 @@ class ItemFrame(wx.Frame):
 		ctrl(self, 'text:orders.target_dates.actual_mmg_release').Bind(wx.EVT_SET_FOCUS, self.on_focus_insert_date)
 
 		self.applicable_labor_hours_per_material = {
+			'BST': ('welding', 'painting', 'base_assembly', 'tube_fab_header', 'tube_fab', 'brazing', 'box_wire', 'hookup', 'testing', 'finishing'),
 			'CDA': ('welding', 'base_assembly', 'tube_fab', 'brazing', 'box_wire', 'hookup', 'testing', 'finishing'), 
 			'CPP': ('welding', 'painting', 'base_assembly', 'tube_fab', 'brazing', 'box_wire', 'hookup', 'testing', 'finishing'), 
 			'CSS': ('welding', 'painting', 'base_assembly', 'tube_fab_header', 'tube_fab', 'brazing', 'box_wire', 'hookup', 'testing', 'finishing'), 
@@ -68,6 +69,7 @@ class ItemFrame(wx.Frame):
 			'DSS': ('welding', 'base_assembly', 'tube_fab_header', 'tube_fab', 'brazing', 'box_wire', 'hookup', 'testing', 'finishing'), 
 			'DSSIIX': ('welding', 'base_assembly', 'tube_fab_header', 'tube_fab', 'brazing', 'box_wire', 'hookup', 'testing', 'finishing'), 
 			'DXVS': ('welding', 'painting', 'base_assembly', 'tube_fab_header', 'tube_fab', 'brazing', 'box_wire', 'hookup', 'testing', 'finishing'), 
+			'ELA': ('welding', 'painting', 'box_wire', 'hookup', 'testing', 'finishing'),
 			'FAH': ('welding', 'painting', 'base_assembly', 'tube_fab_header', 'tube_fab', 'brazing', 'box_wire', 'hookup', 'testing', 'finishing'), 
 			'FAV': ('welding', 'painting', 'base_assembly', 'tube_fab_header', 'tube_fab', 'brazing', 'box_wire', 'hookup', 'testing', 'finishing'), 
 			'FAX': ('welding', 'painting', 'base_assembly', 'tube_fab_header', 'tube_fab', 'brazing', 'box_wire', 'hookup', 'testing', 'finishing'), 
@@ -85,6 +87,7 @@ class ItemFrame(wx.Frame):
 			'ONH': ('welding', 'painting', 'base_assembly', 'tube_fab_header', 'tube_fab', 'brazing', 'box_wire', 'hookup', 'testing', 'finishing'), 
 			'ONV': ('welding', 'painting', 'base_assembly', 'tube_fab_header', 'tube_fab', 'brazing', 'box_wire', 'hookup', 'testing', 'finishing'), 
 			'PSM': ('welding', 'painting', 'base_assembly', 'tube_fab', 'brazing', 'box_wire', 'hookup', 'testing', 'finishing'), 
+			'RAA': ('welding', 'painting', 'base_assembly', 'tube_fab_header', 'tube_fab', 'brazing', 'box_wire', 'hookup', 'testing', 'finishing'),
 			'RCA': ('welding', 'painting', 'base_assembly', 'tube_fab', 'brazing', 'box_wire', 'hookup', 'testing', 'finishing'), 
 			'RHD': ('welding', 'painting', 'base_assembly', 'tube_fab_header', 'tube_fab', 'brazing', 'box_wire', 'hookup', 'testing', 'finishing'), 
 			'SHIP_LOOSE': ('ship_loose', ), 
