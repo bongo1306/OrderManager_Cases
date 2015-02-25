@@ -27,7 +27,7 @@ class ReportsTab(object):
 	def init_de_release_stats(self):
 		#default dates to cover last week
 		today = dt.date.today()
-		first_day_last_week = today - dt.timedelta(days=today.weekday()-2) - dt.timedelta(days=3) - dt.timedelta(weeks=1)
+		first_day_last_week = today - dt.timedelta(days=today.weekday()-2) - dt.timedelta(days=3) #made if default to current week for Paul Juder # - dt.timedelta(weeks=1)
 		last_day_last_week = first_day_last_week + dt.timedelta(days=6)
 		
 		ctrl(self, 'date:de_release_stats_from').SetValue(wx.DateTimeFromDMY(first_day_last_week.day, first_day_last_week.month-1, first_day_last_week.year))		
