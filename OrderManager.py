@@ -640,9 +640,9 @@ class MainFrame(wx.Frame, Search.SearchTab, Scheduling.SchedulingTab, Reports.Re
 			applications_engineer, applications_status = formatted_record
 
 			#only display orders with CMATs that AE cares about
-			if material not in ('CDA', 'CPP', 'CSS', 'CTL', 'CVS', 'DBV', 'DSP', 'DSS', 'DSSIIX', 'DXVS', \
+			if material not in ('BST', 'CDA', 'CPP', 'CSS', 'CTL', 'CVS', 'DBV', 'DSP', 'DSS', 'DSSIIX', 'DXVS', 'ELA',  \
 							'FAH', 'FAV', 'FAX', 'HPM', 'HVS', 'MISC', 'NH2', 'NHS', 'NV2', \
-							'NX2', 'OHD', 'OHN', 'OHS', 'OHW', 'ONH', 'ONV', 'PSM', 'RCA', \
+							'NX2', 'OHD', 'OHN', 'OHS', 'OHW', 'ONH', 'ONV', 'PSM', 'RAA', 'RCA', \
 							'RHD', 'SHIP_LOOSE', 'WEE', 'WEH', 'WEM'):
 				continue
 			
