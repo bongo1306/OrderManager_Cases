@@ -594,6 +594,12 @@ class ItemFrame(wx.Frame):
 			ctrl(self, 'text:orders.financials.gross_margin_standard').SetValue(gross_margin_standard)
 			ctrl(self, 'text:orders.financials.net_sales').SetValue(net_sales)
 
+			try:
+				quote_total = sum(map(float, filter(None, [material_quote, labor_quote, overhead_quote, cost_quote, copper_surcharge_quote, steel_surcharge_quote])))
+			except:
+				quote_total = 0
+			ctrl(self, 'text:quote_total').SetLabel('${:,.2f}'.format(quote_total))
+
 
 	def reset_labor_hours_tab(self):
 		ctrl(self, 'text:orders.labor_hours.applications_engineering').SetValue('')
