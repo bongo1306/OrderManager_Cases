@@ -7,14 +7,19 @@ import wx
 import re #for regular expressions
 
 import datetime as dt
+import workdays
 import operator
 
 
 updates_dir = r"\\kw_engineering\sharepoint$\Everyone\Management Software\OrderManager\release"
+NightlyBuildPath = r"\\kw_engineering\sharepoint$\Everyone\Management Software\OrderManager\release\NightlyBuild\OrderManagerSetup.exe"
 
 #global variable hold reference to wxGUI
 app = None
 user = None
+
+#read-only mode
+mode_readonly = 'False'
 
 #references needed for when closing on software update
 splash_frame = None
@@ -43,7 +48,40 @@ def wxdate2pydate(date):
 		ymd = map(int, date.FormatISODate().split('-')) 
 		return dt.date(*ymd) 
 	else: 
-		return None 
+		return None
+
+#Date conversion functions
+def PY2WX(pyDate):
+
+    if pyDate == None:
+        return wx.DefaultDateTime
+
+    try:
+       dt = pyDate.date()
+       wxDate = wx.DateTime()
+       wxDate.ParseDate(str(dt))
+
+       if wxDate.GetYear() == 9999:  return wx.DefaultDateTime
+       else: return wxDate
+
+    except ValueError:
+       return wx.DefaultDateTime
+
+#calculates the turn around days (date completed - date received) between two given dates in python format
+def GetTADays(pyRec, pyComp):
+
+	#convert python date to wx date so we can check date validity
+	wx_rec = PY2WX(pyRec)
+	wx_comp = PY2WX(pyComp)
+
+	if wx_rec.IsValid() == True and wx_comp.IsValid() == True and wx_rec == wx_comp:
+			TADays = "0"
+	elif wx_rec.IsValid() == True and wx_comp.IsValid() == True:
+			TADays = str(workdays.networkdays(pyRec, pyComp)-1)
+	else:
+			TADays = str("TBD")
+
+	return TADays
 
 
 def date_range(start_date, end_date):
@@ -111,3 +149,5 @@ def rename_notebook_page(notebook, base_page_name, new_page_name):
 	for index in range(notebook.GetPageCount()):
 		if base_page_name in notebook.GetPageText(index):
 			notebook.SetPageText(index, new_page_name)
+
+

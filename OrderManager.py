@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf8 -*-
-version = '2.6'
+version = '3.2'
 #asdfasdfasdf;lkj;lkjsdaf
 
 import sys
@@ -10,7 +10,7 @@ import subprocess
 import threading
 import json
 import shutil
-import workdays
+
 
 import wx				#wxWidgets used as the GUI
 from wx import xrc		#allows the loading and access of xrc file (xml) that describes GUI
@@ -30,12 +30,14 @@ import ChoiceCtrlDbLinker
 import ComboCtrlDbLinker
 import LabelCtrlDbLinker
 
+import QuoteManager
 import General as gn
 import Database as db
 import Search
 import Reports
 import Scheduling
 import Item
+from operator import itemgetter
 
 
 def check_for_updates():
@@ -145,39 +147,20 @@ class SoftwareUpdateFrame(wx.Frame):
 		dialog.Centre(wx.BOTH)
 		dialog.Show()
 		
-		dialog.text_notice.AppendText('Downloading install file from server... \n')
-		dialog.text_notice.AppendText('This may take several minutes depending\n')
-		dialog.text_notice.AppendText('on your connection... ')
-		wx.Yield()
-		
-		try:
-			source_filepath = os.path.join(gn.updates_dir, self.install_filename)
-			destination_filepath = gn.resource_path(self.install_filename)
-			
-			shutil.copy2(source_filepath, destination_filepath)
-			
-		except Exception as e:
-			dialog.text_notice.AppendText('[FAIL]\n')
-			dialog.text_notice.AppendText('ERROR: {}\n'.format(e))
-			dialog.text_notice.AppendText('\nSoftware update failed.\n')
-			wx.Yield()
-			return
-		
-
-		dialog.text_notice.AppendText('[OK]\n')
 		dialog.text_notice.AppendText('Opening install file... ')
 		wx.Yield()
 		
 		try:
-			os.startfile(destination_filepath)
-			
+			source_filepath = os.path.join(gn.updates_dir, self.install_filename)
+			os.startfile(source_filepath)
+
 		except Exception as e:
 			dialog.text_notice.AppendText('[FAIL]\n')
 			dialog.text_notice.AppendText('ERROR: {}\n'.format(e))
 			dialog.text_notice.AppendText('\nSoftware update failed.\n')
 			wx.Yield()
 			return
-			
+		
 		dialog.text_notice.AppendText('[OK]\n')
 		dialog.text_notice.AppendText('Shutting down this program... ')
 		wx.Yield()
@@ -244,6 +227,7 @@ class LoginFrame(wx.Frame):
 			remember_password = config.get('Application', 'remember_password')
 			password = config.get('Application', 'password')
 
+
 		if login_name != '':
 			ctrl(self, 'choice:name').SetStringSelection(login_name)
 
@@ -254,7 +238,8 @@ class LoginFrame(wx.Frame):
 		#put focus on password box
 		ctrl(self, 'text:password').SetFocus()
 		self.Show()
-		
+
+
 		#check for updates!
 		threading.Thread(target=check_for_updates).start()
 		
@@ -278,6 +263,14 @@ class LoginFrame(wx.Frame):
 		#get password from selected user name
 		real_password = db.query("SELECT TOP 1 password FROM employees WHERE name = '{}'".format(selected_user.replace("'", "''")))[0]
 
+		#Get the read-only status from the selected user name
+		readonly_status = db.query("SELECT TOP 1 is_readonly FROM employees WHERE name = '{}'".format(selected_user.replace("'", "''")))[0]
+
+		if readonly_status != None and readonly_status == 1:
+			gn.mode_readonly = 'True'
+		else:
+			gn.mode_readonly = 'False'
+
 		#if real_password == '':
 		#	SetPasswordDialog(None)
 		#	return
@@ -295,7 +288,8 @@ class LoginFrame(wx.Frame):
 			else:
 				config.set('Application', 'remember_password', 'False')
 				config.set('Application', 'password', '')
-				
+
+
 			with open(gn.resource_path('OrderManager.cfg'), 'w+') as configfile:
 				config.write(configfile)
 
@@ -307,7 +301,6 @@ class LoginFrame(wx.Frame):
 		else:
 			wx.MessageBox('Invalid password for user %s.' % selected_user, 'Login failed')
 
-
 	#def on_click_create_user(self, event):
 	#	CreateNewUserFrame(self)
 
@@ -318,7 +311,7 @@ class LoginFrame(wx.Frame):
 
 
 
-class MainFrame(wx.Frame, Search.SearchTab, Scheduling.SchedulingTab, Reports.ReportsTab):
+class MainFrame(wx.Frame, Search.SearchTab, Scheduling.SchedulingTab, QuoteManager.QuoteManagerTab, Reports.ReportsTab):
 	def __init__(self, parent):
 		#super(MainFrame, self).__init__(self)
 		
@@ -338,14 +331,20 @@ class MainFrame(wx.Frame, Search.SearchTab, Scheduling.SchedulingTab, Reports.Re
 		self.SetTitle('OrderManager v{} - Logged in as {}'.format(version, gn.user))
 		#OrderScheduler v{} - Logged in as{} {}'.format(version, self.user.split(',')[-1], self.user.split(',')[0]))
 
+		wx.Log.SetLogLevel(0)
+
+		self.init_QuoteManager_tab()
 		self.init_search_tab()
 		self.init_scheduling_tab()
 		self.init_reports_tab()
 		self.init_lists()
+
+
 		
 		self.refresh_list_lacking_quote_ae()
 		self.refresh_list_potentially_needing_prebom()
 		self.refresh_list_unreleased_de()
+		self.refresh_list_appl_design_workload()     #this list shows the combined workload of the application and design group
 		self.refresh_list_upcoming_de()
 		self.refresh_list_exceptions_de()
 		self.refresh_list_pending_ecms_de()
@@ -354,14 +353,20 @@ class MainFrame(wx.Frame, Search.SearchTab, Scheduling.SchedulingTab, Reports.Re
 
 
 		self.Show()
-		
+
+		#Select the second tab
+		self.notebook = wx.FindWindowByName('notebook:applications')
+		self.sub_notebook = wx.FindWindowByName('notebook:sub_design')
+		self.notebook.ChangeSelection(2)
+		self.sub_notebook.ChangeSelection(0)
+
+
 		#Item.ItemFrame(self, id=12588966)
 		#Item.ItemFrame(self, id=12585270)
 		#Item.ItemFrame(self, id=12585556)
 		#Item.ItemFrame(self, id=12588283)
 		#Item.ItemFrame(self, id=12587666)
 		#Item.ItemFrame(self, id=12585385)
-
 
 
 
@@ -442,6 +447,25 @@ class MainFrame(wx.Frame, Search.SearchTab, Scheduling.SchedulingTab, Reports.Re
 		for index, column_name in enumerate(column_names):
 			list_ctrl.InsertColumn(index, column_name)
 
+		# ---------- appl_design_workload ------------------------------------------------------
+		list_ctrl = ctrl(self, 'list:appl_design_workload')
+
+		list_ctrl.printer_paper_type = wx.PAPER_11X17
+		list_ctrl.printer_header = 'Application / Design Workload'
+		list_ctrl.printer_font_size = 8
+
+		self.Bind(wx.EVT_LIST_ITEM_ACTIVATED , self.on_activated_order, id=xrc.XRCID('list:appl_design_workload'))
+		self.Bind(wx.EVT_BUTTON, self.refresh_list_appl_design_workload, id=xrc.XRCID('button:refresh_appl_design_workload'))
+		self.Bind(wx.EVT_BUTTON, list_ctrl.filter_list, id=xrc.XRCID('button:filter_appl_design_workload'))
+		self.Bind(wx.EVT_BUTTON, list_ctrl.export_list, id=xrc.XRCID('button:export_appl_design_workload'))
+		self.Bind(wx.EVT_BUTTON, list_ctrl.print_list, id=xrc.XRCID('button:print_appl_design_workload'))
+
+		column_names = ['Id', 'Quote Number', 'Sales Order', 'Item', 'Production Order', 'Material', 'Customer', 'City',
+						'Date Expected', 'Appl / Design Lead',	'Status']
+
+		for index, column_name in enumerate(column_names):
+			list_ctrl.InsertColumn(index, column_name)
+		# ------------- end appl_design_workload ---------------------------------------------------------
 
 		#design unreleased
 		list_ctrl = ctrl(self, 'list:unreleased_de')
@@ -452,7 +476,7 @@ class MainFrame(wx.Frame, Search.SearchTab, Scheduling.SchedulingTab, Reports.Re
 		
 		self.Bind(wx.EVT_LIST_ITEM_ACTIVATED , self.on_activated_order, id=xrc.XRCID('list:unreleased_de'))
 		self.Bind(wx.EVT_BUTTON, self.refresh_list_unreleased_de, id=xrc.XRCID('button:refresh_unreleased_de'))
-		self.Bind(wx.EVT_BUTTON, list_ctrl.filter_list, id=xrc.XRCID('button:filter_unreleased_de')) 
+		self.Bind(wx.EVT_BUTTON, list_ctrl.filter_list, id=xrc.XRCID('button:filter_unreleased_de'))
 		self.Bind(wx.EVT_BUTTON, list_ctrl.export_list, id=xrc.XRCID('button:export_unreleased_de')) 
 		self.Bind(wx.EVT_BUTTON, list_ctrl.print_list, id=xrc.XRCID('button:print_unreleased_de')) 
 		
@@ -922,6 +946,153 @@ class MainFrame(wx.Frame, Search.SearchTab, Scheduling.SchedulingTab, Reports.Re
 		#show how many in tab title
 		gn.rename_notebook_page(ctrl(self, 'notebook:sub_design'), ' Upcoming', '  Upcoming ({}) '.format(list_ctrl.GetItemCount()))
 
+
+
+
+	# refresh the list that shows the joint applications / design workflow
+	def refresh_list_appl_design_workload(self, event=None):
+
+		list_ctrl = ctrl(self, 'list:appl_design_workload')
+		list_ctrl.Freeze()
+		list_ctrl.DeleteAllItems()
+		list_ctrl.clean_headers()
+
+		DesignRecords = db.query('''
+			SELECT
+				id,
+				quote,
+
+				CASE
+					WHEN bpcs_sales_order IS NULL THEN sales_order
+					WHEN sales_order IS NULL THEN bpcs_sales_order
+					ELSE sales_order + '/' + bpcs_sales_order
+				END AS sales_order,
+
+				CASE
+					WHEN bpcs_line_up IS NULL THEN item
+					WHEN item IS NULL THEN bpcs_line_up
+					ELSE item + '/' + bpcs_line_up
+				END AS item,
+
+				CASE
+					WHEN bpcs_item IS NULL THEN production_order
+					WHEN production_order IS NULL THEN bpcs_item
+					ELSE production_order + '/' + bpcs_item
+				END AS production_order,
+
+				CASE
+					WHEN bpcs_family IS NULL THEN material
+					WHEN material IS NULL THEN bpcs_family
+					ELSE material + '/' + bpcs_family
+				END AS material,
+
+				sold_to_name,
+				city,
+				date_requested_de_release,
+				design_engineer,
+				design_status
+			FROM
+				orders.view_systems
+			WHERE
+				date_actual_de_release IS NULL AND
+				production_order IS NOT NULL AND
+				status <> 'Canceled'
+			ORDER BY
+				date_requested_de_release, sales_order, item ASC
+			''')
+
+		#insert records into list
+		for index, record in enumerate(DesignRecords):
+			#format all fields as strings
+			formatted_record = []
+			for field in record:
+				if field == None: field = ''
+				elif isinstance(field, dt.datetime): field = field.strftime('%Y-%m-%d')
+				else: pass
+
+				formatted_record.append(field)
+
+			id, quote, sales_order, item, production_order, material, sold_to_name, city, \
+			date_requested_de_release, 	design_engineer, design_status = formatted_record
+
+			#convert some fields to title case
+			try: sold_to_name = sold_to_name.title()
+			except: pass
+
+			try: city = city.title()
+			except: pass
+
+			list_ctrl.InsertStringItem(sys.maxint, '#')
+			list_ctrl.SetStringItem(index, 0, '{}'.format(id))
+			list_ctrl.SetStringItem(index, 1, '{}'.format(quote))
+			list_ctrl.SetStringItem(index, 2, '{}'.format(sales_order))
+			list_ctrl.SetStringItem(index, 3, '{}'.format(item))
+			list_ctrl.SetStringItem(index, 4, '{}'.format(production_order))
+			list_ctrl.SetStringItem(index, 5, '{}'.format(material))
+			list_ctrl.SetStringItem(index, 6, '{}'.format(sold_to_name))
+			list_ctrl.SetStringItem(index, 7, '{}'.format(city))
+
+			list_ctrl.SetStringItem(index, 8, '{}'.format(date_requested_de_release))
+			list_ctrl.SetStringItem(index, 9, '{}'.format(design_engineer))
+			list_ctrl.SetStringItem(index, 10, '{}'.format(design_status))
+
+
+		#Get the quotes where the completion date is none
+		todayDate = dt.datetime.today().date()
+		SixMonth = todayDate - dt.timedelta(days=180)
+		SixMonthOldRequest = str(SixMonth)
+
+		sql = "SELECT QuoteNumber,ProjectType,Customer,ShipTO,DateRequest,Assigned " \
+			  "FROM dbo.QuoteMaker " \
+			  "WHERE (DateComp is NULL) OR (DateComp >= \'1/1/9999\') AND (DateRequest > \'"+ SixMonthOldRequest + "\') " \
+			  "ORDER BY DateRequest DESC"
+
+		ApplRecords = db.query(sql)
+
+
+		for record in ApplRecords:
+			index += 1
+			QuoteNumber = str(record.QuoteNumber)
+			ProjectType = str(record.ProjectType)
+			Customer = str(record.Customer)
+			ShipTO = str(record.ShipTO).strip()
+			Assigned = str(record.Assigned)
+
+			if record.DateRequest == None:	DateRequest = ''
+			elif isinstance(record.DateRequest, dt.datetime): DateRequest = record.DateRequest.strftime('%Y-%m-%d')
+			else: pass
+
+			list_ctrl.InsertStringItem(sys.maxint, '#')
+			list_ctrl.SetStringItem(index, 0, '0')
+			list_ctrl.SetStringItem(index, 1, QuoteNumber)
+			list_ctrl.SetStringItem(index, 2, '')
+			list_ctrl.SetStringItem(index, 3, '')
+			list_ctrl.SetStringItem(index, 4, '')
+			list_ctrl.SetStringItem(index, 5, ProjectType)
+			list_ctrl.SetStringItem(index, 6, Customer)
+			list_ctrl.SetStringItem(index, 7, ShipTO)
+			list_ctrl.SetStringItem(index, 8, DateRequest)
+			list_ctrl.SetStringItem(index, 9, Assigned)
+			list_ctrl.SetStringItem(index, 10, '')
+			list_ctrl.SetItemBackgroundColour(index, "#F5FFFA")
+
+		list_ctrl.SortByColumn(8)
+
+		#auto fit the column widths
+		for index in range(list_ctrl.GetColumnCount()):
+			list_ctrl.SetColumnWidth(index, wx.LIST_AUTOSIZE_USEHEADER)
+
+			#cap column width at max 275
+			if list_ctrl.GetColumnWidth(index) > 275:
+				list_ctrl.SetColumnWidth(index, 275)
+
+		#hide id column
+		list_ctrl.SetColumnWidth(0, 0)
+
+		list_ctrl.Thaw()
+
+		#show how many in tab title
+		gn.rename_notebook_page(ctrl(self, 'notebook:sub_design'), 'Application / Design Workload', '  Application / Design Workload ({}) '.format(list_ctrl.GetItemCount()))
 
 	
 	def refresh_list_unreleased_de(self, event=None):
@@ -1470,8 +1641,6 @@ class MainFrame(wx.Frame, Search.SearchTab, Scheduling.SchedulingTab, Reports.Re
 		self.Destroy()
 
 
-
-
 class OrdManApp(wx.App):
 	def OnInit(self):
 		#show splash screen
@@ -1480,7 +1649,7 @@ class OrdManApp(wx.App):
 			timeout=2500, agwStyle=AS.AS_TIMEOUT | AS.AS_CENTER_ON_SCREEN)
 			
 		wx.Yield()
-			
+
 		return True
 
 
@@ -1505,20 +1674,21 @@ if __name__ == '__main__':
 			if ee[0] == 'IM002':
 				#try to setup the DSN
 				print 'Trying to setup the DSN...'
-				call_command = r'''cd C:\WINDOWS\system32 & ODBCConf ConfigDSN "SQL Server" "DSN=eng04_sql|SERVER=KW_SQL_5|DATABASE=eng04_sql|Trusted_Connection=yes"'''
+				call_command = r'''cd C:\WINDOWS\system32 & ODBCConf ConfigDSN "SQL Server" "DSN=eng04_sql|SERVER=cbssrvsql1|DATABASE=eng04_sql|Trusted_Connection=yes"'''
 				if subprocess.call(call_command, shell=True):
 					wx.MessageBox('Failed to setup ENG04_SQL DSN. Contact IT.\n\n{}'.format(call_command), 'An error occurred!', wx.OK | wx.ICON_ERROR)
 				db.eng04_connection = db.connect_to_eng04_database()
 		
 		if db.eng04_connection == None:
 			wx.MessageBox('Could not connect to database ENG04_SQL on server KW_SQL_5.\nGet with IT and establish a connection.', 'Database Connection Problem.', wx.OK | wx.ICON_ERROR)
-		
+
+
 		#load GUI resource
 		xrc.XmlResource.Get().Load(gn.resource_path('interface.xrc'))
-		
 		gn.login_frame = LoginFrame(None)
 
 		gn.app.MainLoop()
+
 
 	except Exception as e:
 		help_message = ''

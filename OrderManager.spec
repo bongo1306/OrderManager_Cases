@@ -4,6 +4,8 @@ a = Analysis(['S:\\Everyone\\Management Software\\OrderManager\\development\\Ord
              hiddenimports=[],
              hookspath=None)
 
+
+
 files_to_include = '''
 interface.xrc,
 Splash.png,
@@ -24,7 +26,7 @@ exe = EXE(pyz,
           name=os.path.join('build\\pyi.win32\\OrderManager', 'OrderManager.exe'),
           debug=False,
           strip=None,
-          upx=True,
+          upx=False,
           icon='OrderManager.ico',
           console=False )
 coll = COLLECT(exe,

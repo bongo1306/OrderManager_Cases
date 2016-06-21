@@ -274,6 +274,10 @@ class SchedulingTab(object):
 		
 		self.Bind(wx.EVT_BUTTON, self.on_click_visualize_forecast, id=xrc.XRCID('button:visualize_forecast'))
 
+        #if read only mode then make all controls read only
+		if gn.mode_readonly == 'True':
+				ctrl(self,'button:open_scheduler').Enable(False)
+				ctrl(self,'button:calc_and_set_requested_de_release').Enable(False)
 
 	def get_engineering_capacity(self, date):
 		if date.weekday() < 5:
@@ -424,26 +428,32 @@ class SchedulingTab(object):
 				status <> 'Canceled'
 			''')
 
+
 		for record in records:
 			id, material, date_basic_start = record
-			
-			if material == 'CDA':
-				backoff = -33
-			elif material == 'CTL':
-				backoff = -28
-			elif material == 'ELA':
-				backoff = -28
-			elif material == 'WEE':
-				backoff = -28
-			else:
-				backoff = -18
-			
+
+			BO = self.GetBODays(material)
+			backoff = -BO
 			calc_requested_de_release = workdays.workday(date_basic_start, backoff)
 			
 			db.update_order('orders.target_dates', id, 'requested_de_release', calc_requested_de_release, '{} (Auto)'.format(gn.user))
 			
 		wx.MessageBox("{} requested_de_release fields have been calculated and set.".format(len(records)), 'Notice', wx.OK | wx.ICON_INFORMATION)
 
+	#Get the number of backoff days from the database based on the CMAT
+	def GetBODays(self, mat):
+
+			try:
+				MaterialKey = "BACKOFF_" + mat
+				MaterialKey = MaterialKey.upper()
+				sql = "SELECT * FROM dbo.OMSettings WHERE Setting=\'" + MaterialKey + "\'"
+				res = db.query(sql)
+				BODays = int(res[0].Value)
+
+			except:
+				BODays = 18
+
+			return BODays
 
 	def on_click_proto_request_datesOLD(self, event):
 		records = db.query('''

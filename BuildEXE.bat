@@ -4,7 +4,8 @@ set app_name=OrderManager
 set main_dir=%~dp0
 set pyinstaller_dir=S:\Everyone\Management Software\pyinstaller-2.0\utils
 set build_options=
-set python=C:\Python27\python.exe
+REM set python=C:\Python27\python.exe
+set python=python
 
 
 

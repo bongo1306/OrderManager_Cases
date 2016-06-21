@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "OrderManager"
-#define MyAppVersion "2.6"
+#define MyAppVersion "3.2"
 #define MyAppPublisher "Kysor/Warren"
 #define MyAppExeName "OrderManager.exe"
 
@@ -23,23 +23,28 @@ OutputBaseFilename={#MyAppName}Setup
 Compression=lzma
 SolidCompression=yes
 ChangesAssociations=yes
-OutputDir=..\release
+OutputDir=..\release\NightlyBuild
+CloseApplications=force
+DisableFinishedPage=yes
 
+
+     
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
 ;[Tasks]
-;Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
+;Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; 
 
 [Files]
-Source: "S:\Everyone\Management Software\OrderManager\development\OrderManager\*.*"; DestDir: {app}; Flags: ignoreversion recursesubdirs
+Source: "S:\Everyone\Management Software\OrderManager\development\{#MyAppName}\*.*"; DestDir: {app}; Flags: ignoreversion recursesubdirs
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]
 Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
 Name: "{commondesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
-;Name: "{commondesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
+;Name: "{commondesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks:desktopicon
+Name: "{commondesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; WorkingDir: {app}; IconFilename: {app}\{#MyAppName}.ico; 
 
 [Run]
-Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall
 

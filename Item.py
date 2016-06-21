@@ -11,6 +11,16 @@ import wx
 from wx import xrc
 ctrl = xrc.XRCCTRL
 
+#for sending emails
+import smtplib
+from email import Encoders
+from email.MIMEBase import MIMEBase
+from email.MIMEText import MIMEText
+from email.MIMEMultipart import MIMEMultipart
+from email.Utils import formatdate
+
+from threading import Thread
+
 import datetime as dt
 import General as gn
 import Database as db
@@ -28,12 +38,13 @@ class ItemFrame(wx.Frame):
 		self.SetIcon(wx.Icon(gn.resource_path('OrderManager.ico'), wx.BITMAP_TYPE_ICO))
 
 		self.id = id
+		self.SetFocusActive = False    #used to keep track of when on_focus_insert_date_actual_de_release event handler
+		#  is active to prevent it being called multiple times
 
 		#bindings
 		self.Bind(wx.EVT_CLOSE, self.on_close_frame)
 
 		self.Bind(wx.EVT_BUTTON, self.on_click_open_order_folder, id=xrc.XRCID('button:order_folder'))
-
 		self.Bind(wx.EVT_BUTTON, self.on_click_goto_next_item, id=xrc.XRCID('button:next_item'))
 		self.Bind(wx.EVT_BUTTON, self.on_click_goto_previous_item, id=xrc.XRCID('button:previous_item'))
 		
@@ -50,10 +61,12 @@ class ItemFrame(wx.Frame):
 
 		self.Bind(wx.EVT_BUTTON, self.on_click_log_time, id=xrc.XRCID('button:log_time'))
 
+		self.Bind(wx.EVT_BUTTON, self.OrderCompleteNotice, id=xrc.XRCID('button:orders.target_dates.actual_de_release_notification'))
+
 		#for convenience, populate today's date when user focuses on a release field
 		ctrl(self, 'text:orders.target_dates.actual_ae_release').Bind(wx.EVT_SET_FOCUS, self.on_focus_insert_date)
 		ctrl(self, 'text:orders.misc.prebom_ae_release').Bind(wx.EVT_SET_FOCUS, self.on_focus_insert_date)
-		ctrl(self, 'text:orders.target_dates.actual_de_release').Bind(wx.EVT_SET_FOCUS, self.on_focus_insert_date)
+		ctrl(self, 'text:orders.target_dates.actual_de_release').Bind(wx.EVT_SET_FOCUS, self.on_focus_insert_date_actual_de_release)
 		ctrl(self, 'text:orders.target_dates.actual_de_release').Bind(wx.EVT_KILL_FOCUS, self.on_kill_focus_check_if_sent_to_mmg)
 		ctrl(self, 'text:orders.target_dates.actual_mmg_release').Bind(wx.EVT_SET_FOCUS, self.on_focus_insert_date)
 
@@ -110,26 +123,164 @@ class ItemFrame(wx.Frame):
 		
 		self.populate_all()
 
+        #if read only mode then make all controls read only
+		if gn.mode_readonly == 'True':
+				self.on_set_readonly()
 
 		self.Show()
-
 
 	def on_click_print_window(self, event):
 		SnapshotPrinter.print_window(self)
 		wx.CallAfter(self.Raise)
 
-	
+
 	def on_focus_insert_date(self, event):
+
 		#for convenience, populate today's date when user focuses on a release field
 		text_ctrl = event.GetEventObject()
-		
+
 		if text_ctrl.GetValue() == '':
 			text_ctrl.SetValue(dt.date.today().strftime('%m/%d/%Y'))
-		
+
 		event.Skip()
+
+    # @MM
+	def QueryDesignStatus(self):
+
+		record = db.query('''SELECT design_status FROM orders.responsibilities WHERE id={}'''.format(self.id))
+
+		designStatus = ''
+		if record[0] != None:
+			designStatus = record[0]
+
+		return designStatus
+
+	# @MM
+	def OrderCompleteNotice(self, event):
+
+		sender = db.query('SELECT TOP 1 email FROM employees WHERE name = \'{}\''.format(gn.user))
+		sender_email = sender[0]
+
+		popsheet_email_list = db.query('SELECT email FROM employees WHERE gets_pop_sheet_notice = 1')
+		target_email = []
+		for email in popsheet_email_list:
+				target_email.append(email)
+		target_email.append(sender_email)
+
+
+		record = db.query('''SELECT TOP 1 production_order, sales_order, bpcs_sales_order, sold_to_name,country,state,city,zip_code,address
+			FROM orders.root WHERE id={}'''.format(self.id))
+
+		if not record:
+				self.Close()
+				return
+
+		production_order = record[0].production_order
+		sap_so = record[0].sales_order
+		bpcs_so = record[0].bpcs_sales_order
+		sold_to_name = record[0].sold_to_name
+		country = record[0].country
+		state = record[0].state
+		city = record[0].city
+		zip_code = record[0].zip_code
+		address = record[0].address
+
+        ##########################################################################################################
+		### Create Message body and subject for sending out email notification ###################################
+
+		MessageSubject = 'New Order Release Notification'
+		MessageBody = "A new order has been released that may require sending out popsheet to EOR " \
+					  "and controls system manufacturer for programming. \n"
+		sap_order_folder_path = ''
+		bpcs_order_folder_path = ''
+
+		if sold_to_name != None: MessageBody += '\n Customer: {}'.format(sold_to_name)
+		if address != None: MessageBody += '\n Address: {}'.format(sold_to_name)
+		if city != None: MessageBody += ', {}'.format(city)
+		if state != None: MessageBody += ', {}'.format(state)
+		if zip_code != None: MessageBody += ' {}'.format(zip_code)
+		if country != None: MessageBody += ' {}'.format(country)
+
+		if sold_to_name != None: MessageSubject += ' [{}]'.format(sold_to_name)
+		if production_order: MessageSubject +=  ' [P.O. {}]'.format(production_order)
+
+		if sap_so:
+			sap_order_folder_path = self.find_sap_order_folder_path(sap_so)
+			sap_order_folder_path += "\Units\Programing_Info"
+			MessageSubject = MessageSubject +  ' [S.O. {}]'.format(sap_so)
+
+		if bpcs_so:
+			bpcs_order_folder_path = self.find_bpcs_order_folder_path(bpcs_so)
+			MessageSubject = MessageSubject +  ' [BPCS S.O. {}]'.format(bpcs_so)
+
+		if sap_order_folder_path: MessageBody = MessageBody + "\n\n" + sap_order_folder_path
+		if bpcs_order_folder_path: MessageBody = MessageBody + "\n\n" + bpcs_order_folder_path
+
+		Thread(target=self.OrderCompleteNoticeThread, args=(sender_email, target_email,MessageSubject,MessageBody )).start()
+
+
+	# @MM
+	def OrderCompleteNoticeThread(self, MailFrom, MailTo, MailSubject, MailBody):
+
+		MailTo_String = ''
+		for email in MailTo:
+			MailTo_String += '; {}'.format(email)
+		MailTo_String = MailTo_String[2:]
+
+		msg = MIMEMultipart()
+		msg['From'] = MailFrom
+		msg['To'] = MailTo_String
+		msg['Subject'] = MailSubject
+		msg.attach(MIMEText(MailBody))
+		mailserver = smtplib.SMTP('mailrelay.lennoxintl.com')
+
+		try:
+				mailserver.sendmail(MailFrom, MailTo, msg.as_string())
+				confirmation = "Notification of order release was sent to: \n\n" + MailTo_String
+				wx.MessageBox(confirmation, 'Message Sent!', wx.OK | wx.ICON_INFORMATION)
+
+		except Exception, e:
+				x = 1
+				wx.MessageBox('Unable to send email. Error: {}'.format(e), 'An error occurred!', wx.OK | wx.ICON_ERROR)
+
+		mailserver.quit()
+
+	# @MM
+	def on_focus_insert_date_actual_de_release(self, event):
+
+		if self.SetFocusActive == True:
+			event.Skip()
+			return
+		self.SetFocusActive = True
+
+		#for convenience, populate today's date when user focuses on a release field
+		text_ctrl = event.GetEventObject()
+
+		design_status = self.QueryDesignStatus()
+		if design_status.find("Complete") < 0:
+			text_ctrl.SetValue('')
+			wx.MessageBox("Design Status not yet complete", "Error")
+
+		elif text_ctrl.GetValue() == '':
+			text_ctrl.SetValue(dt.date.today().strftime('%m/%d/%Y'))
+
+
+		self.SetFocusActive = False
+		event.Skip()
+		return
+
 
 
 	def on_kill_focus_check_if_sent_to_mmg(self, event):
+
+		# @MM Get the design_status. It should be complete before order can be released   <----- @MM
+		design_status = self.QueryDesignStatus()
+		if design_status.find("Complete") < 0:
+			event.GetEventObject().SetValue('')
+			event.Skip()
+			return
+
+
 		production_order = db.query("SELECT production_order FROM orders.root WHERE id={}".format(self.id))[0]
 		
 		result = db.query("SELECT TOP 1 production_order FROM mmg.change_requests WHERE production_order='{}'".format(production_order))
@@ -1011,7 +1162,7 @@ class ItemFrame(wx.Frame):
 	def on_click_auto_sign_up(self, event):
 		#this will populate the user's name if none selected yet without opening the drop down
 		choice_ctrl = event.GetEventObject()
-		
+
 		if choice_ctrl.GetStringSelection() == '':
 			#choice_ctrl.SetStringSelection(gn.user)
 			wx.CallAfter(choice_ctrl.SetStringSelection, gn.user)
@@ -1024,41 +1175,42 @@ class ItemFrame(wx.Frame):
 
 
 	def on_choice_determine_design_status(self, event=None):
-		design_engineer = ctrl(self, 'choice:orders.responsibilities.design_engineer').GetStringSelection()
-		mechanical_status = ctrl(self, 'choice:orders.responsibilities.mechanical_status').GetStringSelection()
-		electrical_status = ctrl(self, 'choice:orders.responsibilities.electrical_status').GetStringSelection()
-		structural_status = ctrl(self, 'choice:orders.responsibilities.structural_status').GetStringSelection()
+		#design_engineer = ctrl(self, 'choice:orders.responsibilities.design_engineer').GetStringSelection()
+		#mechanical_status = ctrl(self, 'choice:orders.responsibilities.mechanical_status').GetStringSelection()
+		#electrical_status = ctrl(self, 'choice:orders.responsibilities.electrical_status').GetStringSelection()
+		#structural_status = ctrl(self, 'choice:orders.responsibilities.structural_status').GetStringSelection()
 
 		#determine what the Design Status should be
-		design_status = ''
+		#design_status = ''
 
-		if design_engineer <> '':
-			mech_status, elec_status, stru_status = mechanical_status, electrical_status, structural_status
-			if mechanical_status == 'N/A': mech_status = ''
-			if electrical_status == 'N/A': elec_status = ''
-			if structural_status == 'N/A': stru_status = ''
-			if mech_status == '' and elec_status == '' and stru_status == '':
-				design_status = 'Previewed'
+		#if design_engineer <> '':
+		#	mech_status, elec_status, stru_status = mechanical_status, electrical_status, structural_status
+		#	if mechanical_status == 'N/A': mech_status = ''
+		#	if electrical_status == 'N/A': elec_status = ''
+		#	if structural_status == 'N/A': stru_status = ''
+		#	if mech_status == '' and elec_status == '' and stru_status == '':
+		#		design_status = 'Previewed'
 
-			if 'Reviewing' in (mechanical_status, electrical_status, structural_status):
-				design_status = 'Reviewing'
+			#if 'Reviewing' in (mechanical_status, electrical_status, structural_status):
+			#	design_status = 'Reviewing'
 			
-			if 'In Process' in (mechanical_status, electrical_status, structural_status):
-				design_status = 'In Process'
+			#if 'In Process' in (mechanical_status, electrical_status, structural_status):     <---- @MM
+			#	design_status = 'In Process'
 
-			mech_status, elec_status, stru_status = mechanical_status, electrical_status, structural_status
-			if mechanical_status == 'N/A': mech_status = 'Complete'
-			if electrical_status == 'N/A': elec_status = 'Complete'
-			if structural_status == 'N/A': stru_status = 'Complete'
-			if mech_status == 'Complete' and elec_status == 'Complete' and stru_status == 'Complete':
-				design_status = 'Complete'
+			#mech_status, elec_status, stru_status = mechanical_status, electrical_status, structural_status
+			#if mechanical_status == 'N/A': mech_status = 'Complete'
+			#if electrical_status == 'N/A': elec_status = 'Complete'
+			#if structural_status == 'N/A': stru_status = 'Complete'
+			#if mech_status == 'Complete' and elec_status == 'Complete' and stru_status == 'Complete':
+			#	design_status = 'Complete'
 
-		db.update_order('orders.responsibilities', self.id, 'design_status', design_status)
+		#db.update_order('orders.responsibilities', self.id, 'design_status', design_status)
 
-		if design_status == '':
-			design_status = '...'
-		ctrl(self, 'label:design_status').SetLabel('{}'.format(design_status))
-		ctrl(self, 'panel:responsibilities').Layout()
+		#if design_status == '':
+		#	design_status = '...'
+		#ctrl(self, 'label:design_status').SetLabel('{}'.format(design_status))   <------ @MM
+		#ctrl(self, 'choice:orders.responsibilities.design_status').SetStringSelection(design_status)
+		#ctrl(self, 'panel:responsibilities').Layout()
 
 		if event:
 			event.Skip()
@@ -1113,6 +1265,7 @@ class ItemFrame(wx.Frame):
 
 		statuses = ['', 'Previewed', 'In Process', 'Reviewing', 'Complete', 'Hold']
 		ctrl(self, 'choice:orders.responsibilities.applications_status').AppendItems(statuses)
+		ctrl(self, 'choice:orders.responsibilities.design_status').AppendItems(statuses)  #<------ @MM
 
 		statuses = ['', 'In Process', 'Reviewing', 'Complete', 'Hold', 'N/A']
 		ctrl(self, 'choice:orders.responsibilities.mechanical_status').AppendItems(statuses)
@@ -1131,7 +1284,8 @@ class ItemFrame(wx.Frame):
 		ctrl(self, 'choice:orders.responsibilities.structural_cad_designer').SetStringSelection('')
 
 		ctrl(self, 'choice:orders.responsibilities.applications_status').SetStringSelection('')
-		ctrl(self, 'label:design_status').SetLabel('...')
+		ctrl(self, 'choice:orders.responsibilities.design_status').SetStringSelection('')
+		#ctrl(self, 'label:design_status').SetLabel('...')  <--- @MM
 		ctrl(self, 'choice:orders.responsibilities.mechanical_status').SetStringSelection('')
 		ctrl(self, 'choice:orders.responsibilities.electrical_status').SetStringSelection('')
 		ctrl(self, 'choice:orders.responsibilities.structural_status').SetStringSelection('')
@@ -1203,9 +1357,16 @@ class ItemFrame(wx.Frame):
 			choice_ctrl.SetStringSelection(design_engineer)
 
 			#---
-			if design_status == '':
-				design_status = '...'
-			ctrl(self, 'label:design_status').SetLabel('{}'.format(design_status))
+			#if design_status == '':
+			#	design_status = '...'
+			#ctrl(self, 'label:design_status').SetLabel('{}'.format(design_status)) <--- @MM
+
+			choice_ctrl = ctrl(self, 'choice:orders.responsibilities.design_status')
+
+			if design_status not in choice_ctrl.GetStrings():
+				choice_ctrl.Insert(design_status, 1)
+
+			choice_ctrl.SetStringSelection(design_status)
 
 
 			#---
@@ -1438,6 +1599,110 @@ class ItemFrame(wx.Frame):
 		self.Destroy()
 
 
+	def on_set_readonly(self):
+		ctrl(self, 'text:orders.target_dates.requested_ae_release').Enable(False)
+		ctrl(self, 'text:orders.target_dates.planned_ae_release').Enable(False)
+		ctrl(self, 'text:orders.target_dates.suggested_ae_start').Enable(False)
+		ctrl(self, 'text:orders.target_dates.actual_ae_release').Enable(False)
+		ctrl(self, 'checkbox:orders.target_dates.planned_ae_release_locked').Enable(False)
+		ctrl(self, 'text:orders.misc.prebom_ae_release').Enable(False)
+		ctrl(self, 'checkbox:orders.misc.prebom_ae_not_applicable').Enable(False)
+		ctrl(self, 'text:orders.target_dates.requested_de_release').Enable(False)
+		ctrl(self, 'text:orders.target_dates.planned_de_release').Enable(False)
+		ctrl(self, 'text:orders.target_dates.suggested_de_start').Enable(False)
+		ctrl(self, 'text:orders.target_dates.actual_de_release').Enable(False)
+		ctrl(self, 'checkbox:orders.target_dates.planned_de_release_locked').Enable(False)
+		ctrl(self, 'text:orders.target_dates.requested_mmg_release').Enable(False)
+		ctrl(self, 'text:orders.target_dates.planned_mmg_release').Enable(False)
+		ctrl(self, 'text:orders.target_dates.suggested_mmg_start').Enable(False)
+		ctrl(self, 'text:orders.target_dates.actual_mmg_release').Enable(False)
+		ctrl(self, 'checkbox:orders.target_dates.planned_mmg_release_locked').Enable(False)
+		ctrl(self, 'checkbox:orders.misc.pending_ecms').Enable(False)
+		ctrl(self, 'combo:orders.misc.refrigerant').Enable(False)
+		ctrl(self, 'combo:orders.misc.compressor_manufacturer').Enable(False)
+		ctrl(self, 'combo:orders.misc.compressor_type').Enable(False)
+		ctrl(self, 'text:orders.misc.compressor_quantity').Enable(False)
+		ctrl(self, 'text:orders.misc.circuit_quantity').Enable(False)
+		ctrl(self, 'combo:orders.misc.controller').Enable(False)
+		ctrl(self, 'text:orders.misc.length').Enable(False)
+		ctrl(self, 'text:orders.misc.width').Enable(False)
+		ctrl(self, 'text:orders.misc.height').Enable(False)
+		ctrl(self, 'text:orders.financials.material_quote').Enable(False)
+		ctrl(self, 'text:orders.financials.labor_quote').Enable(False)
+		ctrl(self, 'text:orders.financials.overhead_quote').Enable(False)
+		ctrl(self, 'text:orders.financials.cost_quote').Enable(False)
+		ctrl(self, 'text:orders.financials.copper_surcharge_quote').Enable(False)
+		ctrl(self, 'text:orders.financials.steel_surcharge_quote').Enable(False)
+		ctrl(self, 'text:orders.financials.material_standard').Enable(False)
+		ctrl(self, 'text:orders.financials.labor').Enable(False)
+		ctrl(self, 'text:orders.financials.overhead').Enable(False)
+		ctrl(self, 'text:orders.financials.cost_standard').Enable(False)
+		ctrl(self, 'text:orders.financials.list_price').Enable(False)
+		ctrl(self, 'text:orders.financials.discount_multiplier').Enable(False)
+		ctrl(self, 'text:orders.financials.margin_standard').Enable(False)
+		ctrl(self, 'text:orders.financials.gross_margin_standard').Enable(False)
+		ctrl(self, 'text:orders.financials.net_sales').Enable(False)
+		ctrl(self, 'text:orders.labor_hours.applications_engineering').Enable(False)
+		ctrl(self, 'text:orders.labor_hours.mechanical_engineering').Enable(False)
+		ctrl(self, 'text:orders.labor_hours.electrical_engineering').Enable(False)
+		ctrl(self, 'text:orders.labor_hours.structural_engineering').Enable(False)
+		ctrl(self, 'text:orders.labor_hours.welding').Enable(False)
+		ctrl(self, 'text:orders.labor_hours.painting').Enable(False)
+		ctrl(self, 'text:orders.labor_hours.base_assembly').Enable(False)
+		ctrl(self, 'text:orders.labor_hours.tube_fab_header').Enable(False)
+		ctrl(self, 'text:orders.labor_hours.tube_fab').Enable(False)
+		ctrl(self, 'text:orders.labor_hours.brazing').Enable(False)
+		ctrl(self, 'text:orders.labor_hours.box_wire').Enable(False)
+		ctrl(self, 'text:orders.labor_hours.hookup').Enable(False)
+		ctrl(self, 'text:orders.labor_hours.testing').Enable(False)
+		ctrl(self, 'text:orders.labor_hours.finishing').Enable(False)
+		ctrl(self, 'text:orders.labor_hours.ship_loose').Enable(False)
+		ctrl(self, 'text:orders.labor_hours.assembly').Enable(False)
+		ctrl(self, 'text:orders.labor_hours.sheet_metal').Enable(False)
+		ctrl(self, 'label:status').Enable(False)
+		ctrl(self, 'label:orders.root.filemaker_quote').Enable(False)
+		ctrl(self, 'label:orders.root.sales_order').Enable(False)
+		ctrl(self, 'label:orders.root.item').Enable(False)
+		ctrl(self, 'label:orders.root.production_order').Enable(False)
+		ctrl(self, 'label:orders.root.material').Enable(False)
+		ctrl(self, 'label:orders.root.hierarchy').Enable(False)
+		ctrl(self, 'label:orders.root.model').Enable(False)
+		ctrl(self, 'label:orders.root.description').Enable(False)
+		ctrl(self, 'label:orders.root.serial').Enable(False)
+		ctrl(self, 'label:sold_to').Enable(False)
+		ctrl(self, 'label:ship_to').Enable(False)
+		ctrl(self, 'label:orders.root.address').Enable(False)
+		ctrl(self, 'label:city_state').Enable(False)
+		ctrl(self, 'label:orders.root.bpcs_item').Enable(False)
+		ctrl(self, 'label:orders.root.bpcs_sales_order').Enable(False)
+		ctrl(self, 'label:orders.root.bpcs_line_up').Enable(False)
+		ctrl(self, 'label:orders.root.bpcs_family').Enable(False)
+		ctrl(self, 'choice:orders.responsibilities.applications_engineer').Enable(False)
+		ctrl(self, 'choice:orders.responsibilities.design_engineer').Enable(False)
+		ctrl(self, 'choice:orders.responsibilities.mechanical_engineer').Enable(False)
+		ctrl(self, 'choice:orders.responsibilities.mechanical_cad_designer').Enable(False)
+		ctrl(self, 'choice:orders.responsibilities.electrical_engineer').Enable(False)
+		ctrl(self, 'choice:orders.responsibilities.electrical_cad_designer').Enable(False)
+		ctrl(self, 'choice:orders.responsibilities.structural_engineer').Enable(False)
+		ctrl(self, 'choice:orders.responsibilities.structural_cad_designer').Enable(False)
+		ctrl(self, 'choice:orders.responsibilities.applications_status').Enable(False)
+		ctrl(self, 'choice:orders.responsibilities.design_status').Enable(False)
+		ctrl(self, 'choice:orders.responsibilities.mechanical_status').Enable(False)
+		ctrl(self, 'choice:orders.responsibilities.electrical_status').Enable(False)
+		ctrl(self, 'choice:orders.responsibilities.structural_status').Enable(False)
+		ctrl(self, 'button:log_time_applications_engineer').Enable(False)
+		ctrl(self, 'button:log_time_design_engineer').Enable(False)
+		ctrl(self, 'button:log_time_mechanical_engineer').Enable(False)
+		ctrl(self, 'button:log_time_electrical_engineer').Enable(False)
+		ctrl(self, 'button:log_time_structural_engineer').Enable(False)
+		ctrl(self, 'button:log_time_mechanical_cad_designer').Enable(False)
+		ctrl(self, 'button:log_time_electrical_cad_designer').Enable(False)
+		ctrl(self, 'button:log_time_structural_cad_designer').Enable(False)
+		ctrl(self, 'button:log_time').Enable(False)
+		ctrl(self, 'button:orders.target_dates.actual_de_release_notification').Enable(False)
+		ctrl(self, 'text:orders.misc.comments').Enable(False)
+
+
 
 class LogTimeDialog(wx.Dialog):
 	def __init__(self, parent, button_name=None):
@@ -1583,4 +1848,5 @@ class LogTimeDialog(wx.Dialog):
 	def on_close_dialog(self, event):
 		print 'called on_close_dialog'
 		self.Destroy()
+
 

@@ -362,10 +362,10 @@ class BetterListCtrl(wx.ListCtrl):
 		excel_range.Value = grid_values
 
 		#convert range to excel table
-		wb.ActiveSheet.ListObjects.Add(1, excel_range, None, 1).Name = 'Table1'
+		#wb.ActiveSheet.ListObjects.Add(1, excel_range, None, 1).Name = 'Table1'
 		
 		#change table style to plain whitespace
-		wb.ActiveSheet.ListObjects('Table1').TableStyle = ''
+		#wb.ActiveSheet.ListObjects('Table1').TableStyle = ''
 		
 		excel_range.Columns.AutoFit()
 
@@ -600,6 +600,118 @@ class BetterListCtrl(wx.ListCtrl):
 		if original_list_data_is_temporary == True:
 			self.original_list_data = None
 
+
+	def SortByColumn(self, sort_column_index):
+
+		headers = []
+		column_widths = []
+		for col in range(self.GetColumnCount()):
+			headers.append(self.GetColumn(col).GetText())
+			column_widths.append(self.GetColumnWidth(col))
+
+		#if original_list_data exists because of filtering, use it and sort it
+		# otherwise just temporarily save the original for sorting and building then forget about it
+		if self.original_list_data:
+			original_list_data_is_temporary = False
+		else:
+			original_list_data_is_temporary = True
+			self.original_list_data = OriginalListData(self)
+
+		#prepare the column we're going to sort by making a copy and turning strings to ints if need be etc.
+		# Also put in indexes to sort the real list by
+		prepped_column_dict = {}
+		for entry_index, entry in enumerate(self.original_list_data.entries):
+			field_value = entry.fields[sort_column_index]
+
+			#remove decorative characters from field value
+			field_value = field_value.replace(u'%', u'').replace(u'$', u'').replace(u',', u'')
+
+			#try to convert to datetime object if it's a date
+			if '/' in field_value:
+				try:
+					field_value = str(date_parser.parse(field_value))
+				except:
+					pass
+
+			#try to convert string numbers to legit numbers
+			try:
+				if len(field_value) == 1:
+					try:
+						field_value = float(field_value)
+					except:
+						pass
+
+				else:
+					try:
+						if field_value[0] == '0' and field_value[1] != '.':
+							pass #it's not a 'real' number... probaly and old format item number
+						else:
+							field_value = float(field_value)
+					except:
+						pass
+
+			except:
+				pass
+
+			prepped_column_dict[entry_index] = field_value
+
+		#↓↑
+
+		try:
+			if u'↓' in headers[sort_column_index]:
+				headers[sort_column_index] = headers[sort_column_index].replace(u'↓', u'↑')
+				sorted_prepped_column_indexes = zip(*sorted(prepped_column_dict.iteritems(), key=operator.itemgetter(1), reverse=False))[0]
+
+			elif u'↑' in headers[sort_column_index]:
+				headers[sort_column_index] = headers[sort_column_index].replace(u'↑', u'↓')
+				sorted_prepped_column_indexes = zip(*sorted(prepped_column_dict.iteritems(), key=operator.itemgetter(1), reverse=True))[0]
+
+			else:
+				headers[sort_column_index] = u'{} {}'.format(headers[sort_column_index], u'↑')
+				sorted_prepped_column_indexes = zip(*sorted(prepped_column_dict.iteritems(), key=operator.itemgetter(1), reverse=False))[0]
+		except Exception as e:
+			sorted_prepped_column_indexes = []
+			print e
+
+		#sort the original list by keying off the sorted prepped column
+		sorted_original_list_data = []
+
+		for sorted_index in sorted_prepped_column_indexes:
+			sorted_original_list_data.append(self.original_list_data.entries[sorted_index])
+
+		self.original_list_data.entries = sorted_original_list_data
+
+		for header_index, header in enumerate(headers):
+			if header_index != sort_column_index:
+				headers[header_index] = headers[header_index].replace(u'↑', u'').replace(u'↓', u'').strip()
+
+		#rebuild list
+		self.Hide()
+
+		self.DeleteAllColumns()
+		for header_index, header in enumerate(headers):
+			self.InsertColumn(header_index, header)
+
+		if self.quick_filter_frame:
+			self.build_filtered_list(self.quick_filter_frame.text.GetValue())
+		else:
+			self.build_filtered_list('')
+
+		#the build_filtered_list calls list.Show() so hide it again for column width adjusting
+		self.Hide()
+
+		#return column widths to their previous values
+		for column_widths_index, column_width in enumerate(column_widths):
+			self.SetColumnWidth(column_widths_index, column_width)
+
+		#except for the column we are sorting... as the arrow could make the column not wide enough to display
+		self.SetColumnWidth(sort_column_index, wx.LIST_AUTOSIZE_USEHEADER)
+
+		self.Show()
+
+		#ok, we're done with the temp orginal list so kill it
+		if original_list_data_is_temporary == True:
+			self.original_list_data = None
 
 
 class OriginalListData():
