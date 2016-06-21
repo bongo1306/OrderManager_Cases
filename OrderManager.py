@@ -1680,7 +1680,7 @@ if __name__ == '__main__':
 				db.eng04_connection = db.connect_to_eng04_database()
 		
 		if db.eng04_connection == None:
-			wx.MessageBox('Could not connect to database ENG04_SQL on server KW_SQL_5.\nGet with IT and establish a connection.', 'Database Connection Problem.', wx.OK | wx.ICON_ERROR)
+			wx.MessageBox('Could not connect to the database via the eng04_sql DSN.\nGet with IT to ensure the DSN is pointing to a valid server.', 'Database Connection Problem.', wx.OK | wx.ICON_ERROR)
 
 
 		#load GUI resource
