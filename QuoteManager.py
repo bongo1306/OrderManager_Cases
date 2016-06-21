@@ -3,6 +3,7 @@ import wx
 from wx import xrc
 ctrl = xrc.XRCCTRL
 
+import Database as db
 import pyodbc as mypyodbc
 from QuoteSearch import QuoteSearchDialog
 from QuoteSearch import DailyScheduleFrame
@@ -156,8 +157,7 @@ class QuoteManagerTab(object):
     def FetchDB(self):
 
         #Database connection variables
-        connStr = ( r'DRIVER={SQL Server};SERVER=cbssrvsql1;DATABASE=eng04_sql;Trusted_Connection=yes')
-        conn = mypyodbc.connect(connStr)
+        conn = db.eng04_connection ##use existing connection via the DSN instead of hardcoding. -E
         self.dbCursor = conn.cursor()
 
         self.FillAEComboBoxNames()    # Fill in the names of all application engineers in combo box
