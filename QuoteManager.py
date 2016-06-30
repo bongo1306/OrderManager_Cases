@@ -157,7 +157,7 @@ class QuoteManagerTab(object):
     def FetchDB(self):
 
         #Database connection variables
-        conn = db.eng04_connection ##use existing connection via the DSN instead of hardcoding. -E
+	conn = db.connect_to_eng04_database() #create a new database connection for QuoteManager.
         self.dbCursor = conn.cursor()
 
         self.FillAEComboBoxNames()    # Fill in the names of all application engineers in combo box
