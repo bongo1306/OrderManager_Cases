@@ -11,9 +11,10 @@ eng04_connection = None
 
 
 def connect_to_eng04_database():
-	connection_string = "DSN=eng04_sql"
+	connection_string = "DSN=eng04_sql; Uid=ENGSQL04; Pwd=EngSql$04;" ##"DSN=eng04_sql"
+        ##connection_string = r'DRIVER={SQL Server};SERVER=RCHSQLT1,1488;DATABASE=ENG04_SQL;uid=ENGSQL04;pwd=EngSql$04'
 	db_connection = pyodbc.connect(connection_string)
-	return db_connection
+	return db_connection 
 
 
 #return list of query results given an SQL statement

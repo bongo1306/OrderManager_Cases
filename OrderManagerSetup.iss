@@ -24,7 +24,7 @@ Compression=lzma
 SolidCompression=yes
 ChangesAssociations=yes
 OutputDir=..\release\NightlyBuild
-CloseApplications=force
+;CloseApplications=force
 DisableFinishedPage=yes
 
 

@@ -123,7 +123,7 @@ class QuoteManagerTab(object):
         self.printer_font_size = 10
         self.printer_paper_type = wx.PAPER_11X17          #wx.PAPER_LETTER
         self.printer_paper_orientation = wx.LANDSCAPE       #wx.LANDSCAPE
-        self.margins = (15, 15, 15, 15)	                    #specify like (0, 0, 0, 0), otherwise None means whatever default is
+        self.margins = (15, 15, 15, 15)                     #specify like (0, 0, 0, 0), otherwise None means whatever default is
 
 
     def OnPreviousRecord(self, event):
@@ -139,6 +139,7 @@ class QuoteManagerTab(object):
     def OnSeekRecord(self, event):
         #check if value is numeric
         indexString = self.m_TextRecordNum.GetValue()
+       
         if indexString.isdigit() == False:
             return
 
@@ -157,7 +158,7 @@ class QuoteManagerTab(object):
     def FetchDB(self):
 
         #Database connection variables
-	conn = db.connect_to_eng04_database() #create a new database connection for QuoteManager.
+        conn = db.connect_to_eng04_database() #create a new database connection for QuoteManager.
         self.dbCursor = conn.cursor()
 
         self.FillAEComboBoxNames()    # Fill in the names of all application engineers in combo box
@@ -503,8 +504,8 @@ class QuoteManagerTab(object):
         row = self.dbCursor.fetchone()
 
         while row != None:
-				SearchRecordKeys.append(row.RecordKey)
-				row = self.dbCursor.fetchone()
+                                SearchRecordKeys.append(row.RecordKey)
+                                row = self.dbCursor.fetchone()
 
         NumRes = len(SearchRecordKeys)
         if NumRes == 0:   #No searh results found
@@ -533,8 +534,8 @@ class QuoteManagerTab(object):
         row = self.dbCursor.fetchone()
 
         while row != None:
-				SearchRecordKeys.append(row.RecordKey)
-				row = self.dbCursor.fetchone()
+                                SearchRecordKeys.append(row.RecordKey)
+                                row = self.dbCursor.fetchone()
 
         NumRes = len(SearchRecordKeys)
         if NumRes == 0:   #No searh results found
@@ -561,8 +562,8 @@ class QuoteManagerTab(object):
         row = self.dbCursor.fetchone()
 
         while row != None:
-				SearchRecordKeys.append(row.RecordKey)
-				row = self.dbCursor.fetchone()
+                                SearchRecordKeys.append(row.RecordKey)
+                                row = self.dbCursor.fetchone()
 
         NumRes = len(SearchRecordKeys)
         if NumRes == 0:   #No searh results found
@@ -593,8 +594,8 @@ class QuoteManagerTab(object):
         row = self.dbCursor.fetchone()
 
         while row != None:
-				SearchRecordKeys.append(row.RecordKey)
-				row = self.dbCursor.fetchone()
+                                SearchRecordKeys.append(row.RecordKey)
+                                row = self.dbCursor.fetchone()
 
         NumRes = len(SearchRecordKeys)
         if NumRes == 0:   #No searh results found
@@ -1260,19 +1261,19 @@ class QuoteManagerTab(object):
 
     def OnComboCustomerSelected(self, event):
 
-		name = self.m_ComboCustomerName.GetValue()
+                name = self.m_ComboCustomerName.GetValue()
 
-		#find the customer in the list
-		try:  idx = self.CustomerData.index(name)
-		except: idx = -1
+                #find the customer in the list
+                try:  idx = self.CustomerData.index(name)
+                except: idx = -1
 
-		if idx < 0: number = ""   # customer not found in the list
-		else: number = str(self.CustomerNumbers[idx])
+                if idx < 0: number = ""   # customer not found in the list
+                else: number = str(self.CustomerNumbers[idx])
 
-		key = name + " " + number
+                key = name + " " + number
 
-		self.m_TextCustomerNumber.SetLabelText(number)
-		self.m_TextCustomerKey.SetLabelText(key)
+                self.m_TextCustomerNumber.SetLabelText(number)
+                self.m_TextCustomerKey.SetLabelText(key)
 
     def OnCheckRefrigerant(self, event):
 
@@ -1287,17 +1288,17 @@ class QuoteManagerTab(object):
 
     def GetFloatValue(self, str_value):
 
-		str_value = str_value.replace("$","")
-		str_value = str_value.replace(",","")
-		str_value = str_value.strip()
+                str_value = str_value.replace("$","")
+                str_value = str_value.replace(",","")
+                str_value = str_value.strip()
 
-		if len(str_value) == 0:
-				return -1
-		try:
-				float_value = float(str_value)
-				return float_value
-		except ValueError:
-				return -1
+                if len(str_value) == 0:
+                                return -1
+                try:
+                                float_value = float(str_value)
+                                return float_value
+                except ValueError:
+                                return -1
 
 
     def PY2STR_DATE(self,pyDateTime):
