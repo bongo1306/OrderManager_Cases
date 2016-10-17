@@ -8,7 +8,7 @@ from win32com.client import Dispatch
 from dateutil.parser import parse
 #import numpy as np
 #import easygui
-import pypyodbc
+import pyodbc
 import re
 import datetime
 import General as gn

@@ -1682,8 +1682,8 @@ if __name__ == '__main__':
                         if ee[0] == 'IM002':
                                 #try to setup the DSN
                                 print 'Trying to setup the DSN...'
-##                              call_command = r'''cd C:\WINDOWS\system32 & ODBCConf ConfigDSN "SQL Server" "DSN=eng04_sql|SERVER=cbssrvsql1|DATABASE=eng04_sql|Trusted_Connection=yes"'''
-                                call_command = r'''cd C:\WINDOWS\system32 & ODBCConf ConfigDSN "SQL Server" "DSN=eng04_sql|DRIVER={SQL Server};SERVER=RCHSQLT1,1488|DATABASE=ENG04_SQL|uid=ENGSQL04|pwd=EngSql$04"'''
+                                call_command = r'''cd C:\WINDOWS\system32 & ODBCConf ConfigDSN "SQL Server" "DSN=eng04_sql|SERVER=cbssrvsql1|DATABASE=eng04_sql|Trusted_Connection=yes"'''
+                                #call_command = r'''cd C:\WINDOWS\system32 & ODBCConf ConfigDSN "SQL Server" "DSN=eng04_sql|DRIVER={SQL Server};SERVER=RCHSQLT1,1488|DATABASE=ENG04_SQL|uid=ENGSQL04|pwd=EngSql$04"'''
                                 if subprocess.call(call_command, shell=True):
                                         wx.MessageBox('Failed to setup ENG04_SQL DSN. Contact IT.\n\n{}'.format(call_command), 'An error occurred!', wx.OK | wx.ICON_ERROR)
                                 db.eng04_connection = db.connect_to_eng04_database()
