@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+﻿#!/usr/bin/env python
 # -*- coding: utf8 -*-
 
 import os
@@ -11,8 +11,8 @@ import workdays
 import operator
 
 
-updates_dir = r"\\kw_engineering\sharepoint$\Everyone\Management Software\OrderManager\release"
-NightlyBuildPath = r"\\kw_engineering\sharepoint$\Everyone\Management Software\OrderManager\release\NightlyBuild\OrderManagerSetup.exe"
+updates_dir = r"\\cbssrvit\kwfiles\Management Software\OrderManager\release"
+NightlyBuildPath = r"\\cbssrvit\kwfiles\Management Software\OrderManager\release\NightlyBuild\OrderManagerSetup.exe"
 
 #global variable hold reference to wxGUI
 app = None
