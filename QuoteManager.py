@@ -18,6 +18,7 @@ import sys
 import threading
 import subprocess
 from CustomMessage import MessageDialog
+import time
 
 
 class QuoteManagerTab(object):
@@ -109,7 +110,11 @@ class QuoteManagerTab(object):
         self.count = 0
         self.Index = 0                              # zero based index of current record displayed
         self.dbCursor = None
+        self.dbCursor_threaded = None
         threading.Thread(target=self.FetchDB).start()
+
+        conn = db.connect_to_eng04_database() #create a new database connection for QuoteManager.
+        self.dbCursor = conn.cursor()
 
         #self.mainWnd.Maximize()
 
@@ -156,10 +161,11 @@ class QuoteManagerTab(object):
 
     # Fetch all records from the database. This function will be called from a thread
     def FetchDB(self):
+        time.sleep(2)
 
         #Database connection variables
         conn = db.connect_to_eng04_database() #create a new database connection for QuoteManager.
-        self.dbCursor = conn.cursor()
+        self.dbCursor_threaded = conn.cursor()
 
         self.FillAEComboBoxNames()    # Fill in the names of all application engineers in combo box
         self.FillSPComboBoxNames()    # Fill in the names of all saleperson in the combo box
@@ -171,12 +177,12 @@ class QuoteManagerTab(object):
 
         del self.DBRecordKeys[:]
         self.DBRecordKeys = []
-        self.dbCursor.execute('SELECT TOP 5000 RecordKey FROM dbo.QuoteMaker ORDER BY RecordModificationDate DESC, RecordModificationTime DESC')
-        row = self.dbCursor.fetchone()
+        self.dbCursor_threaded.execute('SELECT TOP 5000 RecordKey FROM dbo.QuoteMaker ORDER BY RecordModificationDate DESC, RecordModificationTime DESC')
+        row = self.dbCursor_threaded.fetchone()
 
         while row != None:
                 self.DBRecordKeys.append(row.RecordKey)
-                row = self.dbCursor.fetchone()
+                row = self.dbCursor_threaded.fetchone()
 
         self.DBRecordKeys.reverse()
         self.count = len(self.DBRecordKeys)
@@ -419,14 +425,13 @@ class QuoteManagerTab(object):
             wx.MessageBox("Unable to open project folder", "Error Opening Poject Folder",wx.OK | wx.ICON_EXCLAMATION)
 
     def FillAEComboBoxNames(self):
-
         del self.AENames[:]
-        self.dbCursor.execute('SELECT * FROM dbo.ApplicationsTable')
-        row = self.dbCursor.fetchone()
+        self.dbCursor_threaded.execute('SELECT * FROM dbo.ApplicationsTable')
+        row = self.dbCursor_threaded.fetchone()
 
         while row != None:
             self.AENames.append(row.Name)
-            row = self.dbCursor.fetchone()
+            row = self.dbCursor_threaded.fetchone()
 
         self.m_ComboAssigned.SetItems(self.AENames)
 
@@ -434,12 +439,12 @@ class QuoteManagerTab(object):
     def FillSPComboBoxNames(self):
 
         del self.SPNames[:]
-        self.dbCursor.execute('SELECT * FROM dbo.SalepersonTable')
-        row = self.dbCursor.fetchone()
+        self.dbCursor_threaded.execute('SELECT * FROM dbo.SalepersonTable')
+        row = self.dbCursor_threaded.fetchone()
 
         while row != None:
             self.SPNames.append(row.Name)
-            row = self.dbCursor.fetchone()
+            row = self.dbCursor_threaded.fetchone()
 
         self.m_ComboSP.SetItems(self.SPNames)
 
@@ -449,13 +454,13 @@ class QuoteManagerTab(object):
 
         del self.CustomerData[:]
         del self.CustomerNumbers[:]
-        self.dbCursor.execute('SELECT * FROM dbo.CustomerTable')
-        row = self.dbCursor.fetchone()
+        self.dbCursor_threaded.execute('SELECT * FROM dbo.CustomerTable')
+        row = self.dbCursor_threaded.fetchone()
 
         while row != None:
             self.CustomerData.append(row.Name)
             self.CustomerNumbers.append(row.Number)
-            row = self.dbCursor.fetchone()
+            row = self.dbCursor_threaded.fetchone()
 
         self.m_ComboCustomerName.SetItems(self.CustomerData)
 
@@ -463,12 +468,12 @@ class QuoteManagerTab(object):
 
         del self.CMATNames[:]
         self.CMATNames.append("ANY")
-        self.dbCursor.execute('SELECT * FROM dbo.AlternateCMAT')
-        row = self.dbCursor.fetchone()
+        self.dbCursor_threaded.execute('SELECT * FROM dbo.AlternateCMAT')
+        row = self.dbCursor_threaded.fetchone()
 
         while row != None:
             self.CMATNames.append(row.Name)
-            row = self.dbCursor.fetchone()
+            row = self.dbCursor_threaded.fetchone()
 
         self.m_ComboCMAT.SetItems(self.CMATNames)
 

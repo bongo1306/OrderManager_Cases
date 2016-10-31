@@ -125,8 +125,8 @@ class AdminTab(object):
         def fetchDB(self):
 
                 #Database connection variables
-                conn = db.connect_to_eng04_database() #create a new database connection for admin.                
-                self.dbCursor = conn.cursor()
+                self.conn = db.connect_to_eng04_database() #create a new database connection for admin.                
+                self.dbCursor = self.conn.cursor()
                 self.db_dropdown()
                
                 
@@ -198,7 +198,7 @@ class AdminTab(object):
                                                       Admin=?
                                                       WHERE email=?""",
                                                       (activated,name, password,dt,email,department,revision_notice,popsheet,isenginner,cad,projectenginner,projectlead,scheduler,approvefirst,approvesecond,readonly,admin,email))
-                                                        self.dbCursor.commit() 
+                                                        self.conn.commit() 
                                                         msgbox = wx.MessageBox('Data successfully updated', 'Alert')
                                                else:
                                                         msgbox = wx.MessageBox('Email should be like example@Lennoxintl.com or example@Heatcraftrpd.com', 'Alert')
@@ -227,7 +227,7 @@ class AdminTab(object):
                                               ,[can_approve_second]
                                               ,[is_readonly],[Admin]) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
                                              [activated,name, password,dt,email,department,revision_notice,popsheet,isenginner,cad,projectenginner,projectlead,scheduler,approvefirst,approvesecond,readonly,admin])                                                  
-                                               self.dbCursor.commit()
+                                               self.conn.commit()
                                                msgbox = wx.MessageBox('Data successfully inserted', 'Alert')
                                    else:
                                         msgbox = wx.MessageBox('Email should be like example@Lennoxintl.com or example@Heatcraftrpd.com', 'Alert')       
