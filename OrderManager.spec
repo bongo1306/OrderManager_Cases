@@ -1,10 +1,14 @@
 # -*- mode: python -*-
-a = Analysis(['S:\\Everyone\\Management Software\\OrderManager\\development\\OrderManager.py'],
-             pathex=['S:\\Everyone\\Management Software\\OrderManager\\development'],
+
+block_cipher = None
+
+
+a = Analysis(['OrderManager.py'],
+             pathex=['C:\\temp_build\\development', 'C:\\Python27\\libs\\', 'C:\\Python27\\Lib\\site-packages'],
              hiddenimports=[],
-             hookspath=None)
-
-
+             hookspath=None,
+             runtime_hooks=None,
+             cipher=block_cipher)
 
 files_to_include = '''
 interface.xrc,
@@ -19,11 +23,13 @@ for file_to_include in files_to_include.split(','):
           file_to_include = file_to_include.strip()
           a.datas += [(file_to_include , file_to_include , 'DATA')]
 
-pyz = PYZ(a.pure)
+
+pyz = PYZ(a.pure,
+             cipher=block_cipher)
 exe = EXE(pyz,
           a.scripts,
-          exclude_binaries=1,
-          name=os.path.join('build\\pyi.win32\\OrderManager', 'OrderManager.exe'),
+          exclude_binaries=True,
+          name='OrderManager.exe',
           debug=False,
           strip=None,
           upx=False,
@@ -34,5 +40,5 @@ coll = COLLECT(exe,
                a.zipfiles,
                a.datas,
                strip=None,
-               upx=True,
-               name=os.path.join('dist', 'OrderManager'))
+               upx=False,
+               name='OrderManager')

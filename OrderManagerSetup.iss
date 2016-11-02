@@ -19,11 +19,11 @@ DefaultDirName={pf}\{#MyAppName}
 DisableDirPage=yes
 DefaultGroupName={#MyAppName}
 DisableProgramGroupPage=yes
-OutputBaseFilename={#MyAppName}Setup
+OutputBaseFilename={#MyAppName}Setup v{#MyAppVersion}
 Compression=lzma
 SolidCompression=yes
 ChangesAssociations=yes
-OutputDir=..\release\NightlyBuild
+OutputDir=release
 ;CloseApplications=force
 DisableFinishedPage=yes
 
@@ -36,7 +36,8 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 ;Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; 
 
 [Files]
-Source: "S:\Everyone\Management Software\OrderManager\development\{#MyAppName}\*.*"; DestDir: {app}; Flags: ignoreversion recursesubdirs
+;Source: "S:\Everyone\Management Software\OrderManager\development\{#MyAppName}\*.*"; DestDir: {app}; Flags: ignoreversion recursesubdirs
+Source: "dist\{#MyAppName}\*.*"; DestDir: {app}; Flags: ignoreversion recursesubdirs
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]
