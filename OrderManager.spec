@@ -1,4 +1,5 @@
 # -*- mode: python -*-
+from glob import glob
 
 block_cipher = None
 
@@ -22,6 +23,11 @@ VisualizeEtoForecast.xlsm
 for file_to_include in files_to_include.split(','):
           file_to_include = file_to_include.strip()
           a.datas += [(file_to_include , file_to_include , 'DATA')]
+
+for file_to_include in glob('Images/*'):
+          file_to_include = file_to_include.strip()
+          a.datas += [(file_to_include , file_to_include , 'DATA')]
+
 
 
 pyz = PYZ(a.pure,
