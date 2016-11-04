@@ -1,4 +1,11 @@
 import pyodbc
+if pyodbc.version == '3.0.5':
+	print('You currently have pyodbc module version {} installed.'.format(pyodbc.version))
+	print('Some code in QuoteManager.py requires features only found in v3.0.10 or higher.')
+	print("Please upgrade pyodbc. I'll now stop the program with a division by zero :)")
+	raw_input("Press Enter to continue...")
+	1/0.
+	
 import sys
 import wx
 
