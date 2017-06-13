@@ -19,7 +19,15 @@ import threading
 import subprocess
 from CustomMessage import MessageDialog
 import time
-
+import smtplib
+from email.MIMEMultipart import MIMEMultipart
+from email.MIMEText import MIMEText
+import sys
+import wx
+DropShipOrderNumberold = ''
+datejobcompletedold = ''
+projecttypeold = ''
+salesorderold = ''
 
 class QuoteManagerTab(object):
     def init_QuoteManager_tab(self):
@@ -62,6 +70,7 @@ class QuoteManagerTab(object):
         self.Bind(wx.EVT_CHECKBOX, self.OnCheckRefrigerant, id=xrc.XRCID('m_CheckGlycol'))
 
 
+        #self.m_checkListBox = wx.FindWindowByName('m_checkListBox')
         self.m_ComboProjectType = wx.FindWindowByName('m_ComboProjectType')
         self.m_ComboBidOpen = wx.FindWindowByName('m_ComboBidOpen')
         self.m_ComboProjectStatus = wx.FindWindowByName('m_ComboProjectStatus')
@@ -107,6 +116,7 @@ class QuoteManagerTab(object):
         self.CustomerData = []
         self.CustomerNumbers = []
         self.DBRecordKeys = []
+        ##self.EmailIDS = []
         self.count = 0
         self.Index = 0                              # zero based index of current record displayed
         self.dbCursor = None
@@ -144,7 +154,7 @@ class QuoteManagerTab(object):
     def OnSeekRecord(self, event):
         #check if value is numeric
         indexString = self.m_TextRecordNum.GetValue()
-       
+
         if indexString.isdigit() == False:
             return
 
@@ -172,6 +182,7 @@ class QuoteManagerTab(object):
         self.FillCustomerComboBox()    # Fill in the names of all customers in the combo box
         self.FillCMATComboBox()        # Fill in the names of all CMAT associated with alternate refrigerants
         self.FillDBRecordKeys()
+        ##self.FillEMailCheckBoxList()
 
     def FillDBRecordKeys(self):
 
@@ -208,6 +219,9 @@ class QuoteManagerTab(object):
         #update the project type ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         ProjectType = str(DBRecord.ProjectType)
 
+        global projecttypeold
+        projecttypeold = ProjectType
+        #print(projecttypeold)
         if self.m_ComboProjectType.FindString(ProjectType) == wx.NOT_FOUND:
             self.m_ComboProjectType.Append(ProjectType)
         self.m_ComboProjectType.SetStringSelection(ProjectType)
@@ -256,10 +270,14 @@ class QuoteManagerTab(object):
 
         # update the sales order number on the display ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         SalesOrderNum = str(DBRecord.SalesOrderNum)
+        global salesorderold
+        salesorderold = SalesOrderNum
         self.m_TextSalesOrderNum.SetLabelText(SalesOrderNum)
 
         # update the drop ship order number on the display ~~~~~~~~~~~~~~~~~~~~~~~~~~
         DropShipOrderNumber = str(DBRecord.DropShipOrderNum)
+        global DropShipOrderNumberold
+        DropShipOrderNumberold = DropShipOrderNumber
         self.m_TextDropShipOrderNum.SetLabelText(DropShipOrderNumber)
 
         # update date received ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -274,6 +292,8 @@ class QuoteManagerTab(object):
         wx_Comp = gn.PY2WX(DBRecord.DateComp)
         self.m_DateCompleted.SetValue(wx_Comp)
 
+        global datejobcompletedold
+        datejobcompletedold = str(wx_Comp)
         # calculate the turn around time in days ~~~~~~~~~~~~~~~~~~~~~~~~~~
         TADays = gn.GetTADays(DBRecord.DateReceived, DBRecord.DateComp)
         self.m_TextTurnAround.SetLabelText(TADays)
@@ -425,6 +445,7 @@ class QuoteManagerTab(object):
             wx.MessageBox("Unable to open project folder", "Error Opening Poject Folder",wx.OK | wx.ICON_EXCLAMATION)
 
     def FillAEComboBoxNames(self):
+        time.sleep(2)
         del self.AENames[:]
         self.dbCursor_threaded.execute('SELECT * FROM dbo.ApplicationsTable')
         row = self.dbCursor_threaded.fetchone()
@@ -435,9 +456,19 @@ class QuoteManagerTab(object):
 
         self.m_ComboAssigned.SetItems(self.AENames)
 
+    def FillEMailCheckBoxList(self):
+        time.sleep(1)
+        del self.EmailIDS[:]
+        self.dbCursor_threaded.execute("SELECT * FROM dbo.emailforquote where etype = 'optional' and enabled = 1")
+        row = self.dbCursor_threaded.fetchone()
+
+        while row != None:
+            self.EmailIDS.append(row.name)
+            row = self.dbCursor_threaded.fetchone()
+        self.m_checkListBox.Set(self.EmailIDS)
 
     def FillSPComboBoxNames(self):
-
+        time.sleep(1)
         del self.SPNames[:]
         self.dbCursor_threaded.execute('SELECT * FROM dbo.SalepersonTable')
         row = self.dbCursor_threaded.fetchone()
@@ -967,6 +998,7 @@ class QuoteManagerTab(object):
 
         #get the project type ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         ProjectType = self.m_ComboProjectType.GetValue()
+        #print(projecttypeold)
         if len(ProjectType) <= 1:
              wx.MessageBox("Please select a valid Project Type", "Save Unsuccessful",wx.OK | wx.ICON_EXCLAMATION)
              return
@@ -1161,12 +1193,19 @@ class QuoteManagerTab(object):
             RecordCreationDate = str(wx.DateTime_Today().FormatISODate())
             RecordCreationTime = str(wx.DateTime_Now().FormatISOTime())
 
+        sqlorder = "SELECT * FROM dbo.QuoteMaker WHERE QuoteNumber = '" + QuoteNumber + "'and projecttype = 'Order'"
+        self.dbCursor.execute(sqlorder)
+        row = self.dbCursor.fetchone()
+        if row != None:
+            OrderExists = True
+        else:
+            OrderExists = False
 
         # If the record does not exisit, check to make sure that AE, Saleperson and Customer are in the allowed list
         if RecordKeyExists == False:
                 try: self.AENames.index(Assigned)
                 except:
-                        wx.MessageBox("The name of Application Engineer was not found in the allowed list", "Save Unsuccessful",wx.OK | wx.ICON_EXCLAMATION)
+                        wx.MessageBox("The name of Application was not found in the allowed list", "Save Unsuccessful",wx.OK | wx.ICON_EXCLAMATION)
                         return
 
                 try: self.SPNames.index(Saleperson)
@@ -1189,13 +1228,11 @@ class QuoteManagerTab(object):
         # If the record exists, check if the user wants to over-write the record
         ContinueSave = wx.YES
         if RecordKeyExists == True:
-            msg = ProjectType + " " + QuoteNumber  + " Revision " + RevLevel + " already exists. Continue with save and" \
-                                                                               " update existing record?"
+            msg = ProjectType + " " + QuoteNumber  + " Revision " + RevLevel + " already exists. Continue with save and update existing record?"
             ContinueSave = wx.MessageBox(msg, "Save Confirmation",wx.YES_NO | wx.ICON_INFORMATION)
 
         if ContinueSave == wx.NO:
             return
-
 
         #Check to see if there is ANOTHER record in database using the same quote number (but a different customer number).
         # All records that share the same quote number should ideally have the same customer number as well
@@ -1214,6 +1251,45 @@ class QuoteManagerTab(object):
 
         if ContinueSave == wx.NO:
             return
+
+
+        try:
+            prev_ProjectType, prev_DateComp, prev_SalesOrderNum = self.dbCursor.execute("SELECT ProjectType, DateComp, SalesOrderNum FROM dbo.QuoteMaker WHERE RecordKey=?", self.DBRecordKeys[self.Index]).fetchone()
+            
+            prev_DateComp = str(prev_DateComp).replace(' 00:00:00', '')
+            
+            current_ProjectType = ProjectType
+            current_SalesOrderNum = SalesOrderNum
+            
+            if wx_Comp.IsValid():
+                current_DateComp = wx_Comp.FormatISODate()
+            else:
+                current_DateComp = '9999-01-01'
+            
+            #print('   prev_ProjectType: {}'.format(prev_ProjectType))
+            #print('current_ProjectType: {}'.format(current_ProjectType))
+            #print('   prev_DateComp: {}'.format(prev_DateComp))
+            #print('current_DateComp: {}'.format(current_DateComp))
+            #print('   prev_SalesOrderNum: {}'.format(prev_SalesOrderNum))
+            #print('current_SalesOrderNum: {}'.format(current_SalesOrderNum))
+        
+            #check id project type old and new are different to send email
+            if prev_ProjectType != current_ProjectType and current_ProjectType == 'Order' and OrderExists == False:
+                print("ProjectType has changed to Order.")
+                self.sendemail('order',QuoteNumber,RevLevel,Assigned);
+
+            #check id completion date old and new are different to send email
+            if prev_DateComp != current_DateComp and current_DateComp != '9999-01-01' and OrderExists == True:
+                print("Completion date has changed.")
+                self.sendemail('compdate',QuoteNumber,RevLevel,RecordCreatorName);
+
+            #check id salesorder and dropshipto number old and new are different to send email
+            if prev_SalesOrderNum != current_SalesOrderNum and len(current_SalesOrderNum) != 0 and OrderExists == True:
+                print("SalesOrder has changed.")
+                self.sendemail('salesorder',QuoteNumber,RevLevel,Assigned);
+        
+        except Exception as e:
+            print(e)
 
 
         ######################### CREATE THE SQL QUERY TO SAVE ##################################
@@ -1457,11 +1533,201 @@ class QuoteManagerTab(object):
 
         self.PrintText = html
 
+    def PepareHTMLTextforemail(self):
+
+        #prepare html for sending email
+        ProjectType = self.m_ComboProjectType.GetValue()
+        BidOpen  = self.m_ComboBidOpen.GetValue()
+        ProjectStatus  = self.m_ComboProjectStatus.GetValue()
+        Zone= self.m_ComboZone.GetValue()
+
+        QuoteNumber = str(self.m_TextQuoteNumber.GetValue())
+        RevLevel = str(self.m_ComboRevLevel.GetValue())
+        SalesOrderNum = str(self.m_TextSalesOrderNum.GetValue())
+        DropShipOrderNum= str(self.m_TextDropShipOrderNum.GetValue())
+
+        wx_Rec = self.m_DateReceived.GetValue()
+        if wx_Rec.IsValid() == True: DateReceived = wx_Rec.FormatISODate()
+        else: DateReceived = ""
+
+        wx_Req = self.m_DateDue.GetValue()
+        if wx_Req.IsValid() == True: DateRequest = wx_Req.FormatISODate()
+        else:DateRequest = ""
+
+        wx_Comp = self.m_DateCompleted.GetValue()
+        if wx_Comp.IsValid() == True:DateComp = wx_Comp.FormatISODate()
+        else:DateComp = ""
+
+        TADays = self.m_TextTurnAround.GetValue()
+
+        Assigned = str(self.m_ComboAssigned.GetValue())
+        Saleperson = str(self.m_ComboSP.GetValue())
+
+        EquipPrice = str(self.m_TextEquipUSD.GetValue())
+        BuyoutPrice = str(self.m_TextBODollars.GetValue())
+        BuyoutPercent = str(self.m_TextBOPercent.GetValue())
+        Multiplier = str(self.m_TextMultiplier.GetValue())
+
+        ProjectFolder = str(self.m_TextProjectFolder.GetValue())
+        Customer = str(self.m_ComboCustomerName.GetValue())
+        CustomerNumber = str(self.m_TextCustomerNumber.GetValue())
+        CustomerKey = str(self.m_TextCustomerKey.GetValue())
+        ShipTO = str(self.m_TextShipAddress.GetValue())
+
+        Comments = str(self.m_TextNotes.GetValue()).strip()
+        Comments = Comments.replace("\n","<br>")
+
+        RecordText = self.m_TextRecordInfo.GetValue()
+        RecordText = RecordText.split('\n')
+
+        #RecordText = [R.replace("\n","<tr><td align="+"""left""" +"valign="+"""top"""+ "nowrap>") for R in RecordText]
+        RecordText = [R.replace(":","</td><td>",1) for R in RecordText]
+        RecordText = '</tr><tr><td align="left" valign="top" nowrap>'.join(filter(None,RecordText))
+
+
+        ######################### CREATE THE HTML TABLE #################################
+
+        html = '<table border =1 >'
+
+        html += '''<tr><td align="left" valign="top"  colspan="2" nowrap><strong>PROJECT INFORMATION</strong></td></tr>'''
+        #html += '''<tr><td align="left" valign="top" nowrap> </td><td></td></tr>'''
+        html += '''<tr><td align="left" valign="top" nowrap> ProjectType:</td> ''' + '''<td>{}&nbsp;</td></tr>'''.format(ProjectType)
+        html += '''<tr><td align="left" valign="top" nowrap>QuoteNumber: </td>'''+'''<td>{}&nbsp;</td></tr>'''.format(QuoteNumber)
+        html += '''<tr><td align="left" valign="top" nowrap>DateReceived: </td>''' + '''<td>{}&nbsp;</td></tr>'''.format(DateReceived)
+        html += '''<tr><td align="left" valign="top" nowrap>Salesperson:</td>'''+'''<td> {}&nbsp;</td></tr>'''.format(Saleperson)
+        html += '''<tr><td align="left" valign="top" nowrap>BuyoutPrice:</td>'''+'''<td> {}&nbsp;</td></tr>'''.format(BuyoutPrice)
+        html += '''<tr><td align="left" valign="top" nowrap>BidOpen:</td>'''+ '''<td>{}&nbsp;</td></tr>'''.format(BidOpen)
+        html += '''<tr><td align="left" valign="top" nowrap>ProjectStatus:</td>'''+'''<td> {}&nbsp;</td></tr>'''.format(ProjectStatus)
+        html += '''<tr><td align="left" valign="top" nowrap>Zone:</td>'''+'''<td> {}&nbsp;</td></tr>'''.format(Zone)
+        html += '''<tr><td align="left" valign="top" nowrap>RevLevel: </td>'''+'''<td>{}&nbsp;</td></tr>'''.format(RevLevel)
+        html += '''<tr><td align="left" valign="top" nowrap>SalesOrder#: </td>'''+'''<td>{}&nbsp;</td></tr>'''.format(SalesOrderNum)
+        html += '''<tr><td align="left" valign="top" nowrap>DropShipOrder#: </td>'''+'''<td> {}&nbsp;</td></tr>'''.format(DropShipOrderNum)
+        html += '''<tr><td align="left" valign="top" nowrap>DateRequest: </td>'''+'''<td>{}&nbsp;</td></tr>'''.format(DateRequest)
+        html += '''<tr><td align="left" valign="top" nowrap>DateComp: </td>'''+'''<td>{}&nbsp;</td></tr>'''.format(DateComp)
+        html += '''<tr><td align="left" valign="top" nowrap>TADays: </td>'''+'''<td>{}&nbsp;</td></tr>'''.format(TADays)
+        html += '''<tr><td align="left" valign="top" nowrap>Assigned: </td>'''+'''<td>{}&nbsp;</td></tr>'''.format(Assigned)
+        html += '''<tr><td align="left" valign="top" nowrap>EquipPrice:</td>'''+'''<td> {}&nbsp;</td></tr>'''.format(EquipPrice)
+        html += '''<tr><td align="left" valign="top" nowrap>BuyoutPercent:</td>'''+'''<td> {}&nbsp;</td></tr>'''.format(BuyoutPercent)
+        html += '''<tr><td align="left" valign="top" nowrap>Multiplier:</td>'''+'''<td> {}&nbsp;</td></tr>'''.format(Multiplier)
+
+        html += '''<tr><td align="left" valign="top"  colspan="2" nowrap><strong>CUSTOMER INFORMATION</strong></td></tr>'''
+
+        html += '''<tr><td align="left" valign="top" nowrap>Customer: </td>'''+'''<td>{}&nbsp;</td></tr>'''.format(Customer)
+        html += '''<tr><td align="left" valign="top" nowrap>CustomerKey:</td>'''+'''<td> {}&nbsp;</td></tr>'''.format(CustomerKey)
+        html += '''<tr><td align="left" valign="top" nowrap>ShipTO: </td>'''+'''<td>{}&nbsp;</td></tr>'''.format(ShipTO)
+        html += '''<tr><td align="left" valign="top" nowrap>CustomerNumber: </td>'''+'''<td>{}&nbsp;</td></tr>'''.format(CustomerNumber)
 
 
 
+        html += '''<tr><td align="left" valign="top"  colspan="2" nowrap><strong>RECORD INFORMATION</strong></td></tr>'''
+
+        html += '''<tr><td align="left" valign="top" nowrap>{}&nbsp;</td></tr>'''.format(RecordText)
+        html += '''<tr><td align="left" valign="top"  colspan="2" nowrap><strong>COMMENTS</strong></td></tr>'''
+        html += '''<tr><td align="left" valign="top" colspan="2" nowrap>{}&nbsp;</td></tr>'''.format(Comments)
+        html += '</table>'
+
+        self.PrintText = html
+        return html
+
+    def sendemail(self,typeofmail,quote,revision, send_to_name):
+        TO = []
+        CC = []
+        ##Emailnames = []
+        ##Emailnames = self.m_checkListBox.GetCheckedStrings();
+
+        ##email_cc_sql = "select emailid from dbo.emailforquote where etype = 'optional' and enabled = 1 and name in ('" + "','".join(Emailnames) +"')"
+
+        #toaddr = "nivedha.dhakshnamurthy@lennoxintl.com"
+        msg = MIMEMultipart()
+        #mail part for changing qoute to order
+        if typeofmail == 'order' :
+            email_to_sql = "select top 1 email from dbo.employees where name like '"+ send_to_name +"%'"
 
 
+            msg['Subject'] = "Quote  :"+quote+" revision : "+revision+" changed to order by "+str(gn.user)
+
+        #mail part for changing completion date
+        elif typeofmail == 'compdate':
+            email_to_sql = "select top 1 email from dbo.employees where name like '"+ send_to_name +"%'"
+
+            wx_Comp = self.m_DateCompleted.GetValue()
+            if wx_Comp.IsValid() == True:DateComp = wx_Comp.FormatISODate()
+            else:
+                DateComp = ""
+
+            msg['Subject'] = "Quote  :"+quote+" revision : "+revision+" Completed date updated by "+str(gn.user)
+
+        #mail part for changing salesorder and dropshipto number
+        elif typeofmail == 'salesorder':
+            email_to_sql = "select emailid from emailforquote where emailid is not null and etype = 'order' and enabled=1"
+
+            msg['Subject'] = "Quote  :"+quote+" revision : "+revision+" Salesorder and dropshipto updated "+str(gn.user)
 
 
+        try:
+            db_connection = db.connect_to_eng04_database()
+            cursor = db_connection.cursor()
+            
+            for row in cursor.execute(email_to_sql).fetchall():
+                TO.append(row[0])
+
+            if typeofmail == 'compdate':
+                #use customer service's respective POD email addresses for CC
+                pod_emails = self.dbCursor.execute("SELECT pod_email FROM dbo.customer_service_pods WHERE customer_service_name IN (SELECT RecordCreatorName FROM dbo.QuoteMaker WHERE RecordKey=?)", self.DBRecordKeys[self.Index]).fetchall()
+
+                #if no customer service POD relation is found, use all known POD email addresses for CC
+                if not pod_emails:
+                    pod_emails = self.dbCursor.execute("SELECT DISTINCT pod_email FROM dbo.customer_service_pods").fetchall()
+                    customer_service_name = self.dbCursor.execute("SELECT RecordCreatorName FROM dbo.QuoteMaker WHERE RecordKey=?", self.DBRecordKeys[self.Index]).fetchone()[0]
+                    wx.MessageBox("There are no PODs associated with Customer Service user {}.\nEmails will CC all PODs for now.\n\nAsk your Database Administrator to add {}'s respective PODs to dbo.customer_service_pods.".format(customer_service_name, customer_service_name), 'Notice!', wx.OK | wx.ICON_INFORMATION)
+            else:
+                pod_emails = []
+
+            for row in pod_emails:
+                CC.append(row[0])
+            
+            fromaddr = cursor.execute("select top 1 email from dbo.employees where name = ?", gn.user).fetchone()[0]
+
+            db_connection.close()
+
+            toaddr = ",".join(TO)
+            ccaddr = ",".join(CC)
+
+            #fromaddr = "donotreply@lennoxintl.com"
+            
+            msg['From'] = fromaddr
+            msg['To'] = toaddr
+            msg['CC'] = ccaddr
+            text = "HI , Please check the detail of the quote."
+            html = self.PepareHTMLTextforemail();
+
+            print('Sending email:')
+            print('   FROM: {}'.format(fromaddr))
+            print('   TO: {}'.format(toaddr))
+            print('   CC: {}'.format(ccaddr))
+            
+            part1 = MIMEText(text, 'plain')
+            part2 = MIMEText(html, 'html')
+            msg.attach(part2)
+            server = smtplib.SMTP('mailrelay.lennoxintl.com',25)
+            tex = msg.as_string()
+            server.sendmail(fromaddr,TO+CC,tex)
+            server.quit()
+            ProjectType = self.m_ComboProjectType.GetValue()
+            SalesOrderNum = str(self.m_TextSalesOrderNum.GetValue())
+            DropShipOrderNum= str(self.m_TextDropShipOrderNum.GetValue())
+            if typeofmail == 'salesorder' :
+                global DropShipOrderNumberold
+                DropShipOrderNumberold = DropShipOrderNum
+                global salesorderold
+                salesorderold = SalesOrderNum
+            elif typeofmail == 'compdate':
+                global datejobcompletedold
+                datejobcompletedold = str(wx_Comp)
+            elif typeofmail == 'order':
+                global projecttypeold
+                projecttypeold = ProjectType
+        except Exception as e:
+            wx.MessageBox("Record will be saved and Mail must be sent manually","Error Sending Mail",wx.OK | wx.ICON_INFORMATION)
+            pass
 
