@@ -330,9 +330,8 @@ class ReportsTab(object):
 					)
 				WHERE
 					ecrs.reason = 'Engineering Error' AND
-					((view_systems.date_actual_finish >= '{}' AND view_systems.date_actual_finish <= '{}') OR
-					(view_systems.date_actual_finish IS NULL AND view_systems.date_shipped IS NOT NULL AND view_systems.date_shipped >= '{}' AND view_systems.date_shipped <= '{}'))
-			'''.format(start_date, end_date, start_date, end_date))
+					((view_systems.date_actual_finish >= '{}' AND view_systems.date_actual_finish <= '{}'))
+			'''.format(start_date, end_date))
 			
 			try:
 				engineering_errors = len(records)

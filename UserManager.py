@@ -181,7 +181,7 @@ class AddUserDialog(wx.Dialog):
 		sql = "SELECT MAX(Number) AS HighestNum FROM " + self.tableName;
 		self.CursorName.execute(sql)
 		row = self.CursorName.fetchone()
-		if row != None: self.m_TextAddUserNum.SetLabelText(str(row.HighestNum+1))
+		if row != None: self.m_TextAddUserNum.table_used(str(row.HighestNum+1))
 
 
 	def on_close_frame(self, event):

@@ -129,7 +129,7 @@ class QuoteManagerTab(object):
         #self.mainWnd.Maximize()
 
         #bind various individual controls to theor events
-        self.m_TextProjectFolder.SetCursor(wx.StockCursor(wx.CURSOR_CLOSED_HAND))
+        self.m_TextProjectFolder.SetCursor(wx.StockCursor(1))
         self.m_TextProjectFolder.Bind(wx.EVT_LEFT_UP, self.OnClickProjectDir)
 
 
@@ -257,7 +257,7 @@ class QuoteManagerTab(object):
 
         # update the quote number on the display ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         QuoteNumber = str(DBRecord.QuoteNumber)
-        self.m_TextQuoteNumber.SetLabelText(QuoteNumber)
+        self.m_TextQuoteNumber.SetLabel(QuoteNumber)
 
 
         # update the quote revision level on the display ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -272,13 +272,13 @@ class QuoteManagerTab(object):
         SalesOrderNum = str(DBRecord.SalesOrderNum)
         global salesorderold
         salesorderold = SalesOrderNum
-        self.m_TextSalesOrderNum.SetLabelText(SalesOrderNum)
+        self.m_TextSalesOrderNum.SetLabel(SalesOrderNum)
 
         # update the drop ship order number on the display ~~~~~~~~~~~~~~~~~~~~~~~~~~
         DropShipOrderNumber = str(DBRecord.DropShipOrderNum)
         global DropShipOrderNumberold
         DropShipOrderNumberold = DropShipOrderNumber
-        self.m_TextDropShipOrderNum.SetLabelText(DropShipOrderNumber)
+        self.m_TextDropShipOrderNum.SetLabel(DropShipOrderNumber)
 
         # update date received ~~~~~~~~~~~~~~~~~~~~~~~~~~
         wx_Rec = gn.PY2WX(DBRecord.DateReceived)
@@ -296,7 +296,7 @@ class QuoteManagerTab(object):
         datejobcompletedold = str(wx_Comp)
         # calculate the turn around time in days ~~~~~~~~~~~~~~~~~~~~~~~~~~
         TADays = gn.GetTADays(DBRecord.DateReceived, DBRecord.DateComp)
-        self.m_TextTurnAround.SetLabelText(TADays)
+        self.m_TextTurnAround.SetLabel(TADays)
 
         # add the name of the appl engineer to the combo box and select it ~~~~~~~~~~~
         Assigned = str(DBRecord.Assigned)
@@ -316,28 +316,28 @@ class QuoteManagerTab(object):
         EquipPrice = "0"
         if DBRecord.EquipPrice != None:
               EquipPrice = '{0:,}'.format(DBRecord.EquipPrice)
-        self.m_TextEquipUSD.SetLabelText(EquipPrice)
+        self.m_TextEquipUSD.SetLabel(EquipPrice)
 
         BuyoutPrice = "0"
         if DBRecord.BuyoutPrice != None:
               BuyoutPrice = '{0:,}'.format(DBRecord.BuyoutPrice)
-        self.m_TextBODollars.SetLabelText(BuyoutPrice)
+        self.m_TextBODollars.SetLabel(BuyoutPrice)
 
         BuyoutPercent = "0"
         if DBRecord.BuyoutPercent != None:
               BuyoutPercent = str("%0.0f" %DBRecord.BuyoutPercent)
-        self.m_TextBOPercent.SetLabelText(BuyoutPercent)
+        self.m_TextBOPercent.SetLabel(BuyoutPercent)
 
         Multiplier = "0"
         if DBRecord.Multiplier != None:
               Multiplier = str("%0.2f" %DBRecord.Multiplier)
-        self.m_TextMultiplier.SetLabelText(Multiplier)
+        self.m_TextMultiplier.SetLabel(Multiplier)
 
         # Update the project folder
         ProjectFolder = ""
         if DBRecord.ProjectFolder != None:
               ProjectFolder = str(DBRecord.ProjectFolder)
-        self.m_TextProjectFolder.SetLabelText(ProjectFolder)
+        self.m_TextProjectFolder.SetLabel(ProjectFolder)
 
         # add the customer name, number, key and ship to address to the display ~~~~~~~
         Customer = str(DBRecord.Customer)
@@ -348,14 +348,14 @@ class QuoteManagerTab(object):
         self.m_ComboCustomerName.SetStringSelection(Customer)
 
         CustomerKey = DBRecord.CustomerKey
-        self.m_TextCustomerKey.SetLabelText(CustomerKey)
+        self.m_TextCustomerKey.SetLabel(CustomerKey)
 
         CustomerNumber = str(DBRecord.CustomerNumber)
-        self.m_TextCustomerNumber.SetLabelText(CustomerNumber)
+        self.m_TextCustomerNumber.SetLabel(CustomerNumber)
 
         ShipTO = str(DBRecord.ShipTO)
         ShipTO = ShipTO.replace("&","and")
-        self.m_TextShipAddress.SetLabelText(ShipTO)
+        self.m_TextShipAddress.SetLabel(ShipTO)
 
         #Update the record information (box in lower right hand corner of the screen) ~~~~~
         # Update the record key
@@ -379,10 +379,10 @@ class QuoteManagerTab(object):
         #if DBRecord.DrawingComments != None and len(DrawingComments) > 1:
         #    Comments = Comments + "\r\n\r\n\r\n" + DrawingComments
 
-        self.m_TextNotes.SetLabelText(Comments)
+        self.m_TextNotes.SetLabel(Comments)
         idx = self.Index + 1
-        self.m_TextRecordNum.SetLabelText(str("%0.0f" %idx))
-        self.m_TextRecordCount.SetLabelText(" of " + str(self.count))
+        self.m_TextRecordNum.SetLabel(str("%0.0f" %idx))
+        self.m_TextRecordCount.SetLabel(" of " + str(self.count))
 
         txt = "Record Key: " + RecordKey + "\r\n"
         #txt = txt + "Record Number: " + str("%0.0f" %i) + " of " + str(self.count) + "\r\n"
@@ -393,7 +393,7 @@ class QuoteManagerTab(object):
         txt = txt + "Record Modification Date: " + RecordModificationDate + "\r\n"
         txt = txt + "Record Modification Time: " + RecordModificationTime + "\r\n"
 
-        self.m_TextRecordInfo.SetLabelText (txt)
+        self.m_TextRecordInfo.SetLabel(txt)
 
         #If any of the alternate refrigerants are checked, then make the CMAT drop down visible
         CarbonDioxide = DBRecord.CarbonDioxide
@@ -435,7 +435,7 @@ class QuoteManagerTab(object):
 
     def OnProjectDirectory(self, event):
         self.ProjectFolder = self.m_BrowseDir.GetPath()
-        self.m_TextProjectFolder.SetLabelText(self.ProjectFolder)
+        self.m_TextProjectFolder.SetLabel(self.ProjectFolder)
 
     def OnClickProjectDir(self, event):
         dir = self.m_TextProjectFolder.GetValue()
@@ -788,7 +788,7 @@ class QuoteManagerTab(object):
 
         # update the quote number on the display ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         QuoteNumber = ""
-        self.m_TextQuoteNumber.SetLabelText(QuoteNumber)
+        self.m_TextQuoteNumber.SetLabel(QuoteNumber)
 
 
         # update the quote revision level on the display ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -801,11 +801,11 @@ class QuoteManagerTab(object):
 
         # update the sales order number on the display ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         SalesOrderNum = ""
-        self.m_TextSalesOrderNum.SetLabelText(SalesOrderNum)
+        self.m_TextSalesOrderNum.SetLabel(SalesOrderNum)
 
         # update the drop ship order number on the display ~~~~~~~~~~~~~~~~~~~~~~~~~~
         DropShipOrderNumber = ""
-        self.m_TextDropShipOrderNum.SetLabelText(DropShipOrderNumber)
+        self.m_TextDropShipOrderNum.SetLabel(DropShipOrderNumber)
 
         # update date received ~~~~~~~~~~~~~~~~~~~~~~~~~~
         self.m_DateReceived.SetValue(wx.DateTime_Today())
@@ -820,7 +820,7 @@ class QuoteManagerTab(object):
         self.m_DateCompleted.SetValue(wx.DefaultDateTime)
 
         # calculate the turn around time in days ~~~~~~~~~~~~~~~~~~~~~~~~~~
-        self.m_TextTurnAround.SetLabelText("")
+        self.m_TextTurnAround.SetLabel("")
 
         # add the name of the appl engineer to the combo box and select it ~~~~~~~~~~~
         Assigned = ""
@@ -838,33 +838,33 @@ class QuoteManagerTab(object):
 
         # add the Equipment and Buyout to the display ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         EquipPrice = ""
-        self.m_TextEquipUSD.SetLabelText(EquipPrice)
+        self.m_TextEquipUSD.SetLabel(EquipPrice)
 
         BuyoutPrice = ""
-        self.m_TextBODollars.SetLabelText(BuyoutPrice)
+        self.m_TextBODollars.SetLabel(BuyoutPrice)
 
         BuyoutPercent = ""
-        self.m_TextBOPercent.SetLabelText(BuyoutPercent)
+        self.m_TextBOPercent.SetLabel(BuyoutPercent)
 
         Multiplier = ""
-        self.m_TextMultiplier.SetLabelText(Multiplier)
+        self.m_TextMultiplier.SetLabel(Multiplier)
 
         # Update the project folder
         ProjectFolder = ""
-        self.m_TextProjectFolder.SetLabelText(ProjectFolder)
+        self.m_TextProjectFolder.SetLabel(ProjectFolder)
 
         # add the customer name, number, key and ship to address to the display ~~~~~~~
         Customer = ""
-        self.m_ComboCustomerName.SetLabelText(Customer)
+        self.m_ComboCustomerName.SetLabel(Customer)
 
         CustomerKey = ""
-        self.m_TextCustomerKey.SetLabelText(CustomerKey)
+        self.m_TextCustomerKey.SetLabel(CustomerKey)
 
         CustomerNumber = ""
-        self.m_TextCustomerNumber.SetLabelText(CustomerNumber)
+        self.m_TextCustomerNumber.SetLabel(CustomerNumber)
 
         ShipTO = ""
-        self.m_TextShipAddress.SetLabelText(ShipTO)
+        self.m_TextShipAddress.SetLabel(ShipTO)
 
         #Update the record information (box in lower right hand corner of the screen) ~~~~~
         # Update the record key
@@ -882,10 +882,10 @@ class QuoteManagerTab(object):
 
         #update notes and record information
         Comments = ""
-        self.m_TextNotes.SetLabelText(Comments)
+        self.m_TextNotes.SetLabel(Comments)
 
-        self.m_TextRecordNum.SetLabelText("")
-        self.m_TextRecordCount.SetLabelText(" of " + str(self.count))
+        self.m_TextRecordNum.SetLabel("")
+        self.m_TextRecordCount.SetLabel(" of " + str(self.count))
 
         txt = "Record Key: " + RecordKey + "\r\n"
         txt = txt + "Record Creator Name: "+ RecordCreatorName + "\r\n"
@@ -895,7 +895,7 @@ class QuoteManagerTab(object):
         txt = txt + "Record Modification Date: " + RecordModificationDate + "\r\n"
         txt = txt + "Record Modification Time: " + RecordModificationTime + "\r\n"
 
-        self.m_TextRecordInfo.SetLabelText (txt)
+        self.m_TextRecordInfo.SetLabel (txt)
 
     def OnDeleteRecord(self, event):
         #if read only mode then exit
@@ -961,7 +961,7 @@ class QuoteManagerTab(object):
 
         # update the quote number on the display ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         QuoteNumber = self.m_TextQuoteNumber.GetLabelText() + "-COPY"
-        self.m_TextQuoteNumber.SetLabelText(QuoteNumber)
+        self.m_TextQuoteNumber.SetLabel(QuoteNumber)
 
         #Update the record information (box in lower right hand corner of the screen) ~~~~~
         # Update the record key
@@ -985,8 +985,8 @@ class QuoteManagerTab(object):
         txt = txt + "Record Modification Date: " + RecordModificationDate + "\r\n"
         txt = txt + "Record Modification Time: " + RecordModificationTime + "\r\n"
 
-        self.m_TextRecordInfo.SetLabelText (txt)
-        self.m_TextRecordNum.SetLabelText("")
+        self.m_TextRecordInfo.SetLabel (txt)
+        self.m_TextRecordNum.SetLabel("")
 
 
     def OnSaveRecord(self, event):
@@ -1085,10 +1085,10 @@ class QuoteManagerTab(object):
         elif wx_Comp.IsValid() == True:
             DateComp = wx_Comp.FormatISODate()
             TADays = str(workdays.networkdays(PyReceived, PyComplete)-1)
-            self.m_TextTurnAround.SetLabelText(TADays)
+            self.m_TextTurnAround.SetLabel(TADays)
         else:
             DateComp = "1/1/9999"  #Invalid Date
-            self.m_TextTurnAround.SetLabelText("TBD")
+            self.m_TextTurnAround.SetLabel("TBD")
 
 
         # get the name of the appl engineer selected in the combo box ~~~~~~~~~~~
@@ -1353,8 +1353,8 @@ class QuoteManagerTab(object):
 
                 key = name + " " + number
 
-                self.m_TextCustomerNumber.SetLabelText(number)
-                self.m_TextCustomerKey.SetLabelText(key)
+                self.m_TextCustomerNumber.SetLabel(number)
+                self.m_TextCustomerKey.SetLabel(key)
 
     def OnCheckRefrigerant(self, event):
 
