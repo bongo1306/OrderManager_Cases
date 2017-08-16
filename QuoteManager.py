@@ -226,11 +226,14 @@ class QuoteManagerTab(object):
             self.m_ComboProjectType.Append(ProjectType)
         self.m_ComboProjectType.SetStringSelection(ProjectType)
 
+        #if px != 'Quote':
+        #   self.m_DateDue.Enable()
+
         #update the bid open ("Yes" or "No") ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         BidOpen  = str(DBRecord.BidOpen)
         BidOpen = BidOpen.strip()
 
-        if len(BidOpen) < 1: BidOpen = "NA"
+        if len(BidOpen) < 1: BidOpen = ""
 
         if self.m_ComboBidOpen.FindString(BidOpen) == wx.NOT_FOUND:
             self.m_ComboBidOpen.Append(BidOpen)
@@ -266,7 +269,6 @@ class QuoteManagerTab(object):
         if self.m_ComboRevLevel.FindString(RevLevel) == wx.NOT_FOUND:
             self.m_ComboRevLevel.Append(RevLevel)
         self.m_ComboRevLevel.SetStringSelection(RevLevel)
-
 
         # update the sales order number on the display ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         SalesOrderNum = str(DBRecord.SalesOrderNum)
@@ -766,7 +768,7 @@ class QuoteManagerTab(object):
         self.m_ComboProjectType.SetStringSelection(ProjectType)
 
         #update the bid open ("Yes" or "No") ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        BidOpen  = "NA"
+        BidOpen  = ""
 
         if self.m_ComboBidOpen.FindString(BidOpen) == wx.NOT_FOUND:
             self.m_ComboBidOpen.Append(BidOpen)
@@ -797,7 +799,6 @@ class QuoteManagerTab(object):
         if self.m_ComboRevLevel.FindString(RevLevel) == wx.NOT_FOUND:
             self.m_ComboRevLevel.Append(RevLevel)
         self.m_ComboRevLevel.SetStringSelection(RevLevel)
-
 
         # update the sales order number on the display ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         SalesOrderNum = ""
@@ -1061,9 +1062,42 @@ class QuoteManagerTab(object):
             wx.MessageBox("Please select a valid Date Received", "Save Unsuccessful",wx.OK | wx.ICON_EXCLAMATION)
             return
 
-
          # get date requested ~~~~~~~~~~~~~~~~~~~~~~~~~~
         wx_Req = self.m_DateDue.GetValue()
+
+         #define a function to calculate working days between today's date and expected/due date.
+        def workday_diff(date1, date2):
+            date_format = "%d/%m/%Y %H:%M:%S"
+            d1 = datetime.datetime.strptime(date1, date_format)
+            d2 = datetime.datetime.strptime(date2, date_format)
+
+             #Query holidays list from Database
+            sqlHolidayquery = 'SELECT * from Holidays'
+            holidays = self.dbCursor.execute(sqlHolidayquery).fetchall()
+            holidays_list = []
+            for holiday in holidays:
+                for date in holiday:
+                    holidays_list.append(date)
+            #print holidays_list
+             #Convert holiday from holidays list into datetime object and append in list vac
+            vac = []
+            for i in range(len(holidays_list)):
+                vac.append(datetime.datetime.strptime(holidays_list[i], date_format))
+
+             #finally calculate the no. of business days between today's date and expected date
+            workday_diff = workdays.networkdays(d1, d2, vac)
+            return workday_diff
+
+         #Don't allow user to save record if ProjectType is Quote and BidOpen is No and RevLevel is 0
+        if ProjectType == 'Quote' and BidOpen == 'No' and RevLevel == '0':
+             #store today's date with time in variable i
+            i = datetime.datetime.now()
+             #remove floating part of seconds from today's date
+            date_today = i.strftime('%d/%m/%Y %H:%M:%S')
+             #call workday_diff function
+            if workday_diff(str(date_today), str(wx_Req)) >= 5:
+                wx.MessageBox("You cannot select Expected Date greater than 4 business days from Today's Date if ProjectType is Quote and BidOpen/Non-Std is No and RevisionLevel is 0. Please select Expected Date within 4 business days from Today's Date to successfully save record.", "Save Unsuccessful",wx.OK | wx.ICON_EXCLAMATION)
+                return
 
         if wx_Req.IsValid() == True and wx_Rec.IsLaterThan(wx_Req):
             wx.MessageBox("Due Date cannot be earlier than date received", "Save Unsuccessful",wx.OK | wx.ICON_EXCLAMATION)
@@ -1290,6 +1324,10 @@ class QuoteManagerTab(object):
         
         except Exception as e:
             print(e)
+
+        if ProjectType == 'Quote' and BidOpen == 'No' and RevLevel == '0':
+            print("New Quote added with BidOpen = No and RevLevel = 0. Notify salespersion by email.")
+            self.sendemail('Quote', QuoteNumber, RevLevel, Saleperson)
 
 
         ######################### CREATE THE SQL QUERY TO SAVE ##################################
@@ -1645,6 +1683,12 @@ class QuoteManagerTab(object):
 
 
             msg['Subject'] = "Quote  :"+quote+" revision : "+revision+" changed to order by "+str(gn.user)
+
+        #mail part for notifying salesperson about new Quote record
+        elif typeofmail == 'Quote':
+            email_to_sql = "select top 1 email from tss.salespersons where name like '%" + send_to_name + "%'"
+            msg['Subject'] = "New Quote :" + quote + " revision : " + revision + " added by " + str(gn.user) + " due within 4 business days from today! "
+
 
         #mail part for changing completion date
         elif typeofmail == 'compdate':

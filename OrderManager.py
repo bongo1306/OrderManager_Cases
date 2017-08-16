@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf8 -*-
-version = '4.0'
+version = '4.1'
 
 import sys
 import os
@@ -9,6 +9,7 @@ import subprocess
 import threading
 import json
 import shutil
+import decimal
 
 
 import wx                               #wxWidgets used as the GUI
