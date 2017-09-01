@@ -93,6 +93,8 @@ class QuoteManagerTab(object):
         self.m_TextMultiplier = wx.FindWindowByName('m_TextMultiplier')
         self.m_BrowseDir =  wx.FindWindowByName('m_BrowseDir')
         self. m_TextProjectFolder = wx.FindWindowByName('m_TextProjectFolder')
+        self.m_TextEquiphrs = wx.FindWindowByName('m_TextEquiphrs')
+        self.m_ComboQuoteForm = wx.FindWindowByName('m_ComboQuoteForm')
         self.m_ComboCustomerName = wx.FindWindowByName('m_ComboCustomerName')
         self.m_TextCustomerKey  = wx.FindWindowByName('m_TextCustomerKey')
         self.m_TextCustomerNumber = wx.FindWindowByName('m_TextCustomerNumber')
@@ -108,6 +110,7 @@ class QuoteManagerTab(object):
         self.m_TextRecordNum = wx.FindWindowByName('m_TextRecordNum')
         self.m_TextRecordCount = wx.FindWindowByName('m_TextRecordCount')
         self.mainWnd = wx.FindWindowByName('frame:main')
+
 
         #Database connection variables
         self.AENames = []
@@ -340,6 +343,18 @@ class QuoteManagerTab(object):
         if DBRecord.ProjectFolder != None:
               ProjectFolder = str(DBRecord.ProjectFolder)
         self.m_TextProjectFolder.SetLabel(ProjectFolder)
+
+        # Update Quote Form Received?
+        QuoteForm = ""
+        if DBRecord.QuoteFormReceived != None:
+            QuoteForm = str(DBRecord.QuoteFormReceived)
+        self.m_ComboQuoteForm.SetStringSelection(QuoteForm)
+
+        # Update Equipment (hours)
+        Equiphrs = ""
+        if DBRecord.EquipmentHours != None:
+            Equiphrs = str(DBRecord.EquipmentHours)
+        self.m_TextEquiphrs.SetLabel(Equiphrs)
 
         # add the customer name, number, key and ship to address to the display ~~~~~~~
         Customer = str(DBRecord.Customer)
@@ -854,6 +869,16 @@ class QuoteManagerTab(object):
         ProjectFolder = ""
         self.m_TextProjectFolder.SetLabel(ProjectFolder)
 
+        # Update Quote Form Received?
+        QuoteForm = ""
+        if self.m_ComboQuoteForm.FindString(QuoteForm) == wx.NOT_FOUND:
+            self.m_ComboQuoteForm.Append(QuoteForm)
+        self.m_ComboQuoteForm.SetStringSelection(QuoteForm)
+
+        # Update Equipment (hours)
+        Equiphrs = ""
+        self.m_TextEquiphrs.SetLabel(Equiphrs)
+
         # add the customer name, number, key and ship to address to the display ~~~~~~~
         Customer = ""
         self.m_ComboCustomerName.SetLabel(Customer)
@@ -1094,9 +1119,25 @@ class QuoteManagerTab(object):
             i = datetime.datetime.now()
              #remove floating part of seconds from today's date
             date_today = i.strftime('%d/%m/%Y %H:%M:%S')
+
+            xx = datetime.date.today()
+            #print xx
+            for x in range(1,50): #I know while loop is better option but I don't want it to get stuck in infinite loop, besides hey who has more than 50 days of vacation?
+                yy = xx + datetime.timedelta(x)
+                #print yy
+                xxx = xx.strftime('%d/%m/%Y %H:%M:%S')
+                #print xxx
+                yyy= yy.strftime('%d/%m/%Y %H:%M:%S')
+                #print yyy
+
+                if workday_diff(str(xxx), str(yyy)) == 5:
+                    fourth_date = yy
+                else:
+                    print 'Somethings wrong with fourth date code'
+
              #call workday_diff function
-            if workday_diff(str(date_today), str(wx_Req)) >= 5:
-                wx.MessageBox("You cannot select Expected Date greater than 4 business days from Today's Date if ProjectType is Quote and BidOpen/Non-Std is No and RevisionLevel is 0. Please select Expected Date within 4 business days from Today's Date to successfully save record.", "Save Unsuccessful",wx.OK | wx.ICON_EXCLAMATION)
+            if workday_diff(str(date_today), str(wx_Req)) > 4:
+                wx.MessageBox("You cannot select Expected Date greater than 4 business days from Today's Date if ProjectType is Quote and BidOpen/Non-Std is No and RevisionLevel is 0. Please select Expected Date within {} to successfully save record.".format(fourth_date), "Save Unsuccessful",wx.OK | wx.ICON_EXCLAMATION)
                 return
 
         if wx_Req.IsValid() == True and wx_Rec.IsLaterThan(wx_Req):
@@ -1163,6 +1204,20 @@ class QuoteManagerTab(object):
 
         # Get the project folder
         ProjectFolder = str(self.m_TextProjectFolder.GetValue())
+
+        # get the Quote Form Received? ("Yes" or "No") ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        QuoteForm = self.m_ComboQuoteForm.GetValue()
+        if len(QuoteForm) <= 1:
+            wx.MessageBox("Please select a valid choice for Quote Form Received?", "Save Unsuccessful", wx.OK | wx.ICON_EXCLAMATION)
+            return
+
+        # get the Equipment (hours)~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        Equiphrs = str(self.m_TextEquiphrs.GetValue())
+        EquiphrsFloat = self.GetFloatValue(Equiphrs)
+        if EquiphrsFloat == -1:
+            Equiphrs = "0"
+        else:
+            Equiphrs = str(EquiphrsFloat)
 
         # get the customer name, number, key and ship to address ~~~~~~~
         Customer = str(self.m_ComboCustomerName.GetValue())
@@ -1325,8 +1380,8 @@ class QuoteManagerTab(object):
         except Exception as e:
             print(e)
 
-        if ProjectType == 'Quote' and BidOpen == 'No' and RevLevel == '0':
-            print("New Quote added with BidOpen = No and RevLevel = 0. Notify salespersion by email.")
+        if ProjectType == 'Quote' and (BidOpen == 'No' or 'Yes') and RevLevel == '0':
+            print("New Quote added with BidOpen = No/Yes and RevLevel = 0. Notify salespersion by email.")
             self.sendemail('Quote', QuoteNumber, RevLevel, Saleperson)
 
 
@@ -1335,8 +1390,8 @@ class QuoteManagerTab(object):
               "SalesOrderNum, DropShipOrderNum, DateReceived, DateRequest, DateComp, Assigned, Saleperson, EquipPrice, " \
               "BuyoutPrice, BuyoutPercent, Multiplier, ProjectFolder, Customer, CustomerKey, CustomerNumber, ShipTO, " \
               "RecordKey, RecordCreatorName, RecordCreationDate, RecordCreationTime, RecordModifierName, RecordModificationDate, " \
-              "RecordModificationTime, Comments, CarbonDioxide, Ammonia, Glycol, CMAT) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?" \
-              ",?,?,?,?,?,?,?,?,?)"
+              "RecordModificationTime, Comments, CarbonDioxide, Ammonia, Glycol, CMAT, QuoteFormReceived, EquipmentHours) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?" \
+              ",?,?,?,?,?,?,?,?,?,?,?)"
 
 
         sql_update = "UPDATE dbo.QuoteMaker SET ProjectType=?, BidOpen=?, ProjectStatus=?, Zone=?,QuoteNumber=?, " \
@@ -1344,7 +1399,7 @@ class QuoteManagerTab(object):
                      "Assigned=?,Saleperson=?,EquipPrice=?,BuyoutPrice=?, BuyoutPercent=?, Multiplier=?, " \
                      "ProjectFolder=?, Customer=?,CustomerKey=?,CustomerNumber=?,ShipTO=?,RecordCreatorName=?," \
                      "RecordCreationDate=?, RecordCreationTime=?, RecordModifierName=?, RecordModificationDate=?, " \
-                     "RecordModificationTime=?,Comments=?, CarbonDioxide=?,Ammonia=?,Glycol=?,CMAT=? WHERE RecordKey=?"
+                     "RecordModificationTime=?,Comments=?, CarbonDioxide=?,Ammonia=?,Glycol=?,CMAT=?, QuoteFormReceived=?, EquipmentHours=? WHERE RecordKey=?"
 
 
         if RecordKeyExists == True:
@@ -1353,7 +1408,7 @@ class QuoteManagerTab(object):
                                   float(EquipPrice), float(BuyoutPrice), float(BuyoutPercent), float(Multiplier),
                                   ProjectFolder,Customer, CustomerKey, int(CustomerNumber),ShipTO,RecordCreatorName,
                                   RecordCreationDate,  RecordCreationTime, RecordModifierName, RecordModificationDate,
-                                  RecordModificationTime,  Comments,CO2, Ammonia, Glycol, CMAT, RecordKey)
+                                  RecordModificationTime,  Comments,CO2, Ammonia, Glycol, CMAT, QuoteForm, float(Equiphrs), RecordKey)
             self.dbCursor.commit()
             wx.MessageBox("The record was successfully saved","Save Successful",wx.OK | wx.ICON_INFORMATION)
             return
@@ -1366,7 +1421,7 @@ class QuoteManagerTab(object):
                                     Assigned, Saleperson,  float(EquipPrice), float(BuyoutPrice), float(BuyoutPercent),
                                     float(Multiplier), ProjectFolder,Customer, CustomerKey, int(CustomerNumber), ShipTO,
                                     RecordKey, RecordCreatorName, RecordCreationDate,  RecordCreationTime, RecordModifierName,
-                                    RecordModificationDate,  RecordModificationTime,  Comments,CO2, Ammonia, Glycol, CMAT)
+                                    RecordModificationDate,  RecordModificationTime,  Comments,CO2, Ammonia, Glycol, CMAT, QuoteForm, float(Equiphrs))
         self.dbCursor.commit()
 
         #Add the new record to the DBRecordKeys list
@@ -1517,6 +1572,10 @@ class QuoteManagerTab(object):
         Multiplier = str(self.m_TextMultiplier.GetValue())
 
         ProjectFolder = str(self.m_TextProjectFolder.GetValue())
+
+        QuoteForm = str(self.m_ComboQuoteForm.GetValue())
+        Equiphrs = str(self.m_TextEquiphrs.GetValue())
+
         Customer = str(self.m_ComboCustomerName.GetValue())
         CustomerNumber = str(self.m_TextCustomerNumber.GetValue())
         CustomerKey = str(self.m_TextCustomerKey.GetValue())
@@ -1552,6 +1611,8 @@ class QuoteManagerTab(object):
         html += '''<tr><td align="left" valign="top" nowrap>BuyoutPrice: {}&nbsp;</td></tr>'''.format(BuyoutPrice)
         html += '''<tr><td align="left" valign="top" nowrap>BuyoutPercent: {}&nbsp;</td></tr>'''.format(BuyoutPercent)
         html += '''<tr><td align="left" valign="top" nowrap>Multiplier: {}&nbsp;</td></tr>'''.format(Multiplier)
+        html += '''<tr><td align="left" valign="top" nowrap>QuoteFormReceived: {}&nbsp;</td></tr>'''.format(QuoteForm)
+        html += '''<tr><td align="left" valign="top" nowrap>Equipment(Hours): {}&nbsp;</td></tr>'''.format(Equiphrs)
 
         html += '''<tr><td align="left" valign="top" nowrap> </td></tr>'''
         html += '''<tr><td align="left" valign="top" nowrap><strong>CUSTOMER INFORMATION</strong></td></tr>'''
@@ -1607,6 +1668,9 @@ class QuoteManagerTab(object):
         Multiplier = str(self.m_TextMultiplier.GetValue())
 
         ProjectFolder = str(self.m_TextProjectFolder.GetValue())
+        QuoteForm = str(self.m_ComboQuoteForm.GetValue())
+        Equiphrs = str(self.m_TextEquiphrs.GetValue())
+
         Customer = str(self.m_ComboCustomerName.GetValue())
         CustomerNumber = str(self.m_TextCustomerNumber.GetValue())
         CustomerKey = str(self.m_TextCustomerKey.GetValue())
@@ -1647,6 +1711,8 @@ class QuoteManagerTab(object):
         html += '''<tr><td align="left" valign="top" nowrap>EquipPrice:</td>'''+'''<td> {}&nbsp;</td></tr>'''.format(EquipPrice)
         html += '''<tr><td align="left" valign="top" nowrap>BuyoutPercent:</td>'''+'''<td> {}&nbsp;</td></tr>'''.format(BuyoutPercent)
         html += '''<tr><td align="left" valign="top" nowrap>Multiplier:</td>'''+'''<td> {}&nbsp;</td></tr>'''.format(Multiplier)
+        html += '''<tr><td align="left" valign="top" nowrap>QuoteFormReceived:</td>''' + '''<td> {}&nbsp;</td></tr>'''.format(QuoteForm)
+        html += '''<tr><td align="left" valign="top" nowrap>Equipment(hours):</td>''' + '''<td> {}&nbsp;</td></tr>'''.format(Equiphrs)
 
         html += '''<tr><td align="left" valign="top"  colspan="2" nowrap><strong>CUSTOMER INFORMATION</strong></td></tr>'''
 

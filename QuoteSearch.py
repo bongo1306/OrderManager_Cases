@@ -50,6 +50,10 @@ class QuoteSearchDialog(wx.Dialog):
                 self.m_TextSearchEquipMAX = wx.FindWindowByName('m_TextSearchEquipMAX')
                 self.m_TextSearchBuyoutMIN = wx.FindWindowByName('m_TextSearchBuyoutMIN')
                 self.m_TextSearchBuyoutMAX = wx.FindWindowByName('m_TextSearchBuyoutMAX')
+                self.m_ComboBid = wx.FindWindowByName('m_ComboBid')
+                self.m_ComboQuoteFormReceived = wx.FindWindowByName('m_ComboQuoteFormReceived')
+                self.m_TextCtrlEquipHrsMin = wx.FindWindowByName('m_TextCtrlEquipHrsMin')
+                self.m_TextCtrlEquipHrsMax = wx.FindWindowByName('m_TextCtrlEquipHrsMax')
 
                 self.m_TextSearchCustName = wx.FindWindowByName('m_TextSearchCustName')
                 self.m_TextSearchCustNum = wx.FindWindowByName('m_TextSearchCustNum')
@@ -83,12 +87,12 @@ class QuoteSearchDialog(wx.Dialog):
                 self.m_DateDueEnd.SetValue(wxDate)
                 self.m_DateCompEnd.SetValue(wx.DefaultDateTime)
 
-                self.HeaderDBNames = ["", "RecordKey", "ProjectType", "QuoteNumber", "RevLevel", "SalesOrderNum","DropShipOrderNum",
+                self.HeaderDBNames = ["", "RecordKey", "ProjectType", "BidOpen", "QuoteNumber", "RevLevel", "SalesOrderNum","DropShipOrderNum",
                                                           "DateReceived" ,"DateRequest","DateComp","", "Assigned","Saleperson","EquipPrice", "BuyoutPrice",
-                                                          "CustomerKey","ShipTO","CMAT"]
+                                                          "CustomerKey","ShipTO","CMAT","QuoteFormReceived","EquipmentHours"]
 
-                self.Headers = ["No.","Record Key" ,"Project Type","Quote Number","Rev","Sales Order No.","Drop Ship No.", "Date Received",
-                                   "Date Expected","Date Completed","TA Days", "Application Engineer","Salesperson","Equipment (USD)","Buyouts (USD)",
+                self.Headers = ["No.","Record Key" ,"Project Type", "BidOpen/Non-Std" , "Quote Number","Rev","Sales Order No.","Drop Ship No.", "Date Received",
+                                   "Date Expected","Date Completed","TA Days", "Application Engineer","Salesperson","Equipment (USD)","Buyouts (USD)", "Quote Form Received","Equipment(hours)",
                                    "Customer Key","Ship TO","CMAT"]
 
                 self.ColumnCount = len(self.Headers)
@@ -206,6 +210,13 @@ class QuoteSearchDialog(wx.Dialog):
                 if Rev.isdigit() == True:
                                 self.sql += " AND (RevLevel=" + Rev + ")"
 
+                # ----------------------------------------------------------------------
+                # Get the revision number search field
+                BidOpen = self.m_ComboBid.GetValue()
+                if len(BidOpen)> 1:
+                                self.sql += " AND (BidOpen LIKE ?)"
+                                parameters.append(BidOpen)
+
                 #----------------------------------------------------------------------
                 #Get the sales and drop ship number search field
                 SalesOrder = self.m_TextSearchSalesOrder.GetValue()
@@ -245,10 +256,25 @@ class QuoteSearchDialog(wx.Dialog):
                                 self.sql += " AND (EquipPrice >= " + EquipMin + ")"
                 if self.GetNumber(EquipMax) >= 0:
                                 self.sql += " AND (EquipPrice <= " + EquipMax + ")"
+
                 if self.GetNumber(BOMin) >= 0:
                                 self.sql += " AND (BuyoutPrice >= " + BOMin + ")"
                 if self.GetNumber(BOMax) >= 0:
                                 self.sql += " AND (BuyoutPrice <= " + BOMax + ")"
+
+                # ----------------------------------------------------------------------
+                # Get the Quote Form Received Selection and Equipment Hours
+                QuoteForm = self.m_ComboQuoteFormReceived.GetValue()
+                if len(QuoteForm) > 1:
+                        self.sql += " AND (QuoteFormReceived LIKE ?)"
+                        parameters.append(QuoteForm)
+
+                EquipHrsMin = self.m_TextCtrlEquipHrsMin.GetValue()
+                EquipHrsMax = self.m_TextCtrlEquipHrsMax.GetValue()
+                if self.GetNumber(EquipHrsMin) >= 0:
+                        self.sql += "AND (EquipmentHours >= " + EquipHrsMin + ")"
+                if self.GetNumber(EquipHrsMax) >= 0:
+                        self.sql += "AND (EquipmentHours <= " + EquipHrsMax + ")"
 
                 #----------------------------------------------------------------------
                 #Get the customer name search field
@@ -302,11 +328,11 @@ class QuoteSearchDialog(wx.Dialog):
 
                 while row != None:
 
-                                GridRow = [str(NumRes), str(row.RecordKey),str(row.ProjectType),str(row.QuoteNumber),str(row.RevLevel),
+                                GridRow = [str(NumRes), str(row.RecordKey),str(row.ProjectType),str(row.BidOpen), str(row.QuoteNumber),str(row.RevLevel),
                                                    str(row.SalesOrderNum), str(row.DropShipOrderNum),self.GetDateString(row.DateReceived),
                                                    self.GetDateString(row.DateRequest),self.GetDateString(row.DateComp),
                                                    gn.GetTADays(row.DateReceived, row.DateComp), str(row.Assigned), str(row.Saleperson),
-                                                   str(row.EquipPrice),str(row.BuyoutPrice),str(row.CustomerKey), str(row.ShipTO).strip(), str(row.CMAT).strip()]
+                                                   str(row.EquipPrice),str(row.BuyoutPrice),str(row.QuoteFormReceived), str(row.EquipmentHours), str(row.CustomerKey), str(row.ShipTO).strip(), str(row.CMAT).strip()]
 
                                 self.SearchResultGrid.append(GridRow)
                                 SearchRecordKeys.append(row.RecordKey)

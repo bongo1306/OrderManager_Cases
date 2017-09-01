@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf8 -*-
-version = '4.1'
+version = '4.2'
 
 import sys
 import os
@@ -321,8 +321,8 @@ class MainFrame(wx.Frame, Search.SearchTab, Scheduling.SchedulingTab, QuoteManag
                 
                 #load frame XRC description
                 pre = wx.PreFrame()
-                res = xrc.XmlResource.Get() 
-                res.LoadOnFrame(pre, parent, "frame:main") 
+                res = xrc.XmlResource.Get()
+                res.LoadOnFrame(pre, parent, "frame:main")
                 self.PostCreate(pre)
                 self.SetIcon(wx.Icon(gn.resource_path('OrderManager.ico'), wx.BITMAP_TYPE_ICO))               
                 self.name=wx.FindWindowByName('choice:name')
@@ -362,6 +362,7 @@ class MainFrame(wx.Frame, Search.SearchTab, Scheduling.SchedulingTab, QuoteManag
 
 
                 self.Show()
+                self.Maximize(True)
 ##
 ##                #Select the second tab
                 self.notebook = wx.FindWindowByName('notebook:applications')
