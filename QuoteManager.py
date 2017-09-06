@@ -235,6 +235,8 @@ class QuoteManagerTab(object):
         #update the bid open ("Yes" or "No") ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         BidOpen  = str(DBRecord.BidOpen)
         BidOpen = BidOpen.strip()
+        if BidOpen == 'NA':
+            BidOpen = 'No'
 
         if len(BidOpen) < 1: BidOpen = ""
 
@@ -1381,7 +1383,7 @@ class QuoteManagerTab(object):
             print(e)
 
         if ProjectType == 'Quote' and (BidOpen == 'No' or 'Yes') and RevLevel == '0':
-            print("New Quote added with BidOpen = No/Yes and RevLevel = 0. Notify salespersion by email.")
+            print("New Quote added with Revision Level = 0. Notify salespersion by email.")
             self.sendemail('Quote', QuoteNumber, RevLevel, Saleperson)
 
 
@@ -1632,7 +1634,7 @@ class QuoteManagerTab(object):
 
         self.PrintText = html
 
-    def PepareHTMLTextforemail(self):
+    def PepareHTMLTextforemail(self, typeofmail):
 
         #prepare html for sending email
         ProjectType = self.m_ComboProjectType.GetValue()
@@ -1689,49 +1691,115 @@ class QuoteManagerTab(object):
 
         ######################### CREATE THE HTML TABLE #################################
 
-        html = '<table border =1 >'
+        if typeofmail != 'Quote':
+            html = '<table border =1 >'
+            html += '''<tr><td align="left" valign="top"  colspan="2" nowrap><strong>PROJECT INFORMATION</strong></td></tr>'''
+            #html += '''<tr><td align="left" valign="top" nowrap> </td><td></td></tr>'''
+            html += '''<tr><td align="left" valign="top" nowrap> ProjectType:</td> ''' + '''<td>{}&nbsp;</td></tr>'''.format(ProjectType)
+            html += '''<tr><td align="left" valign="top" nowrap>QuoteNumber: </td>'''+'''<td>{}&nbsp;</td></tr>'''.format(QuoteNumber)
+            html += '''<tr><td align="left" valign="top" nowrap>DateReceived: </td>''' + '''<td>{}&nbsp;</td></tr>'''.format(DateReceived)
+            html += '''<tr><td align="left" valign="top" nowrap>Salesperson:</td>'''+'''<td> {}&nbsp;</td></tr>'''.format(Saleperson)
+            html += '''<tr><td align="left" valign="top" nowrap>BuyoutPrice:</td>'''+'''<td> {}&nbsp;</td></tr>'''.format(BuyoutPrice)
+            html += '''<tr><td align="left" valign="top" nowrap>BidOpen:</td>'''+ '''<td>{}&nbsp;</td></tr>'''.format(BidOpen)
+            html += '''<tr><td align="left" valign="top" nowrap>ProjectStatus:</td>'''+'''<td> {}&nbsp;</td></tr>'''.format(ProjectStatus)
+            html += '''<tr><td align="left" valign="top" nowrap>Zone:</td>'''+'''<td> {}&nbsp;</td></tr>'''.format(Zone)
+            html += '''<tr><td align="left" valign="top" nowrap>RevLevel: </td>'''+'''<td>{}&nbsp;</td></tr>'''.format(RevLevel)
+            html += '''<tr><td align="left" valign="top" nowrap>SalesOrder#: </td>'''+'''<td>{}&nbsp;</td></tr>'''.format(SalesOrderNum)
+            html += '''<tr><td align="left" valign="top" nowrap>DropShipOrder#: </td>'''+'''<td> {}&nbsp;</td></tr>'''.format(DropShipOrderNum)
+            html += '''<tr><td align="left" valign="top" nowrap>DateRequest: </td>'''+'''<td>{}&nbsp;</td></tr>'''.format(DateRequest)
+            html += '''<tr><td align="left" valign="top" nowrap>DateComp: </td>'''+'''<td>{}&nbsp;</td></tr>'''.format(DateComp)
+            html += '''<tr><td align="left" valign="top" nowrap>TADays: </td>'''+'''<td>{}&nbsp;</td></tr>'''.format(TADays)
+            html += '''<tr><td align="left" valign="top" nowrap>Assigned: </td>'''+'''<td>{}&nbsp;</td></tr>'''.format(Assigned)
+            html += '''<tr><td align="left" valign="top" nowrap>EquipPrice:</td>'''+'''<td> {}&nbsp;</td></tr>'''.format(EquipPrice)
+            html += '''<tr><td align="left" valign="top" nowrap>BuyoutPercent:</td>'''+'''<td> {}&nbsp;</td></tr>'''.format(BuyoutPercent)
+            html += '''<tr><td align="left" valign="top" nowrap>Multiplier:</td>'''+'''<td> {}&nbsp;</td></tr>'''.format(Multiplier)
+            html += '''<tr><td align="left" valign="top" nowrap>QuoteFormReceived:</td>''' + '''<td> {}&nbsp;</td></tr>'''.format(QuoteForm)
+            html += '''<tr><td align="left" valign="top" nowrap>Equipment(hours):</td>''' + '''<td> {}&nbsp;</td></tr>'''.format(Equiphrs)
 
-        html += '''<tr><td align="left" valign="top"  colspan="2" nowrap><strong>PROJECT INFORMATION</strong></td></tr>'''
-        #html += '''<tr><td align="left" valign="top" nowrap> </td><td></td></tr>'''
-        html += '''<tr><td align="left" valign="top" nowrap> ProjectType:</td> ''' + '''<td>{}&nbsp;</td></tr>'''.format(ProjectType)
-        html += '''<tr><td align="left" valign="top" nowrap>QuoteNumber: </td>'''+'''<td>{}&nbsp;</td></tr>'''.format(QuoteNumber)
-        html += '''<tr><td align="left" valign="top" nowrap>DateReceived: </td>''' + '''<td>{}&nbsp;</td></tr>'''.format(DateReceived)
-        html += '''<tr><td align="left" valign="top" nowrap>Salesperson:</td>'''+'''<td> {}&nbsp;</td></tr>'''.format(Saleperson)
-        html += '''<tr><td align="left" valign="top" nowrap>BuyoutPrice:</td>'''+'''<td> {}&nbsp;</td></tr>'''.format(BuyoutPrice)
-        html += '''<tr><td align="left" valign="top" nowrap>BidOpen:</td>'''+ '''<td>{}&nbsp;</td></tr>'''.format(BidOpen)
-        html += '''<tr><td align="left" valign="top" nowrap>ProjectStatus:</td>'''+'''<td> {}&nbsp;</td></tr>'''.format(ProjectStatus)
-        html += '''<tr><td align="left" valign="top" nowrap>Zone:</td>'''+'''<td> {}&nbsp;</td></tr>'''.format(Zone)
-        html += '''<tr><td align="left" valign="top" nowrap>RevLevel: </td>'''+'''<td>{}&nbsp;</td></tr>'''.format(RevLevel)
-        html += '''<tr><td align="left" valign="top" nowrap>SalesOrder#: </td>'''+'''<td>{}&nbsp;</td></tr>'''.format(SalesOrderNum)
-        html += '''<tr><td align="left" valign="top" nowrap>DropShipOrder#: </td>'''+'''<td> {}&nbsp;</td></tr>'''.format(DropShipOrderNum)
-        html += '''<tr><td align="left" valign="top" nowrap>DateRequest: </td>'''+'''<td>{}&nbsp;</td></tr>'''.format(DateRequest)
-        html += '''<tr><td align="left" valign="top" nowrap>DateComp: </td>'''+'''<td>{}&nbsp;</td></tr>'''.format(DateComp)
-        html += '''<tr><td align="left" valign="top" nowrap>TADays: </td>'''+'''<td>{}&nbsp;</td></tr>'''.format(TADays)
-        html += '''<tr><td align="left" valign="top" nowrap>Assigned: </td>'''+'''<td>{}&nbsp;</td></tr>'''.format(Assigned)
-        html += '''<tr><td align="left" valign="top" nowrap>EquipPrice:</td>'''+'''<td> {}&nbsp;</td></tr>'''.format(EquipPrice)
-        html += '''<tr><td align="left" valign="top" nowrap>BuyoutPercent:</td>'''+'''<td> {}&nbsp;</td></tr>'''.format(BuyoutPercent)
-        html += '''<tr><td align="left" valign="top" nowrap>Multiplier:</td>'''+'''<td> {}&nbsp;</td></tr>'''.format(Multiplier)
-        html += '''<tr><td align="left" valign="top" nowrap>QuoteFormReceived:</td>''' + '''<td> {}&nbsp;</td></tr>'''.format(QuoteForm)
-        html += '''<tr><td align="left" valign="top" nowrap>Equipment(hours):</td>''' + '''<td> {}&nbsp;</td></tr>'''.format(Equiphrs)
+            html += '''<tr><td align="left" valign="top"  colspan="2" nowrap><strong>CUSTOMER INFORMATION</strong></td></tr>'''
 
-        html += '''<tr><td align="left" valign="top"  colspan="2" nowrap><strong>CUSTOMER INFORMATION</strong></td></tr>'''
-
-        html += '''<tr><td align="left" valign="top" nowrap>Customer: </td>'''+'''<td>{}&nbsp;</td></tr>'''.format(Customer)
-        html += '''<tr><td align="left" valign="top" nowrap>CustomerKey:</td>'''+'''<td> {}&nbsp;</td></tr>'''.format(CustomerKey)
-        html += '''<tr><td align="left" valign="top" nowrap>ShipTO: </td>'''+'''<td>{}&nbsp;</td></tr>'''.format(ShipTO)
-        html += '''<tr><td align="left" valign="top" nowrap>CustomerNumber: </td>'''+'''<td>{}&nbsp;</td></tr>'''.format(CustomerNumber)
+            html += '''<tr><td align="left" valign="top" nowrap>Customer: </td>'''+'''<td>{}&nbsp;</td></tr>'''.format(Customer)
+            html += '''<tr><td align="left" valign="top" nowrap>CustomerKey:</td>'''+'''<td> {}&nbsp;</td></tr>'''.format(CustomerKey)
+            html += '''<tr><td align="left" valign="top" nowrap>ShipTO: </td>'''+'''<td>{}&nbsp;</td></tr>'''.format(ShipTO)
+            html += '''<tr><td align="left" valign="top" nowrap>CustomerNumber: </td>'''+'''<td>{}&nbsp;</td></tr>'''.format(CustomerNumber)
 
 
 
-        html += '''<tr><td align="left" valign="top"  colspan="2" nowrap><strong>RECORD INFORMATION</strong></td></tr>'''
+            html += '''<tr><td align="left" valign="top"  colspan="2" nowrap><strong>RECORD INFORMATION</strong></td></tr>'''
 
-        html += '''<tr><td align="left" valign="top" nowrap>{}&nbsp;</td></tr>'''.format(RecordText)
-        html += '''<tr><td align="left" valign="top"  colspan="2" nowrap><strong>COMMENTS</strong></td></tr>'''
-        html += '''<tr><td align="left" valign="top" colspan="2" nowrap>{}&nbsp;</td></tr>'''.format(Comments)
-        html += '</table>'
+            html += '''<tr><td align="left" valign="top" nowrap>{}&nbsp;</td></tr>'''.format(RecordText)
+            html += '''<tr><td align="left" valign="top"  colspan="2" nowrap><strong>COMMENTS</strong></td></tr>'''
+            html += '''<tr><td align="left" valign="top" colspan="2" nowrap>{}&nbsp;</td></tr>'''.format(Comments)
+            html += '</table>'
 
-        self.PrintText = html
+            self.PrintText = html
+        else:
+            html = '<table border =1 >'
+            html += '''<tr><td align="left" valign="top"  colspan="2" nowrap><strong>PROJECT INFORMATION</strong></td></tr>'''
+            # html += '''<tr><td align="left" valign="top" nowrap> </td><td></td></tr>'''
+            html += '''<tr><td align="left" valign="top" nowrap> ProjectType:</td> ''' + '''<td>{}&nbsp;</td></tr>'''.format(
+                ProjectType)
+            html += '''<tr><td align="left" valign="top" nowrap>QuoteNumber: </td>''' + '''<td>{}&nbsp;</td></tr>'''.format(
+                QuoteNumber)
+            html += '''<tr><td align="left" valign="top" nowrap>DateReceived: </td>''' + '''<td>{}&nbsp;</td></tr>'''.format(
+                DateReceived)
+            html += '''<tr><td align="left" valign="top" nowrap>Salesperson:</td>''' + '''<td> {}&nbsp;</td></tr>'''.format(
+                Saleperson)
+            #html += '''<tr><td align="left" valign="top" nowrap>BuyoutPrice:</td>''' + '''<td> {}&nbsp;</td></tr>'''.format(
+            #    BuyoutPrice)
+            #html += '''<tr><td align="left" valign="top" nowrap>BidOpen:</td>''' + '''<td>{}&nbsp;</td></tr>'''.format(
+            #    BidOpen)
+            #html += '''<tr><td align="left" valign="top" nowrap>ProjectStatus:</td>''' + '''<td> {}&nbsp;</td></tr>'''.format(
+            #    ProjectStatus)
+            #html += '''<tr><td align="left" valign="top" nowrap>Zone:</td>''' + '''<td> {}&nbsp;</td></tr>'''.format(
+            #    Zone)
+            #html += '''<tr><td align="left" valign="top" nowrap>RevLevel: </td>''' + '''<td>{}&nbsp;</td></tr>'''.format(
+            #    RevLevel)
+            html += '''<tr><td align="left" valign="top" nowrap>SalesOrder#: </td>''' + '''<td>{}&nbsp;</td></tr>'''.format(
+                SalesOrderNum)
+            #html += '''<tr><td align="left" valign="top" nowrap>DropShipOrder#: </td>''' + '''<td> {}&nbsp;</td></tr>'''.format(
+            #    DropShipOrderNum)
+            html += '''<tr><td align="left" valign="top" nowrap>DateRequest: </td>''' + '''<td>{}&nbsp;</td></tr>'''.format(
+                DateRequest)
+            #html += '''<tr><td align="left" valign="top" nowrap>DateComp: </td>''' + '''<td>{}&nbsp;</td></tr>'''.format(
+            #    DateComp)
+            #html += '''<tr><td align="left" valign="top" nowrap>TADays: </td>''' + '''<td>{}&nbsp;</td></tr>'''.format(
+            #    TADays)
+            html += '''<tr><td align="left" valign="top" nowrap>Assigned: </td>''' + '''<td>{}&nbsp;</td></tr>'''.format(
+                Assigned)
+            #html += '''<tr><td align="left" valign="top" nowrap>EquipPrice:</td>''' + '''<td> {}&nbsp;</td></tr>'''.format(
+            #    EquipPrice)
+            #html += '''<tr><td align="left" valign="top" nowrap>BuyoutPercent:</td>''' + '''<td> {}&nbsp;</td></tr>'''.format(
+            #    BuyoutPercent)
+            #html += '''<tr><td align="left" valign="top" nowrap>Multiplier:</td>''' + '''<td> {}&nbsp;</td></tr>'''.format(
+            #    Multiplier)
+            #html += '''<tr><td align="left" valign="top" nowrap>QuoteFormReceived:</td>''' + '''<td> {}&nbsp;</td></tr>'''.format(
+            #    QuoteForm)
+            #html += '''<tr><td align="left" valign="top" nowrap>Equipment(hours):</td>''' + '''<td> {}&nbsp;</td></tr>'''.format(
+            #    Equiphrs)
+
+            html += '''<tr><td align="left" valign="top"  colspan="2" nowrap><strong>CUSTOMER INFORMATION</strong></td></tr>'''
+
+            html += '''<tr><td align="left" valign="top" nowrap>Customer: </td>''' + '''<td>{}&nbsp;</td></tr>'''.format(
+                Customer)
+            #html += '''<tr><td align="left" valign="top" nowrap>CustomerKey:</td>''' + '''<td> {}&nbsp;</td></tr>'''.format(
+            #    CustomerKey)
+            html += '''<tr><td align="left" valign="top" nowrap>ShipTO: </td>''' + '''<td>{}&nbsp;</td></tr>'''.format(
+                ShipTO)
+            #html += '''<tr><td align="left" valign="top" nowrap>CustomerNumber: </td>''' + '''<td>{}&nbsp;</td></tr>'''.format(
+            #    CustomerNumber)
+
+            #html += '''<tr><td align="left" valign="top"  colspan="2" nowrap><strong>RECORD INFORMATION</strong></td></tr>'''
+
+            #html += '''<tr><td align="left" valign="top" nowrap>{}&nbsp;</td></tr>'''.format(RecordText)
+            #html += '''<tr><td align="left" valign="top"  colspan="2" nowrap><strong>COMMENTS</strong></td></tr>'''
+            #html += '''<tr><td align="left" valign="top" colspan="2" nowrap>{}&nbsp;</td></tr>'''.format(Comments)
+            html += '</table>'
+
+            self.PrintText = html
         return html
+
+
 
     def sendemail(self,typeofmail,quote,revision, send_to_name):
         TO = []
@@ -1753,7 +1821,7 @@ class QuoteManagerTab(object):
         #mail part for notifying salesperson about new Quote record
         elif typeofmail == 'Quote':
             email_to_sql = "select top 1 email from tss.salespersons where name like '%" + send_to_name + "%'"
-            msg['Subject'] = "New Quote :" + quote + " revision : " + revision + " added by " + str(gn.user) + " due within 4 business days from today! "
+            msg['Subject'] = "New Quote :" + quote + " revision : " + revision + " added by " + str(gn.user) + " due within 4 business days from today "
 
 
         #mail part for changing completion date
@@ -1809,7 +1877,7 @@ class QuoteManagerTab(object):
             msg['To'] = toaddr
             msg['CC'] = ccaddr
             text = "HI , Please check the detail of the quote."
-            html = self.PepareHTMLTextforemail();
+            html = self.PepareHTMLTextforemail(typeofmail);
 
             print('Sending email:')
             print('   FROM: {}'.format(fromaddr))

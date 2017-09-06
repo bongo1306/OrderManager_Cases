@@ -61,7 +61,7 @@ class QuoteSearchDialog(wx.Dialog):
                 self.m_TextSearchNotes = wx.FindWindowByName('m_TextSearchNotes')
                 self.m_CheckSearchCMAT = wx.FindWindowByName('m_CheckSearchCMAT')
                 self.m_ComboSearchCMAT = wx.FindWindowByName('m_ComboSearchCMAT')
-                #self.m_TextQuery = wx.FindWindowByName('m_TextQuery')
+                self.m_TextQuery = wx.FindWindowByName('m_TextQuery')
                 self.m_ListSearchResults = wx.FindWindowByName('m_ListSearchResults')
 
                 #bindings
@@ -214,6 +214,12 @@ class QuoteSearchDialog(wx.Dialog):
                 # Get the revision number search field
                 BidOpen = self.m_ComboBid.GetValue()
                 if len(BidOpen)> 1:
+                        if BidOpen == 'No':
+                                self.sql += " AND (BidOpen LIKE ? OR BidOpen LIKE ?)"
+                                parameters.append(BidOpen)
+                                BidOpen = 'NA'
+                                parameters.append(BidOpen)
+                        else:
                                 self.sql += " AND (BidOpen LIKE ?)"
                                 parameters.append(BidOpen)
 
@@ -318,7 +324,9 @@ class QuoteSearchDialog(wx.Dialog):
                         self.sql += "AND (CMAT IS NOT NULL)"
 
                 self.sql += self.OrderCriteria
-                self.SearchCursor.execute(self.sql, parameters)
+                #self.sql.format(parameters)
+                self.m_TextQuery.SetLabel(self.sql)
+                self.SearchCursor.execute(self.sql,parameters)
 
                 del self.SearchResultGrid[:]
 
