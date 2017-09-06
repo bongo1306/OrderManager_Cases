@@ -1755,8 +1755,8 @@ class QuoteManagerTab(object):
             #    Zone)
             #html += '''<tr><td align="left" valign="top" nowrap>RevLevel: </td>''' + '''<td>{}&nbsp;</td></tr>'''.format(
             #    RevLevel)
-            html += '''<tr><td align="left" valign="top" nowrap>SalesOrder#: </td>''' + '''<td>{}&nbsp;</td></tr>'''.format(
-                SalesOrderNum)
+            #html += '''<tr><td align="left" valign="top" nowrap>SalesOrder#: </td>''' + '''<td>{}&nbsp;</td></tr>'''.format(
+            #    SalesOrderNum)
             #html += '''<tr><td align="left" valign="top" nowrap>DropShipOrder#: </td>''' + '''<td> {}&nbsp;</td></tr>'''.format(
             #    DropShipOrderNum)
             html += '''<tr><td align="left" valign="top" nowrap>DateRequest: </td>''' + '''<td>{}&nbsp;</td></tr>'''.format(
