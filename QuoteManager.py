@@ -1091,10 +1091,13 @@ class QuoteManagerTab(object):
 
          # get date requested ~~~~~~~~~~~~~~~~~~~~~~~~~~
         wx_Req = self.m_DateDue.GetValue()
+        wx_Reqstr = str(wx_Req)
+        wx_Reqstr = datetime.datetime.strptime(wx_Reqstr, "%d/%m/%Y %H:%M:%S").strftime("%m/%d/%Y %H:%M:%S")
+        print wx_Reqstr
 
          #define a function to calculate working days between today's date and expected/due date.
         def workday_diff(date1, date2):
-            date_format = "%d/%m/%Y %H:%M:%S"
+            date_format = "%m/%d/%Y %H:%M:%S"
             d1 = datetime.datetime.strptime(date1, date_format)
             d2 = datetime.datetime.strptime(date2, date_format)
 
@@ -1120,16 +1123,16 @@ class QuoteManagerTab(object):
              #store today's date with time in variable i
             i = datetime.datetime.now()
              #remove floating part of seconds from today's date
-            date_today = i.strftime('%d/%m/%Y %H:%M:%S')
+            date_today = i.strftime('%m/%d/%Y %H:%M:%S')
 
             xx = datetime.date.today()
             #print xx
             for x in range(1,50): #I know while loop is better option but I don't want it to get stuck in infinite loop, besides hey who has more than 50 days of vacation?
                 yy = xx + datetime.timedelta(x)
                 #print yy
-                xxx = xx.strftime('%d/%m/%Y %H:%M:%S')
+                xxx = xx.strftime('%m/%d/%Y %H:%M:%S')
                 #print xxx
-                yyy= yy.strftime('%d/%m/%Y %H:%M:%S')
+                yyy= yy.strftime('%m/%d/%Y %H:%M:%S')
                 #print yyy
 
                 if workday_diff(str(xxx), str(yyy)) == 5:
@@ -1138,7 +1141,7 @@ class QuoteManagerTab(object):
                     print 'Somethings wrong with fourth date code'
 
              #call workday_diff function
-            if workday_diff(str(date_today), str(wx_Req)) > 4:
+            if workday_diff(str(date_today), str(wx_Reqstr)) > 4:
                 wx.MessageBox("You cannot select Expected Date greater than 4 business days from Today's Date if ProjectType is Quote and BidOpen/Non-Std is No and RevisionLevel is 0. Please select Expected Date within {} to successfully save record.".format(fourth_date), "Save Unsuccessful",wx.OK | wx.ICON_EXCLAMATION)
                 return
 

@@ -20,6 +20,7 @@ import csv
 import os
 import time
 import re
+import datetime
 
 class AdminTab(object):
 
@@ -56,6 +57,8 @@ class AdminTab(object):
                 self.m_checkBoxAdmin = wx.FindWindowByName('m_checkBoxAdmin')
                 self.m_buttonSubmit = wx.FindWindowByName('m_buttonSubmit')
                 self.m_export_to_excel=wx.FindWindowByName('m_export_to_excel')
+                self.m_ButtonHolidays = wx.FindWindowByName('m_ButtonHolidays')
+                self.m_DateAddHolidays = wx.FindWindowByName('m_DateAddHolidays')
                 self.fetchDB()
                 adminuser=[]
                 selected_user=self.name.GetStringSelection()
@@ -91,6 +94,8 @@ class AdminTab(object):
                          self.m_checkBoxAdmin.Hide()
                          self.m_buttonSubmit.Hide()
                          self.m_export_to_excel.Hide()
+                         self.m_ButtonHolidays.Hide()
+                         self.m_DateAddHolidays.Hide()
                          
                            
                 else:
@@ -98,6 +103,7 @@ class AdminTab(object):
                         self.createuserpanel=wx.FindWindowByName('createuserpanel')
                         self.Bind(wx.EVT_BUTTON, self.insertdetails, id=xrc.XRCID('m_buttonSubmit'))
                         self.Bind(wx.EVT_BUTTON, self.OnBtnExportData, id=xrc.XRCID('m_export_to_excel'))
+                        self.Bind(wx.EVT_BUTTON, self.OnBtnAddHolidays, id=xrc.XRCID('m_ButtonHolidays'))
                         self.m_textName = wx.FindWindowByName('m_textName')                
                         self.m_combodepartment = wx.FindWindowByName('m_combodepartment')
                         self.m_textEmail = wx.FindWindowByName('m_textEmail')
@@ -117,6 +123,8 @@ class AdminTab(object):
                         self.m_checkBoxAdmin = wx.FindWindowByName('m_checkBoxAdmin')
                         self.m_buttonSubmit=wx.FindWindowByName('m_buttonSubmit')
                         self.m_export_to_excel=wx.FindWindowByName('m_export_to_excel')
+                        self.m_ButtonHolidays = wx.FindWindowByName('m_ButtonHolidays')
+                        self.m_DateAddHolidays = wx.FindWindowByName('m_DateAddHolidays')
                         
                         #Database connection variables
                         self.AENames = []
@@ -277,4 +285,15 @@ class AdminTab(object):
 ##                        writer.writerows(self.dbCursor.fetchall())
 ##                        
 ##                msgbox = wx.MessageBox('Export successfully', 'Alert')                
+        def OnBtnAddHolidays(self, event = None):
+            if self.m_DateAddHolidays.GetValue():
+                x = self.m_DateAddHolidays.GetValue()
+                date_format = "%d/%m/%Y %H:%M:%S"
+                xx = x.datetime.strftime('%d/%m/%Y %H:%M:%S')
+                print xx
+
+                self.dbCursor.execute("insert into Holidays (Holidays) values (?)", str(xx))
+                self.conn.commit()
+                msgbox = wx.MessageBox('Holiday successfully added', 'Alert')
+
 
