@@ -21,6 +21,7 @@ import os
 import time
 import re
 import datetime
+import string
 
 class AdminTab(object):
 
@@ -59,6 +60,10 @@ class AdminTab(object):
                 self.m_export_to_excel=wx.FindWindowByName('m_export_to_excel')
                 self.m_ButtonHolidays = wx.FindWindowByName('m_ButtonHolidays')
                 self.m_DateAddHolidays = wx.FindWindowByName('m_DateAddHolidays')
+                self.m_ButtonDisplayList = wx.FindWindowByName('m_ButtonDisplayList')
+                self.m_TextCtrlHoliList = wx.FindWindowByName('m_TextCtrlHoliList')
+                self.m_ButtonRemoveHoliday = wx.FindWindowByName('m_ButtonRemoveHoliday')
+                self.m_DateRemoveHoliday = wx.FindWindowByName('m_DateRemoveHoliday')
                 self.fetchDB()
                 adminuser=[]
                 selected_user=self.name.GetStringSelection()
@@ -96,14 +101,19 @@ class AdminTab(object):
                          self.m_export_to_excel.Hide()
                          self.m_ButtonHolidays.Hide()
                          self.m_DateAddHolidays.Hide()
-                         
-                           
+                         self.m_ButtonDisplayList.Hide()
+                         self.m_TextCtrlHoliList.Hide()
+                         self.m_ButtonRemoveHoliday.Hide()
+                         self.m_DateRemoveHoliday.Hide()
+
                 else:
                         
                         self.createuserpanel=wx.FindWindowByName('createuserpanel')
                         self.Bind(wx.EVT_BUTTON, self.insertdetails, id=xrc.XRCID('m_buttonSubmit'))
                         self.Bind(wx.EVT_BUTTON, self.OnBtnExportData, id=xrc.XRCID('m_export_to_excel'))
                         self.Bind(wx.EVT_BUTTON, self.OnBtnAddHolidays, id=xrc.XRCID('m_ButtonHolidays'))
+                        self.Bind(wx.EVT_BUTTON, self.DisplayHolidayList, id=xrc.XRCID('m_ButtonDisplayList'))
+                        self.Bind(wx.EVT_BUTTON, self.OnBtnRemoveHoliday, id=xrc.XRCID('m_ButtonRemoveHoliday'))
                         self.m_textName = wx.FindWindowByName('m_textName')                
                         self.m_combodepartment = wx.FindWindowByName('m_combodepartment')
                         self.m_textEmail = wx.FindWindowByName('m_textEmail')
@@ -125,6 +135,10 @@ class AdminTab(object):
                         self.m_export_to_excel=wx.FindWindowByName('m_export_to_excel')
                         self.m_ButtonHolidays = wx.FindWindowByName('m_ButtonHolidays')
                         self.m_DateAddHolidays = wx.FindWindowByName('m_DateAddHolidays')
+                        self.m_ButtonDisplayList = wx.FindWindowByName('m_ButtonDisplayList')
+                        self.m_TextCtrlHoliList = wx.FindWindowByName('m_TextCtrlHoliList')
+                        self.m_ButtonRemoveHoliday = wx.FindWindowByName('m_ButtonRemoveHoliday')
+                        self.m_DateRemoveHoliday = wx.FindWindowByName('m_DateRemoveHoliday')
                         
                         #Database connection variables
                         self.AENames = []
@@ -291,8 +305,53 @@ class AdminTab(object):
                 holidaydate1 = datetime.datetime.strptime(holidaydate, "%d/%m/%Y %H:%M:%S").strftime("%m/%d/%Y %H:%M:%S")
                 print holidaydate1
 
-                self.dbCursor.execute("insert into Holidays (Holidays) values (?)", str(holidaydate1))
+                #current holiday list for checking
+                currHolidaylist = 'SELECT * from Holidays'
+                holidays = self.dbCursor.execute(currHolidaylist).fetchall()
+                holidays_list = []
+                for holiday in holidays:
+                    for date in holiday:
+                        holidays_list.append(date)
+
+                print holidays_list
+
+                if holidaydate1 not in holidays_list:
+                   self.dbCursor.execute("insert into Holidays (Holidays) values (?)", str(holidaydate1))
+                   self.conn.commit()
+                   msgbox = wx.MessageBox('Holiday successfully added', 'Alert')
+                else:
+                    msgbox = wx.MessageBox('Holiday already exists in database!', 'Alert')
+
+        def DisplayHolidayList(self, event = None):
+            currHolidaylist = 'SELECT * from Holidays ORDER by Holidays ASC'
+            holidays = self.dbCursor.execute(currHolidaylist).fetchall()
+            holidays_list = []
+            for holiday in holidays:
+                for date in holiday:
+                    dateclean = str(date)
+
+                    holidays_list.append(dateclean)
+
+            datesdisplay = ''
+            for dateclean in holidays_list:
+                dateclean1 = string.replace(dateclean,'00:00:00','')
+                datesdisplay += dateclean1
+                datesdisplay += '\n'
+                datesdisplay += '\n'
+
+            self.m_TextCtrlHoliList.SetValue(str(datesdisplay))
+
+        def OnBtnRemoveHoliday(self,event = None):
+            if self.m_DateRemoveHoliday.GetValue():
+                removedate = str(self.m_DateRemoveHoliday.GetValue())
+                removedate1 = datetime.datetime.strptime(removedate, "%d/%m/%Y %H:%M:%S").strftime("%m/%d/%Y %H:%M:%S")
+                sqlRemove = 'Delete top(1) from Holidays where Holidays = \'{}\''.format(str(removedate1))
+                self.dbCursor.execute(sqlRemove)
                 self.conn.commit()
-                msgbox = wx.MessageBox('Holiday successfully added', 'Alert')
+                msgbox = wx.MessageBox('Holiday removed successfully', 'Alert')
+                print removedate1
+
+
+
 
 
