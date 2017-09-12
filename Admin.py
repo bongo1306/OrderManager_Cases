@@ -287,12 +287,11 @@ class AdminTab(object):
 ##                msgbox = wx.MessageBox('Export successfully', 'Alert')                
         def OnBtnAddHolidays(self, event = None):
             if self.m_DateAddHolidays.GetValue():
-                x = self.m_DateAddHolidays.GetValue()
-                date_format = "%d/%m/%Y %H:%M:%S"
-                xx = x.datetime.strftime('%d/%m/%Y %H:%M:%S')
-                print xx
+                holidaydate = str(self.m_DateAddHolidays.GetValue())
+                holidaydate1 = datetime.datetime.strptime(holidaydate, "%d/%m/%Y %H:%M:%S").strftime("%m/%d/%Y %H:%M:%S")
+                print holidaydate1
 
-                self.dbCursor.execute("insert into Holidays (Holidays) values (?)", str(xx))
+                self.dbCursor.execute("insert into Holidays (Holidays) values (?)", str(holidaydate1))
                 self.conn.commit()
                 msgbox = wx.MessageBox('Holiday successfully added', 'Alert')
 
