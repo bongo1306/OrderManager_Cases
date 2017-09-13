@@ -303,7 +303,7 @@ class AdminTab(object):
             if self.m_DateAddHolidays.GetValue():
                 holidaydate = str(self.m_DateAddHolidays.GetValue())
                 holidaydate1 = datetime.datetime.strptime(holidaydate, "%d/%m/%Y %H:%M:%S").strftime("%m/%d/%Y %H:%M:%S")
-                print holidaydate1
+                #print holidaydate1
 
                 #current holiday list for checking
                 currHolidaylist = 'SELECT * from Holidays'
@@ -313,7 +313,7 @@ class AdminTab(object):
                     for date in holiday:
                         holidays_list.append(date)
 
-                print holidays_list
+                #print holidays_list
 
                 if holidaydate1 not in holidays_list:
                    self.dbCursor.execute("insert into Holidays (Holidays) values (?)", str(holidaydate1))
@@ -343,13 +343,22 @@ class AdminTab(object):
 
         def OnBtnRemoveHoliday(self,event = None):
             if self.m_DateRemoveHoliday.GetValue():
+                currHolidaylist = 'SELECT * from Holidays'
+                holidays = self.dbCursor.execute(currHolidaylist).fetchall()
+                holidays_list = []
+                for holiday in holidays:
+                    for date in holiday:
+                        holidays_list.append(date)
                 removedate = str(self.m_DateRemoveHoliday.GetValue())
                 removedate1 = datetime.datetime.strptime(removedate, "%d/%m/%Y %H:%M:%S").strftime("%m/%d/%Y %H:%M:%S")
-                sqlRemove = 'Delete top(1) from Holidays where Holidays = \'{}\''.format(str(removedate1))
-                self.dbCursor.execute(sqlRemove)
-                self.conn.commit()
-                msgbox = wx.MessageBox('Holiday removed successfully', 'Alert')
-                print removedate1
+                if removedate1 in holidays_list:
+                    sqlRemove = 'Delete top(1) from Holidays where Holidays = \'{}\''.format(str(removedate1))
+                    self.dbCursor.execute(sqlRemove)
+                    self.conn.commit()
+                    msgbox = wx.MessageBox('Holiday removed successfully', 'Alert')
+                    #print removedate1
+                else:
+                    msgbox = wx.MessageBox('This Holiday is not added in database, you cannot remove holiday which is not added in database. Click Display Holiday List button to view which all Holidays are added in the database.', 'Alert')
 
 
 
