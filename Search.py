@@ -37,6 +37,7 @@ class SearchTab(object):
             'orders.time_logs',
             'orders.view_systems',
             'orders.view_systems_abridged',
+            'orders.advancedsearch',
             '-------------------------',
             'mmg.view_preboms',
             'mmg.change_requests',
@@ -61,7 +62,7 @@ class SearchTab(object):
             )
 
         ctrl(self, 'choice:which_table').AppendItems(tables)
-        ctrl(self, 'choice:which_table').SetStringSelection('orders.view_systems_abridged')
+        ctrl(self, 'choice:which_table').SetStringSelection('orders.advancedsearch')
         self.on_choice_table()
 
 
