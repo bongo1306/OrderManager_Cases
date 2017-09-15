@@ -98,7 +98,7 @@ class SearchTab(object):
         table_name = ctrl(self, 'choice:which_table').GetStringSelection()
 
         if table_name in ('orders.root', 'orders.view_systems', 'orders.view_systems_abridged', 'orders.view_case', 'orders.responsibilities',
-                        'orders.target_dates', 'orders.labor_hours', 'orders.financials', 'orders.misc'):
+                        'orders.target_dates', 'orders.labor_hours', 'orders.financials', 'orders.misc','orders.advancedsearch'):
             table_id = selected_item.GetItem(selected_item.GetFirstSelected(), 0).GetText()
 
             if table_id != '':
