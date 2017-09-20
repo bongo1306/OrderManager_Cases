@@ -429,10 +429,10 @@ class QuoteSearchDialog(wx.Dialog):
 
         def OnClickSearchRes(self, event):
                 item = self.m_ListSearchResults.GetNextSelected(-1)
-                #print item
+                        #print item
                 RecordKey = self.m_ListSearchResults.GetItemText(item,1)
-                #RecordKey = self.m_ListSearchResults.GetItemText(str(item.RecordKey))
-                #print RecordKey
+                        #RecordKey = self.m_ListSearchResults.GetItemText(str(item.RecordKey))
+                        #print RecordKey
 
                 #find the record key in the list
                 i = self.GetParent().DBRecordKeys.index(RecordKey)

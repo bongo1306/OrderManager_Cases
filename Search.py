@@ -14,6 +14,7 @@ import TweakedGrid
 import General as gn
 import Database as db
 import Item
+import QuoteManager
 
 
 class SearchTab(object):
@@ -62,7 +63,7 @@ class SearchTab(object):
             )
 
         ctrl(self, 'choice:which_table').AppendItems(tables)
-        ctrl(self, 'choice:which_table').SetStringSelection('orders.advancedsearch')
+        ctrl(self, 'choice:which_table').SetStringSelection('orders.view_systems_abridged')
         self.on_choice_table()
 
 
@@ -103,6 +104,29 @@ class SearchTab(object):
 
             if table_id != '':
                 Item.ItemFrame(self, int(table_id))
+
+            #item = ctrl(self, 'list:search_results').GetNextSelected(-1)
+            #ColCount = ctrl(self, 'list:search_results').GetColumnCount()
+            #print ColCount
+            #print item
+            #RecordKey = ctrl(self, 'list:search_results').GetItemText(item, ColCount-1)
+            #print RecordKey
+            #QuoteManager.QuoteManagerTab.Index = RecordKey
+            #QuoteManager.QuoteManagerTab.LoadRecord()
+            '''
+            obj = QuoteManager.QuoteManagerTab()
+            obj.Index = RecordKey
+            obj.DBRecordKeys = []
+            obj.AENames =[]
+            obj.SPNames = []
+            obj.EmailIDS = []
+            obj.CustomerData = []
+            obj.CustomerNumbers = []
+            obj.CMATNames = []
+            obj.FetchDB()
+            obj.FillDBRecordKeys()
+            #obj.LoadRecord()
+            '''
 
         if table_name == 'orders.changes':
             table_id = selected_item.GetItem(selected_item.GetFirstSelected(), 2).GetText()

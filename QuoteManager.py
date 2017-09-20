@@ -31,28 +31,26 @@ salesorderold = ''
 
 class QuoteManagerTab(object):
     def init_QuoteManager_tab(self):
-
         reload(sys)
         sys.setdefaultencoding('Cp1252')
-
         # Connect Events
-        self.Bind( wx.EVT_TOOL, self.OnPageSetup, id=xrc.XRCID('m_toolPageSetup'))
-        self.Bind( wx.EVT_TOOL, self.OnPrintPreview, id=xrc.XRCID('m_toolPrintPreview'))
-        self.Bind( wx.EVT_TOOL, self.OnPrintRecord, id=xrc.XRCID('m_toolPrint'))
-        self.Bind( wx.EVT_TOOL, self.OnGetQuoteNumber, id=xrc.XRCID('m_toolQuoteNumber'))
-        self.Bind( wx.EVT_TOOL, self.OnAddRecord, id=xrc.XRCID('m_toolRecordAdd'))
-        self.Bind( wx.EVT_TOOL, self.OnDeleteRecord, id=xrc.XRCID('m_toolRecordDelete'))
-        self.Bind( wx.EVT_TOOL, self.OnDuplicateRecord, id=xrc.XRCID('m_toolRecordDuplicate'))
-        self.Bind( wx.EVT_TOOL, self.OnSaveRecord, id=xrc.XRCID('m_toolSave'))
-        self.Bind( wx.EVT_TOOL, self.OnQuoteSearch, id=xrc.XRCID('m_toolSearch'))
-        self.Bind( wx.EVT_TOOL, self.OnSearchClear, id=xrc.XRCID('m_toolSearchClear'))
-        self.Bind( wx.EVT_TOOL, self.OnDailySchedule, id=xrc.XRCID('m_toolSchedule'))
-        self.Bind( wx.EVT_TOOL, self.OnMetrics, id=xrc.XRCID('m_toolMetrics'))
-        self.Bind( wx.EVT_TOOL, self.OnPreviousRecord, id=xrc.XRCID('m_toolBack'))
-        self.Bind( wx.EVT_TOOL, self.OnNextRecord, id=xrc.XRCID('m_toolNext'))
-        self.Bind( wx.EVT_TOOL, self.OnManageUsers, id=xrc.XRCID('m_toolUsers'))
-        self.Bind( wx.EVT_TOOL, self.OnAboutBox, id=xrc.XRCID('m_toolAbout'))
-        self.Bind( wx.EVT_TOOL, self.OnExitApp, id=xrc.XRCID('m_toolQuit'))
+        self.Bind(wx.EVT_TOOL, self.OnPageSetup, id=xrc.XRCID('m_toolPageSetup'))
+        self.Bind(wx.EVT_TOOL, self.OnPrintPreview, id=xrc.XRCID('m_toolPrintPreview'))
+        self.Bind(wx.EVT_TOOL, self.OnPrintRecord, id=xrc.XRCID('m_toolPrint'))
+        self.Bind(wx.EVT_TOOL, self.OnGetQuoteNumber, id=xrc.XRCID('m_toolQuoteNumber'))
+        self.Bind(wx.EVT_TOOL, self.OnAddRecord, id=xrc.XRCID('m_toolRecordAdd'))
+        self.Bind(wx.EVT_TOOL, self.OnDeleteRecord, id=xrc.XRCID('m_toolRecordDelete'))
+        self.Bind(wx.EVT_TOOL, self.OnDuplicateRecord, id=xrc.XRCID('m_toolRecordDuplicate'))
+        self.Bind(wx.EVT_TOOL, self.OnSaveRecord, id=xrc.XRCID('m_toolSave'))
+        self.Bind(wx.EVT_TOOL, self.OnQuoteSearch, id=xrc.XRCID('m_toolSearch'))
+        self.Bind(wx.EVT_TOOL, self.OnSearchClear, id=xrc.XRCID('m_toolSearchClear'))
+        self.Bind(wx.EVT_TOOL, self.OnDailySchedule, id=xrc.XRCID('m_toolSchedule'))
+        self.Bind(wx.EVT_TOOL, self.OnMetrics, id=xrc.XRCID('m_toolMetrics'))
+        self.Bind(wx.EVT_TOOL, self.OnPreviousRecord, id=xrc.XRCID('m_toolBack'))
+        self.Bind(wx.EVT_TOOL, self.OnNextRecord, id=xrc.XRCID('m_toolNext'))
+        self.Bind(wx.EVT_TOOL, self.OnManageUsers, id=xrc.XRCID('m_toolUsers'))
+        self.Bind(wx.EVT_TOOL, self.OnAboutBox, id=xrc.XRCID('m_toolAbout'))
+        self.Bind(wx.EVT_TOOL, self.OnExitApp, id=xrc.XRCID('m_toolQuit'))
 
         self.Bind(wx.EVT_BUTTON, self.OnQuickQuoteSearch, id=xrc.XRCID('m_BtnFindQuote'))
         self.Bind(wx.EVT_TEXT_ENTER, self.OnQuickQuoteSearch, id=xrc.XRCID('m_TextQuoteNumber'))
@@ -489,9 +487,15 @@ class QuoteManagerTab(object):
     def FillSPComboBoxNames(self):
         time.sleep(1)
         del self.SPNames[:]
-        self.dbCursor_threaded.execute('SELECT * FROM dbo.SalepersonTable')
+        self.dbCursor_threaded.execute('SELECT * FROM dbo.SalepersonTable where CurrStatus LIKE \'%Active%\' ')
         row = self.dbCursor_threaded.fetchone()
 
+        while row != None:
+            self.SPNames.append(row.Name)
+            row = self.dbCursor_threaded.fetchone()
+
+        self.dbCursor_threaded.execute('SELECT * FROM dbo.SalepersonTable where CurrStatus is NULL order by name ASC')
+        row = self.dbCursor_threaded.fetchone()
         while row != None:
             self.SPNames.append(row.Name)
             row = self.dbCursor_threaded.fetchone()
@@ -535,9 +539,10 @@ class QuoteManagerTab(object):
         searchWnd.PopulateSP(self.SPNames)
         searchWnd.PopulateCMAT(self.CMATNames)
         searchWnd.OnCheckSearchCMAT(None)
-        searchWnd.SetSize((1320, 780))
+        searchWnd.SetSize((1320, 1024))
         #searchWnd.Maximize()
-        searchWnd.ShowModal()
+        #searchWnd.ShowModal()
+        searchWnd.Show()
 
 
     #Search quote number directly from the main window
