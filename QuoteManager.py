@@ -487,7 +487,7 @@ class QuoteManagerTab(object):
     def FillSPComboBoxNames(self):
         time.sleep(1)
         del self.SPNames[:]
-        self.dbCursor_threaded.execute('SELECT * FROM dbo.SalepersonTable where CurrStatus LIKE \'%Active%\' ')
+        self.dbCursor_threaded.execute('SELECT * FROM dbo.SalepersonTable where CurrStatus LIKE \'%Active%\' order by name ASC')
         row = self.dbCursor_threaded.fetchone()
 
         while row != None:
