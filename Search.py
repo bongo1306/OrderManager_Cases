@@ -111,7 +111,7 @@ class SearchTab(object):
             #print item
             #RecordKey = ctrl(self, 'list:search_results').GetItemText(item, ColCount-1)
             #print RecordKey
-            #QuoteManager.QuoteManagerTab.Index = RecordKey
+            #QuoteManager.QuoteManagerTab.DBRecordKeys.Index(RecordKey)
             #QuoteManager.QuoteManagerTab.LoadRecord()
             '''
             obj = QuoteManager.QuoteManagerTab()

@@ -539,7 +539,7 @@ class QuoteManagerTab(object):
         searchWnd.PopulateSP(self.SPNames)
         searchWnd.PopulateCMAT(self.CMATNames)
         searchWnd.OnCheckSearchCMAT(None)
-        searchWnd.SetSize((1320, 1024))
+        searchWnd.SetSize((1320, 1080))
         #searchWnd.Maximize()
         #searchWnd.ShowModal()
         searchWnd.Show()
@@ -1098,7 +1098,7 @@ class QuoteManagerTab(object):
         wx_Req = self.m_DateDue.GetValue()
         wx_Reqstr = str(wx_Req)
         wx_Reqstr = datetime.datetime.strptime(wx_Reqstr, "%d/%m/%Y %H:%M:%S").strftime("%m/%d/%Y %H:%M:%S")
-        print wx_Reqstr
+        #print wx_Reqstr
 
          #define a function to calculate working days between today's date and expected/due date.
         def workday_diff(date1, date2):
@@ -1278,14 +1278,14 @@ class QuoteManagerTab(object):
 
         sql = "SELECT * FROM dbo.QuoteMaker WHERE RecordKey=\'" + RecordKey + "\'"
         self.dbCursor.execute(sql)
-        row = self.dbCursor.fetchone()
+        rowCheck = self.dbCursor.fetchone()
 
-        if row != None:
+        if rowCheck != None:
             RecordKeyExists = True
 
-            RecordCreatorName = str(row.RecordCreatorName)
-            RecordCreationDate = self.PY2STR_DATE(row.RecordCreationDate)
-            RecordCreationTime = self.PY2STR_TIME(row.RecordCreationTime)
+            RecordCreatorName = str(rowCheck.RecordCreatorName)
+            RecordCreationDate = self.PY2STR_DATE(rowCheck.RecordCreationDate)
+            RecordCreationTime = self.PY2STR_TIME(rowCheck.RecordCreationTime)
 
         else:
             RecordCreatorName = str(gn.user)
@@ -1391,8 +1391,13 @@ class QuoteManagerTab(object):
             print(e)
 
         if ProjectType == 'Quote' and (BidOpen == 'No' or 'Yes') and RevLevel == '0':
-            print("New Quote added with Revision Level = 0. Notify salespersion by email.")
-            self.sendemail('Quote', QuoteNumber, RevLevel, Saleperson)
+            if RecordKeyExists == False:
+                self.sendemail('Quote', QuoteNumber, RevLevel, Saleperson)
+            else:
+                prevDateRec = datetime.datetime.strptime(str(rowCheck.DateReceived), "%Y-%m-%d %H:%M:%S").strftime("%Y-%m-%d")
+                prevDateReq = datetime.datetime.strptime(str(rowCheck.DateRequest), "%Y-%m-%d %H:%M:%S").strftime("%Y-%m-%d")
+                if prevDateRec != DateReceived or prevDateReq != DateRequest:
+                    self.sendemail('Quote', QuoteNumber, RevLevel, Saleperson)
 
 
         ######################### CREATE THE SQL QUERY TO SAVE ##################################
