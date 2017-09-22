@@ -1142,8 +1142,6 @@ class QuoteManagerTab(object):
 
                 if workday_diff(str(xxx), str(yyy)) == 5:
                     fourth_date = yy
-                else:
-                    print 'Somethings wrong with fourth date code'
 
              #call workday_diff function
             if workday_diff(str(date_today), str(wx_Reqstr)) > 4:
@@ -1394,10 +1392,18 @@ class QuoteManagerTab(object):
             if RecordKeyExists == False:
                 self.sendemail('Quote', QuoteNumber, RevLevel, Saleperson)
             else:
-                prevDateRec = datetime.datetime.strptime(str(rowCheck.DateReceived), "%Y-%m-%d %H:%M:%S").strftime("%Y-%m-%d")
-                prevDateReq = datetime.datetime.strptime(str(rowCheck.DateRequest), "%Y-%m-%d %H:%M:%S").strftime("%Y-%m-%d")
-                if prevDateRec != DateReceived or prevDateReq != DateRequest:
-                    self.sendemail('Quote', QuoteNumber, RevLevel, Saleperson)
+                if rowCheck.BidOpen == 'No':
+                    prevDateReq = datetime.datetime.strptime(str(rowCheck.DateRequest), "%Y-%m-%d %H:%M:%S").strftime(
+                        "%Y-%m-%d")
+                    #print DateRequest
+                    #print prevDateReq
+                    if (prevDateReq != DateRequest) and BidOpen == 'No':
+                        wx.MessageBox("To change Date_Requested of existing Quote Rev0 you must change BidOpen to Yes",
+                                      "Save Unsuccessful", wx.OK | wx.ICON_EXCLAMATION)
+                        return
+                    elif (prevDateReq != DateRequest ) and BidOpen == 'Yes':
+                        self.sendemail('Quote', QuoteNumber, RevLevel, Saleperson)
+
 
 
         ######################### CREATE THE SQL QUERY TO SAVE ##################################
@@ -1876,6 +1882,17 @@ class QuoteManagerTab(object):
 
             for row in pod_emails:
                 CC.append(row[0])
+
+            if typeofmail == 'Quote':
+                #Check to see if Zonal Sales Manager wants a copy of email
+                Manager = cursor.execute("Select top 1 Manager from dbo.SalepersonTable where Name like '%" + send_to_name + "%' ").fetchone()[0]
+                #print Manager
+                Wants_Email = cursor.execute("Select top 1 Wants_ccEmails from dbo.SalepersonTable where Name like '%" + Manager + "%' ").fetchone()[0]
+                #print Wants_Email
+                if Wants_Email == 'Yes':
+                    ManagerEmail = cursor.execute("select top 1 email from tss.salespersons where name like '%" + Manager + "%' ").fetchone()[0]
+                    CC.append(ManagerEmail)
+                    #print ManagerEmail
             
             fromaddr = cursor.execute("select top 1 email from dbo.employees where name = ?", gn.user).fetchone()[0]
 
