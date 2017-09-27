@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "OrderManager"
-#define MyAppVersion "4.7"
+#define MyAppVersion "4.8"
 #define MyAppPublisher "Kysor/Warren"
 #define MyAppExeName "OrderManager.exe"
 

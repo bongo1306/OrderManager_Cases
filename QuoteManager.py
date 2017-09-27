@@ -1376,7 +1376,7 @@ class QuoteManagerTab(object):
                 self.sendemail('order',QuoteNumber,RevLevel,Assigned);
 
             #check id completion date old and new are different to send email
-            if prev_DateComp != current_DateComp and current_DateComp != '9999-01-01' and OrderExists == True:
+            if prev_DateComp != current_DateComp and current_DateComp != '9999-01-01' and OrderExists == True and prev_ProjectType == current_ProjectType:
                 print("Completion date has changed.")
                 self.sendemail('compdate',QuoteNumber,RevLevel,RecordCreatorName);
 
@@ -1398,7 +1398,7 @@ class QuoteManagerTab(object):
                     #print DateRequest
                     #print prevDateReq
                     if (prevDateReq != DateRequest) and BidOpen == 'No':
-                        wx.MessageBox("To change Date_Requested of existing Quote Rev0 you must change BidOpen to Yes",
+                        wx.MessageBox("To change Expected Date of existing Quote Rev0 you must change BidOpen to Yes",
                                       "Save Unsuccessful", wx.OK | wx.ICON_EXCLAMATION)
                         return
                     elif (prevDateReq != DateRequest ) and BidOpen == 'Yes':
@@ -1867,6 +1867,7 @@ class QuoteManagerTab(object):
             
             for row in cursor.execute(email_to_sql).fetchall():
                 TO.append(row[0])
+                print TO
 
             if typeofmail == 'compdate':
                 #use customer service's respective POD email addresses for CC
@@ -1880,19 +1881,22 @@ class QuoteManagerTab(object):
             else:
                 pod_emails = []
 
-            for row in pod_emails:
-                CC.append(row[0])
+            #for row in pod_emails:
+                #CC.append(row[0])
 
             if typeofmail == 'Quote':
                 #Check to see if Zonal Sales Manager wants a copy of email
-                Manager = cursor.execute("Select top 1 Manager from dbo.SalepersonTable where Name like '%" + send_to_name + "%' ").fetchone()[0]
-                #print Manager
-                Wants_Email = cursor.execute("Select top 1 Wants_ccEmails from dbo.SalepersonTable where Name like '%" + Manager + "%' ").fetchone()[0]
-                #print Wants_Email
-                if Wants_Email == 'Yes':
-                    ManagerEmail = cursor.execute("select top 1 email from tss.salespersons where name like '%" + Manager + "%' ").fetchone()[0]
-                    CC.append(ManagerEmail)
-                    #print ManagerEmail
+                try:
+                    Manager = cursor.execute("Select top 1 Manager from dbo.SalepersonTable where Name like '%" + send_to_name + "%' ").fetchone()[0]
+                    #print Manager
+                    Wants_Email = cursor.execute("Select top 1 Wants_ccEmails from dbo.SalepersonTable where Name like '%" + Manager + "%' ").fetchone()[0]
+                    #print Wants_Email
+                    if Wants_Email == 'Yes':
+                        ManagerEmail = cursor.execute("select top 1 email from tss.salespersons where name like '%" + Manager + "%' ").fetchone()[0]
+                        CC.append(ManagerEmail)
+                        #print ManagerEmail
+                except Exception as e:
+                    wx.MessageBox("Manager is not added for \'{}\' in SQL table. Email cannot be sent, please ask developer to add Manager for \'{}\' in SQL table for automatic email notifications to \'{}\'.".format(send_to_name,send_to_name,send_to_name), "Error Sending Mail", wx.OK | wx.ICON_INFORMATION)
             
             fromaddr = cursor.execute("select top 1 email from dbo.employees where name = ?", gn.user).fetchone()[0]
 
