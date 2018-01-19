@@ -8,6 +8,7 @@ import pyodbc as mypyodbc
 from QuoteSearch import QuoteSearchDialog
 from QuoteSearch import DailyScheduleFrame
 from Metrics import MetricsDialog
+from AdMetrics import AdMetricsDialog
 from UserManager import UserManagerDialog
 from wx.html import HtmlEasyPrinting
 import General as gn
@@ -46,6 +47,7 @@ class QuoteManagerTab(object):
         self.Bind(wx.EVT_TOOL, self.OnSearchClear, id=xrc.XRCID('m_toolSearchClear'))
         self.Bind(wx.EVT_TOOL, self.OnDailySchedule, id=xrc.XRCID('m_toolSchedule'))
         self.Bind(wx.EVT_TOOL, self.OnMetrics, id=xrc.XRCID('m_toolMetrics'))
+        self.Bind(wx.EVT_TOOL, self.OnAdMetrics, id=xrc.XRCID('m_toolAdMetrics'))
         self.Bind(wx.EVT_TOOL, self.OnPreviousRecord, id=xrc.XRCID('m_toolBack'))
         self.Bind(wx.EVT_TOOL, self.OnNextRecord, id=xrc.XRCID('m_toolNext'))
         self.Bind(wx.EVT_TOOL, self.OnManageUsers, id=xrc.XRCID('m_toolUsers'))
@@ -686,6 +688,15 @@ class QuoteManagerTab(object):
         metricsWnd.Maximize()
         metricsWnd.ShowModal()
 
+    def OnAdMetrics(self, event):
+        metricsWnd = AdMetricsDialog(self)
+        metricsWnd.SearchCursor = self.dbCursor
+        #metricsWnd.PopulateLists()
+        #metricsWnd.Maximize()
+        #metricsWnd.ShowModal()
+        metricsWnd.SetSize((1320, 1080))
+        metricsWnd.Show()
+
 
     def OnPageSetup(self, event):
 
@@ -1106,7 +1117,7 @@ class QuoteManagerTab(object):
             d1 = datetime.datetime.strptime(date1, date_format)
             d2 = datetime.datetime.strptime(date2, date_format)
 
-             #Query holidays list from Database
+            #Query holidays list from Database
             sqlHolidayquery = 'SELECT * from Holidays'
             holidays = self.dbCursor.execute(sqlHolidayquery).fetchall()
             holidays_list = []
@@ -1114,7 +1125,7 @@ class QuoteManagerTab(object):
                 for date in holiday:
                     holidays_list.append(date)
             #print holidays_list
-             #Convert holiday from holidays list into datetime object and append in list vac
+            #Convert holiday from holidays list into datetime object and append in list vac
             vac = []
             for i in range(len(holidays_list)):
                 vac.append(datetime.datetime.strptime(holidays_list[i], date_format))

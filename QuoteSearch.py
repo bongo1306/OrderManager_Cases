@@ -492,7 +492,7 @@ class QuoteSearchDialog(wx.Dialog):
         def OnBtnSearchExcel(self, event):
                 
                 excel = Dispatch('Excel.Application')
-                excel.Visible = True
+                #excel.Visible = True
                 wb = excel.Workbooks.Add()
                 
 

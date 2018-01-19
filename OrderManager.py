@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf8 -*-
-version = '4.8'
+version = '4.9'
 
 import sys
 import os
@@ -184,11 +184,12 @@ class SoftwareUpdateFrame(wx.Frame):
                         dialog.text_notice.AppendText('\nSoftware update failed.\n')
                         wx.Yield()
                         return
-                
 
         def on_close_frame(self, event):
                 print 'called on_close_frame'
                 self.Destroy()
+
+
 
 
 
