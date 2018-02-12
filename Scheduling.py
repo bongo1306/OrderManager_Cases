@@ -70,7 +70,7 @@ class DesignSchedulerFrame(wx.Frame):
 				date_created_on,
 				date_requested_de_release
 			FROM
-				orders.view_systems
+				orders.view_cases
 			WHERE
 				date_actual_de_release IS NULL AND
 				production_order IS NOT NULL AND
@@ -156,7 +156,7 @@ class DesignSchedulerFrame(wx.Frame):
 				date_planned_de_release_locked,
 				date_suggested_de_start
 			FROM
-				orders.view_systems
+				orders.view_cases
 			WHERE
 				date_actual_de_release IS NULL AND
 				production_order IS NOT NULL AND
@@ -322,7 +322,7 @@ class SchedulingTab(object):
 					SELECT
 						material
 					FROM
-						orders.view_systems
+						orders.view_cases
 					WHERE
 						date_actual_de_release IS NULL AND
 						production_order IS NOT NULL AND
@@ -339,7 +339,7 @@ class SchedulingTab(object):
 					SELECT
 						material
 					FROM
-						orders.view_systems
+						orders.view_cases
 					WHERE
 						date_actual_de_release IS NULL AND
 						production_order IS NOT NULL AND
@@ -366,7 +366,7 @@ class SchedulingTab(object):
 					SELECT
 						material
 					FROM
-						orders.view_systems
+						orders.view_cases
 					WHERE
 						date_actual_de_release IS NULL AND
 						production_order IS NOT NULL AND
@@ -383,7 +383,7 @@ class SchedulingTab(object):
 					SELECT
 						material
 					FROM
-						orders.view_systems
+						orders.view_cases
 					WHERE
 						date_actual_de_release IS NULL AND
 						production_order IS NOT NULL AND
@@ -421,7 +421,7 @@ class SchedulingTab(object):
 				material,
 				date_basic_start
 			FROM
-				orders.view_systems
+				orders.view_cases
 			WHERE
 				(date_actual_de_release IS NULL OR date_requested_de_release IS NULL) AND
 				date_basic_start IS NOT NULL AND
@@ -487,7 +487,7 @@ class SchedulingTab(object):
 				date_basic_start,
 				date_requested_de_release
 			FROM
-				orders.view_systems
+				orders.view_cases
 			WHERE
 				date_actual_de_release IS NULL AND
 				production_order IS NOT NULL AND
@@ -565,7 +565,7 @@ class SchedulingTab(object):
 				date_created_on,
 				date_requested_de_release
 			FROM
-				orders.view_systems
+				orders.view_cases
 			WHERE
 				date_created_on > '1/13/2014' AND
 				production_order IS NOT NULL AND

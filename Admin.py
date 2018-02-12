@@ -139,10 +139,9 @@ class AdminTab(object):
                         self.m_TextCtrlHoliList = wx.FindWindowByName('m_TextCtrlHoliList')
                         self.m_ButtonRemoveHoliday = wx.FindWindowByName('m_ButtonRemoveHoliday')
                         self.m_DateRemoveHoliday = wx.FindWindowByName('m_DateRemoveHoliday')
-                        
                         #Database connection variables
                         self.AENames = []
-                        #self.dbCursor = None               
+                        self.dbCursor = None
                         
         def fetchDB(self):
 
@@ -157,7 +156,8 @@ class AdminTab(object):
         #method for binding dropdown with departments
         def db_dropdown(self):
                 
-              del self.AENames[:]                           
+              #del self.AENames[:]
+              self.AENames = []
               self.dbCursor.execute('select department from departments')
               row = self.dbCursor.fetchone()
               

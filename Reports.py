@@ -53,9 +53,9 @@ class ReportsTab(object):
 				material,
 				hours_standard
 			FROM
-				orders.view_systems
+				orders.view_cases
 			WHERE
-				material <> 'SPARTCOLS' AND
+				material <> 'SPARTCOLC' AND
 				date_actual_de_release >= '{}' AND
 				date_actual_de_release <= '{} 23:59:59'
 			ORDER BY
@@ -131,7 +131,7 @@ class ReportsTab(object):
 				print 'checking if date_planned_de_release > end_date for {}'.format(production_order), e
 				
 
-		report.AppendText("{} items were released by DE between {} and {}, (excluding SPARTCOLS)\n\n".format(len(rel_items_data), start_date.strftime('%m/%d/%Y'), end_date.strftime('%m/%d/%Y')))
+		report.AppendText("{} items were released by DE between {} and {}, (excluding SPARTCOLC)\n\n".format(len(rel_items_data), start_date.strftime('%m/%d/%Y'), end_date.strftime('%m/%d/%Y')))
 		
 		if rel_items_data:
 			report.AppendText("     {} items or {:.0f}% were released on time based on date_requested_de_release\n".format(ontime_by_request, ontime_by_request/float(len(rel_items_data))*100))
@@ -223,7 +223,7 @@ class ReportsTab(object):
 				SELECT
 					hours_standard
 				FROM
-					orders.view_systems
+					orders.view_cases
 				WHERE
 					status <> 'Canceled' AND
 					date_basic_finish >= '{}' AND
@@ -240,7 +240,7 @@ class ReportsTab(object):
 				SELECT
 					hours_standard
 				FROM
-					orders.view_systems
+					orders.view_cases
 				WHERE
 					status <> 'Canceled' AND
 					date_actual_de_release IS NOT NULL AND
@@ -306,7 +306,7 @@ class ReportsTab(object):
 				SELECT
 					hours_standard
 				FROM
-					orders.view_systems
+					orders.view_cases
 				WHERE
 					(date_actual_finish >= '{}' AND date_actual_finish <= '{}') OR
 					(date_actual_finish IS NULL AND date_shipped IS NOT NULL AND date_shipped >= '{}' AND date_shipped <= '{}')
@@ -323,13 +323,13 @@ class ReportsTab(object):
 					ecrs.id
 				FROM
 					dbo.ecrs
-				INNER JOIN orders.view_systems ON
+				INNER JOIN orders.view_cases ON
 					(
 					CHARINDEX(view_systems.production_order, ecrs.item) > 0 OR 
 					CHARINDEX(view_systems.bpcs_item, ecrs.item) > 0
 					)
 				WHERE
-					ecrs.reason = 'Engineering Error' AND
+					ecrs.reason = 'Engineering Error' AND ecrs.Production_Plant = 'Cases' AND
 					((view_systems.date_actual_finish >= '{}' AND view_systems.date_actual_finish <= '{}'))
 			'''.format(start_date, end_date))
 			

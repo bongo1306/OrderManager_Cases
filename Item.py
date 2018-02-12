@@ -988,7 +988,7 @@ class ItemFrame(wx.Frame):
 		
 		self.tabulated_data = TweakedGrid.TweakedGrid(table_panel)
 		
-		columns = list(db.get_table_column_names('orders.view_systems', presentable=False))
+		columns = list(db.get_table_column_names('orders.view_cases', presentable=False))
 		
 		for column_index, column in enumerate(columns):
 			if '_spacer_' in column:
@@ -1027,7 +1027,7 @@ class ItemFrame(wx.Frame):
 			SELECT
 				*
 			FROM
-				orders.view_systems
+				orders.view_cases
 			WHERE
 				id={}
 			'''.format(self.id))

@@ -14,7 +14,7 @@ import TweakedGrid
 import General as gn
 import Database as db
 import Item
-import QuoteManager
+#import QuoteManager
 
 
 class SearchTab(object):
@@ -36,8 +36,8 @@ class SearchTab(object):
             'orders.root',
             'orders.changes',
             'orders.time_logs',
-            'orders.view_systems',
-            'orders.view_systems_abridged',
+            'orders.view_cases',
+            'orders.view_cases_abridged',
             'orders.advancedsearch',
             '-------------------------',
             'mmg.view_preboms',
@@ -63,7 +63,7 @@ class SearchTab(object):
             )
 
         ctrl(self, 'choice:which_table').AppendItems(tables)
-        ctrl(self, 'choice:which_table').SetStringSelection('orders.view_systems_abridged')
+        ctrl(self, 'choice:which_table').SetStringSelection('orders.view_cases_abridged')
         self.on_choice_table()
 
 
@@ -98,7 +98,7 @@ class SearchTab(object):
         selected_item = event.GetEventObject()
         table_name = ctrl(self, 'choice:which_table').GetStringSelection()
 
-        if table_name in ('orders.root', 'orders.view_systems', 'orders.view_systems_abridged', 'orders.view_case', 'orders.responsibilities',
+        if table_name in ('orders.root', 'orders.view_cases', 'orders.view_cases_abridged', 'orders.view_case', 'orders.responsibilities',
                         'orders.target_dates', 'orders.labor_hours', 'orders.financials', 'orders.misc','orders.advancedsearch'):
             table_id = selected_item.GetItem(selected_item.GetFirstSelected(), 0).GetText()
 

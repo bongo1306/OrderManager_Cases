@@ -30,14 +30,14 @@ import ChoiceCtrlDbLinker
 import ComboCtrlDbLinker
 import LabelCtrlDbLinker
 
-import QuoteManager
+#import QuoteManager
 import General as gn
 import Database as db
 import Search
 import Reports
 import Scheduling
 import Item
-import Admin
+#import Admin
 from operator import itemgetter
 
 
@@ -315,7 +315,7 @@ class LoginFrame(wx.Frame):
 
 
 
-class MainFrame(wx.Frame, Search.SearchTab, Scheduling.SchedulingTab, QuoteManager.QuoteManagerTab, Reports.ReportsTab,Admin.AdminTab):
+class MainFrame(wx.Frame, Search.SearchTab, Scheduling.SchedulingTab,Reports.ReportsTab):
         
         def __init__(self, parent):
                 #super(MainFrame, self).__init__(self)
@@ -335,17 +335,17 @@ class MainFrame(wx.Frame, Search.SearchTab, Scheduling.SchedulingTab, QuoteManag
 
 
                 #misc
-                self.SetTitle('OrderManager v{} - Logged in as {}'.format(version, gn.user))
+                self.SetTitle('OrderManager v{} - Logged in as {} in Case Plant OrderManager'.format(version, gn.user))
                 #OrderScheduler v{} - Logged in as{} {}'.format(version, self.user.split(',')[-1], self.user.split(',')[0]))
 
                 wx.Log.SetLogLevel(0)
 
-                self.init_QuoteManager_tab()
+                #self.init_QuoteManager_tab()
                 self.init_search_tab()
                 self.init_scheduling_tab()
                 self.init_reports_tab()          
                 self.init_lists()
-                self.init_admin_tab()
+                #self.init_admin_tab()
                 
 
 
@@ -368,8 +368,10 @@ class MainFrame(wx.Frame, Search.SearchTab, Scheduling.SchedulingTab, QuoteManag
 ##                #Select the second tab
                 self.notebook = wx.FindWindowByName('notebook:applications')
                 self.sub_notebook = wx.FindWindowByName('notebook:sub_design')
-                self.notebook.ChangeSelection(2)                
+                self.notebook.ChangeSelection(1)
                 self.sub_notebook.ChangeSelection(0)
+
+
 
 
                 #Item.ItemFrame(self, id=12588966)
@@ -609,7 +611,7 @@ class MainFrame(wx.Frame, Search.SearchTab, Scheduling.SchedulingTab, QuoteManag
                 list_ctrl.clean_headers()
 
                 records = db.query('''
-                        SELECT
+                        SELECT 
                                 id,
 
                                 CASE
@@ -645,13 +647,14 @@ class MainFrame(wx.Frame, Search.SearchTab, Scheduling.SchedulingTab, QuoteManag
                                 applications_engineer,
                                 applications_status
                         FROM
-                                orders.view_systems
+                                orders.view_cases
                         WHERE
                                 date_actual_ae_release IS NULL AND
                                 status <> 'Canceled' AND
                                 quote IS NULL
+                                AND Case_QTE_Status IS NULL
                         ORDER BY
-                                sales_order, item ASC
+                                sales_order, item DESC
                         ''')
                 
                 #insert records into list
@@ -729,7 +732,7 @@ class MainFrame(wx.Frame, Search.SearchTab, Scheduling.SchedulingTab, QuoteManag
                 list_ctrl.clean_headers()
 
                 records = db.query('''
-                        SELECT
+                        SELECT 
                                 id,
                                 quote,
                                 sales_order,
@@ -741,15 +744,16 @@ class MainFrame(wx.Frame, Search.SearchTab, Scheduling.SchedulingTab, QuoteManag
                                 date_basic_start,
                                 applications_engineer
                         FROM
-                                orders.view_systems
+                                orders.view_cases
                         WHERE
                                 date_actual_de_release IS NULL AND
                                 production_order IS NOT NULL AND
                                 status <> 'Canceled' AND
                                 prebom_ae_release IS NULL AND
                                 prebom_ae_not_applicable = 0
+                                AND Case_QTE_Status IS NULL
                         ORDER BY
-                                sales_order, item ASC
+                                sales_order, item DESC
                         ''')
                 
                 #insert records into list
@@ -826,7 +830,7 @@ class MainFrame(wx.Frame, Search.SearchTab, Scheduling.SchedulingTab, QuoteManag
                 list_ctrl.clean_headers()
 
                 records = db.query('''
-                        SELECT
+                        SELECT 
                                 id,
                                 
                                 quote,
@@ -865,14 +869,15 @@ class MainFrame(wx.Frame, Search.SearchTab, Scheduling.SchedulingTab, QuoteManag
                                 electrical_cad_designer,
                                 structural_cad_designer
                         FROM
-                                orders.view_systems
+                                orders.view_cases
                         WHERE
                                 sales_order IS NOT NULL AND
                                 date_actual_de_release IS NULL AND
                                 production_order IS NULL AND
                                 status <> 'Canceled'
+                                AND Case_QTE_Status IS NULL
                         ORDER BY
-                                date_request_delivered, sales_order, CAST(item AS INT) ASC
+                                date_request_delivered, sales_order, CAST(item AS INT) DESC
                         ''')
                 
 
@@ -1003,13 +1008,14 @@ class MainFrame(wx.Frame, Search.SearchTab, Scheduling.SchedulingTab, QuoteManag
                                 design_engineer,
                                 design_status
                         FROM
-                                orders.view_systems
+                                orders.view_cases
                         WHERE
                                 date_actual_de_release IS NULL AND
                                 production_order IS NOT NULL AND
                                 status <> 'Canceled'
+                                AND Case_QTE_Status IS NULL
                         ORDER BY
-                                date_requested_de_release, sales_order, item ASC
+                                date_requested_de_release, sales_order, item DESC
                         ''')
 
                 #insert records into list
@@ -1059,7 +1065,6 @@ class MainFrame(wx.Frame, Search.SearchTab, Scheduling.SchedulingTab, QuoteManag
                           "ORDER BY DateRequest DESC"
 
                 ApplRecords = db.query(sql)
-
 
                 for record in ApplRecords:
                         index += 1
@@ -1162,13 +1167,14 @@ class MainFrame(wx.Frame, Search.SearchTab, Scheduling.SchedulingTab, QuoteManag
                                 electrical_cad_designer,
                                 structural_cad_designer
                         FROM
-                                orders.view_systems
+                                orders.view_cases
                         WHERE
                                 date_actual_de_release IS NULL AND
                                 production_order IS NOT NULL AND
                                 status <> 'Canceled'
+                                AND Case_QTE_Status IS NULL
                         ORDER BY
-                                date_requested_de_release, sales_order, item ASC
+                                date_requested_de_release, sales_order, item DESC
                         ''')
                 
 
@@ -1310,13 +1316,14 @@ class MainFrame(wx.Frame, Search.SearchTab, Scheduling.SchedulingTab, QuoteManag
                                 electrical_cad_designer,
                                 structural_cad_designer
                         FROM
-                                orders.view_systems
+                                orders.view_cases
                         WHERE
                                 date_actual_de_release IS NULL AND
                                 production_order IS NOT NULL AND
                                 --days_off_by > 0 AND
                                 date_planned_de_release > date_requested_de_release AND
                                 status <> 'Canceled'
+                                AND Case_QTE_Status IS NULL
                         ORDER BY
                                 days_off_by DESC
                         ''')
@@ -1432,12 +1439,12 @@ class MainFrame(wx.Frame, Search.SearchTab, Scheduling.SchedulingTab, QuoteManag
                                 comments
 
                         FROM
-                                orders.view_systems
+                                orders.view_cases
                         WHERE
                                 pending_ecms = 1 AND
                                 status <> 'Canceled'
                         ORDER BY
-                                date_actual_de_release ASC
+                                date_actual_de_release DESC
                         ''')
 
 
@@ -1505,7 +1512,7 @@ class MainFrame(wx.Frame, Search.SearchTab, Scheduling.SchedulingTab, QuoteManag
                                 date_actual_de_release,
                                 comments
                         FROM
-                                orders.view_systems
+                                orders.view_cases
                         WHERE
                                 status <> 'Canceled' AND
                                 date_shipped IS NULL AND
