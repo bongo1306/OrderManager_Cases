@@ -11,8 +11,8 @@ import workdays
 import operator
 
 
-updates_dir = r"\\cbssrvit\kwfiles\Management Software\OrderManager\release"
-NightlyBuildPath = r"\\cbssrvit\kwfiles\Management Software\OrderManager\release\NightlyBuild\OrderManagerSetup.exe"
+updates_dir = r"\\cbssrvit\kwfiles\Management Software\OrderManager_Case\release"
+NightlyBuildPath = r"\\cbssrvit\kwfiles\Management Software\OrderManager_Case\release"
 
 #global variable hold reference to wxGUI
 app = None

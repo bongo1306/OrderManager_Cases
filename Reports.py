@@ -325,12 +325,12 @@ class ReportsTab(object):
 					dbo.ecrs
 				INNER JOIN orders.view_cases ON
 					(
-					CHARINDEX(view_systems.production_order, ecrs.item) > 0 OR 
-					CHARINDEX(view_systems.bpcs_item, ecrs.item) > 0
+					CHARINDEX(view_cases.production_order, ecrs.item) > 0 OR 
+					CHARINDEX(view_cases.bpcs_item, ecrs.item) > 0
 					)
 				WHERE
 					ecrs.reason = 'Engineering Error' AND ecrs.Production_Plant = 'Cases' AND
-					((view_systems.date_actual_finish >= '{}' AND view_systems.date_actual_finish <= '{}'))
+					((view_cases.date_actual_finish >= '{}' AND view_cases.date_actual_finish <= '{}'))
 			'''.format(start_date, end_date))
 			
 			try:
