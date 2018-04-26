@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf8 -*-
-version = '1.0'
+version = '1.1'
 
 import sys
 import os
@@ -209,7 +209,7 @@ class LoginFrame(wx.Frame):
                 #self.applications =wx.FindWindowByName('applications')
 
                 #misc
-                self.SetTitle('OrderManager v{} Login'.format(version))
+                self.SetTitle('OrderManager_Case v{} Login'.format(version))
 
                 #populate user selection box
                 names = db.query("SELECT name FROM employees WHERE activated = 1 ORDER BY name ASC")
@@ -335,7 +335,7 @@ class MainFrame(wx.Frame, Search.SearchTab, Scheduling.SchedulingTab,Reports.Rep
 
 
                 #misc
-                self.SetTitle('OrderManager v{} - Logged in as {} in Case Plant OrderManager'.format(version, gn.user))
+                self.SetTitle('OrderManager_Case v{} - Logged in as {} in Case Plant OrderManager'.format(version, gn.user))
                 #OrderScheduler v{} - Logged in as{} {}'.format(version, self.user.split(',')[-1], self.user.split(',')[0]))
 
                 wx.Log.SetLogLevel(0)
